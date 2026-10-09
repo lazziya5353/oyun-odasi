@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Oyun Odası">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5ee0b5"/>
+      <stop offset="1" stop-color="#7aa2ff"/>
+    </linearGradient>
+    <linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <style>
+      .w{fill:none;stroke:#5ee0b5;stroke-width:3.4;stroke-linecap:round;animation:p 1.8s ease-in-out infinite}
+      .w2{stroke:#7aa2ff;animation-delay:.3s}
+      @keyframes p{0%,100%{opacity:.25}50%{opacity:1}}
+      @media (prefers-reduced-motion:reduce){.w{animation:none;opacity:.9}}
+    </style>
+  </defs>
+  <!-- ses dalgaları: oyun + sesli sohbet -->
+  <path class="w" d="M45.5 11.5a9.5 9.5 0 0 1 7 7"/>
+  <path class="w w2" d="M47 4a16.5 16.5 0 0 1 13 13"/>
+  <!-- oyun kolu gövdesi -->
+  <path fill="url(#g)" d="M18.5 22.5h27c7 0 11.7 4.6 13.2 11.4l2.3 10.6c1.1 5.1-2.4 9.5-7.2 9.5-3 0-5.1-1.5-6.6-4L44.8 45H19.2l-2.4 5c-1.5 2.5-3.6 4-6.6 4-4.8 0-8.3-4.4-7.2-9.5l2.3-10.6c1.5-6.8 6.2-11.4 13.2-11.4z"/>
+  <path fill="url(#s)" d="M18.5 22.5h27c4.8 0 8.6 2.2 10.9 5.8H7.6c2.3-3.6 6.1-5.8 10.9-5.8z"/>
+  <!-- yön tuşu -->
+  <rect x="12.5" y="32" width="13" height="4.4" rx="1.6" fill="#0f1218"/>
+  <rect x="16.8" y="27.7" width="4.4" height="13" rx="1.6" fill="#0f1218"/>
+  <!-- düğmeler -->
+  <circle cx="45.5" cy="29.8" r="2.7" fill="#0f1218"/>
+  <circle cx="50.6" cy="34.4" r="2.7" fill="#0f1218"/>
+  <circle cx="40.4" cy="34.4" r="2.7" fill="#0f1218"/>
+  <circle cx="45.5" cy="39" r="2.7" fill="#0f1218"/>
+</svg>

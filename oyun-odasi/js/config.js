@@ -4,5 +4,5 @@
 // Boş bırakılırsa herkese açık ücretsiz PeerJS sunucusu kullanılır.
 // Kendi sunucun cevap vermezse site otomatik olarak herkese açık sunucuyu yedek olarak dener.
 window.OYUNODASI_CONFIG = {
-  sunucu: ''
+  sunucu: 'oyun-odasi.onrender.com'
 };
