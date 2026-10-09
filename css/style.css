@@ -74,6 +74,7 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 .top h1{font-family:var(--display);font-size:20px;margin:0}
 .top-mid{display:flex;align-items:center;gap:8px}
 .count-pill{font-size:13px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-variant-numeric:tabular-nums}
+.sig-pill{font-size:12px;color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);border-radius:99px;padding:4px 10px;animation:breathe 2s ease-in-out infinite}
 .codebox{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .codebox b{font-family:var(--display);letter-spacing:.25em;font-size:18px;color:var(--accent)}
 .layout{display:grid;grid-template-columns:236px minmax(0,1fr) auto;min-height:0}

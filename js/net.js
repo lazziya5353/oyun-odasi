@@ -90,24 +90,84 @@ async function start(code, asHost){
   setupPeer(peer, asHost);
 }
 
+// ---------- eşleştirme sunucusuyla bağlantı ----------
+// Sunucu sadece kişilerin birbirini bulması için gerekir; ses, görüntü ve mesajlar kişiler arasında doğrudan
+// gider. Bu yüzden sunucuyla bağlantı koparsa odadaki konuşma DEVAM EDER. Yeniden bağlanırken:
+//  - hemen değil, artan aralıklarla denenir (2 sn, 3 sn, 5 sn … en fazla 30 sn); sık denemek sunucunun engellemesine yol açar
+//  - sunucu eski bağlantıyı henüz kapatmadıysa "bu ad kullanımda" der; bu da geçici sayılır, beklenip tekrar denenir
+//  - kullanıcıya tek seferlik sakin bir bilgi verilir, üst şeritte küçük bir gösterge yanar
+const sig = { down: false, since: 0, tries: 0, timer: null, told: false };
+function sigDown(){
+  if (!sig.down){ sig.down = true; sig.since = Date.now(); }
+  renderSigStatus();
+  // kısa kopmaları kullanıcıya hiç gösterme; 8 sn'yi geçerse bir kez bilgi ver
+  clearTimeout(sig.tellTimer);
+  sig.tellTimer = setTimeout(() => {
+    if (sig.down && !sig.told && joined){
+      sig.told = true;
+      toast('Sunucuyla bağlantı koptu, arka planda tekrar bağlanılıyor. Odadaki konuşma devam ediyor.');
+    }
+  }, 8000);
+}
+function sigUp(){
+  const wasTold = sig.told;
+  sig.down = false; sig.tries = 0; sig.told = false;
+  clearTimeout(sig.timer); clearTimeout(sig.tellTimer);
+  renderSigStatus();
+  if (wasTold && joined) toast('✓ Sunucuya yeniden bağlanıldı');
+}
+function scheduleReconnect(pr, now){
+  if (!pr || pr.destroyed) return;
+  if (pr !== peer && pr !== lobbyPeer) return;
+  if (pr === peer) sigDown();
+  clearTimeout(pr._reTimer);
+  const n = pr._tries = (pr._tries || 0) + 1;
+  const delay = now ? 300 : Math.min(30000, Math.round(2000 * Math.pow(1.5, n - 1)));
+  pr._reTimer = setTimeout(() => {
+    if (pr.destroyed || !pr.disconnected) return;
+    try { pr.reconnect(); } catch(e){ scheduleReconnect(pr); }
+  }, delay);
+}
+function renderSigStatus(){
+  const el = $('sigStatus'); if (!el) return;
+  el.hidden = !sig.down;
+}
+// internet geri gelince ya da sekmeye dönülünce beklemeden dene
+window.addEventListener('online', () => { [peer, lobbyPeer].forEach(pr => { if (pr && pr.disconnected && !pr.destroyed){ pr._tries = 0; scheduleReconnect(pr, true); } }); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  [peer, lobbyPeer].forEach(pr => { if (pr && pr.disconnected && !pr.destroyed) scheduleReconnect(pr, true); });
+});
+
 function setupPeer(pr, asHost){
   pr.on('connection', conn => handleConn(conn));
   pr.on('call', call => handleCall(call));
-  pr.on('disconnected', () => { if (!pr.destroyed) try { pr.reconnect(); } catch(e){} });
+  pr.on('open', () => { pr._tries = 0; if (pr === peer) sigUp(); });
+  pr.on('disconnected', () => scheduleReconnect(pr));
   pr.on('error', err => {
     const t = err && err.type;
-    if (t === 'unavailable-id' && asHost){
-      pr.destroy(); peer = null;
-      if (customCode) lobbyError('“' + roomCode + '” adında bir oda zaten açık. Ona katılmak için “Odaya katıl”a bas ya da başka bir kod yaz.');
-      else start(genCode(), true);
+    if (pr !== peer) return;
+    if (!joined){
+      // odaya girmeden önceki hatalar: kullanıcıya açıkça söyle
+      if (t === 'unavailable-id' && asHost){
+        pr.destroy(); peer = null;
+        if (customCode) lobbyError('“' + roomCode + '” adında bir oda zaten açık. Ona katılmak için “Odaya katıl”a bas ya da başka bir kod yaz.');
+        else start(genCode(), true);
+        return;
+      }
+      if (t === 'peer-unavailable'){ lobbyError('Bu kodla bir oda bulunamadı.'); return; }
+      if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed'){
+        try { pr.destroy(); } catch(e){}
+        peer = null;
+        lobbyError('Sunucuya bağlanılamadı. İnternet bağlantını kontrol edip biraz sonra tekrar dene.');
+        return;
+      }
+      console.warn(err);
       return;
     }
-    if (t === 'peer-unavailable'){ if (!joined) lobbyError('Bu kodla bir oda bulunamadı.'); return; }
-    if (t === 'network' || t === 'server-error' || t === 'socket-error'){
-      if (!joined) lobbyError('Sunucuya bağlanılamadı. İnternet bağlantını kontrol et.');
-      else toast('Bağlantı sorunu, tekrar deneniyor…');
-      return;
-    }
+    // odadayken: sunucu hataları geçicidir, bağlantılar asla kapatılmaz; yeniden bağlanma 'disconnected' ile sürer
+    if (t === 'peer-unavailable') return;
+    if (['network', 'server-error', 'socket-error', 'socket-closed', 'unavailable-id'].includes(t)){ sigDown(); return; }
     console.warn(err);
   });
 }
@@ -437,14 +497,17 @@ async function claimLobby(tries = 0){
   if (!isHost || !joined || !peer || peer.id === PREFIX + roomCode) return;
   if (lobbyPeer && !lobbyPeer.destroyed) return;
   const lp = new Peer(PREFIX + roomCode, await peerOpts());
-  lp.on('open', () => { lobbyPeer = lp; });
+  lobbyPeer = lp;
+  lp.on('open', () => { lp._tries = 0; });
   lp.on('error', err => {
-    if (err && err.type === 'unavailable-id'){
+    // oda kodu henüz boşalmadıysa (sunucu eski sahibi düşürmediyse) biraz bekleyip yeniden dene
+    if (err && err.type === 'unavailable-id' && !lp.open && !lp._lastServerId){
       try { lp.destroy(); } catch(e){}
-      if (tries < 20) setTimeout(() => claimLobby(tries + 1), 3000);
+      if (lobbyPeer === lp) lobbyPeer = null;
+      if (tries < 30) setTimeout(() => claimLobby(tries + 1), Math.min(15000, 3000 + tries * 1000));
     }
   });
-  lp.on('disconnected', () => { if (!lp.destroyed) try { lp.reconnect(); } catch(e){} });
+  lp.on('disconnected', () => scheduleReconnect(lp));
   lp.on('connection', conn => {
     conn.on('open', () => {
       if (blocked.has(conn.peer)){ conn.close(); return; }
