@@ -10,7 +10,7 @@ Arkadaşlarla oyun oynarken kullanmak için tarayıcıda çalışan sesli sohbet
 - **Sohbet:** herkese açık sohbet, kişiye özel mesaj, fotoğraf gönderme (seç, yapıştır ya da sürükle). Sohbet kalıcıdır: odadan çıkıp dönünce durur, **🧹 Temizle** ile herkes için silinir
 - **📻 Radyo:** odadaki herkes dinler (hangi kanalda olursa olsun); herkes kendi radyo sesini ayarlar ya da sadece kendisi için susturur
 - **Müzik Odası:** herkes bilgisayarından müzik yükleyebilir (ortak sıra)
-- **Son odana dön:** girişte tek tıkla son odaya kodsuz dönülür; oda kapanmışsa aynı kodla yeniden açılır. “Oda oluştur” her zaman yeni kodla yeni oda kurar
+- **Son odana dön:** girişte tek tıkla son odaya kodsuz dönülür. Odadaki herkes çıkınca oda kapanır ve bu kart kendiliğinden kaybolur. “Oda oluştur” her zaman yeni kodla yeni oda kurar
 - **Film Odası:** bilgisayardan film yayını, YouTube'u birlikte senkron izleme, Film modunda ekran paylaşımı
 - **🎲 Oyun Salonu:** Tavla (1/3/5/7 sayılık maç, mars, kırma, zar animasyonu) ve Okey (Klasik, Eşli, 101). Boş koltuklara bot oturur, oyundan çıkanın yerine bot geçer. Oyun sırasında radyo çalmaya devam eder
 - **🍵 İkram:** kişinin kutucuğundaki İkram düğmesiyle çay, simit, Türk kahvesi, ayran, çekirdek, Maraş dondurması, lokum ya da su ikram edilir; ikram uçarak gider, 1 dakika masada durur

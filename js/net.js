@@ -200,12 +200,9 @@ async function guestFlow(code){
   }
   if (unreachable === list.length) throw noServerMessage();
   if (rejoining){
-    // "Son odana dön": oda kapanmışsa aynı kodla yeniden aç (eski davet bağlantıları çalışmaya devam eder)
-    lobbyStatus('Oda kapanmış, aynı kodla yeniden açılıyor…');
-    customCode = true;
-    await hostFlow(code);
-    toast('Oda kapanmıştı; aynı kodla yeniden açtın. Arkadaşların eski davet bağlantısıyla girebilir.');
-    return;
+    // "Son odana dön": herkes çıktıysa oda kapanmıştır; yeniden açılmaz
+    forgetRoom(); $('rejoin').hidden = true; $('createBtn').classList.add('primary');
+    throw 'Son odan kapanmış: herkes çıktığı için oda kapandı. “Oda oluştur” ile yeni bir oda kurabilirsin.';
   }
   throw 'Bu kodla açık bir oda bulunamadı. Kodu kontrol et; oda sahibinin odası açık olmalı.';
 }
@@ -353,6 +350,8 @@ function connectTo(id){
 }
 
 function handleConn(conn){
+  // giriş ekranından "oda hâlâ açık mı?" yoklaması: kişi sayılmaz, hemen kapatılır
+  if (conn.metadata && conn.metadata.probe){ conn.on('open', () => setTimeout(() => { try { conn.close(); } catch(e){} }, 300)); return; }
   if (blocked.has(conn.peer)){ try { conn.close(); } catch(e){} return; }
   const p = getPeer(conn.peer);
   p.conn = conn;
@@ -687,12 +686,23 @@ function kickedOut(){
   forgetRoom();   // atılan kişiye "Son odana dön" gösterme
   leaveRoom();
 }
+// Odada benden başka kimse yoksa çıkınca oda kapanır: "Son odana dön" ve kayıtlı sohbet silinir
+let leaveChecked = false;
+function closeIfAlone(){
+  if (leaveChecked) return;          // çıkarken bağlantılar kapanır; karar bir kez, kapanmadan önce verilir
+  leaveChecked = true;
+  if (!joined || [...peers.values()].some(o => o.linked && !o.lobby)) return;
+  forgetRoom();
+  try { localStorage.removeItem('oyunodasi-chat-' + roomCode); localStorage.removeItem('oyunodasi-chatclr-' + roomCode); } catch(e){}
+}
 function leaveRoom(){
+  closeIfAlone();
   try { lobbyPeer && lobbyPeer.destroy(); } catch(e){}
   try { peer && peer.destroy(); } catch(e){}
   location.reload();
 }
 window.addEventListener('beforeunload', () => {
+  closeIfAlone();
   try { lobbyPeer && lobbyPeer.destroy(); } catch(e){}
   try { peer && peer.destroy(); } catch(e){}
 });

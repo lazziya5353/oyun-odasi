@@ -119,6 +119,7 @@ function renderTavla(body, s, lv){
   tvAnimate(s, v, lv, els, pieces, flip, mySide);
   // mesaj ve kontroller
   tvControls(root.querySelector('.tv-controls'), root.querySelector('.tv-msg'), s, v, seat, names, board);
+  tvFit(root);
 }
 function tvBoardSvg(){
   // üçgenler: üst sıra aşağı, alt sıra yukarı bakar; renkler sırayla
@@ -292,4 +293,35 @@ function tvControls(ctl, msg, s, v, seat, names, board){
 function isFirstRollOfGame(v){
   // oyunun ilk atışı: tahta başlangıç dizilişinde ve kimse oynamadı
   return JSON.stringify(v.board) === JSON.stringify(TavlaCore.initialBoard()) && v.off[0] + v.off[1] === 0 && v.bar[0] + v.bar[1] === 0;
+}
+
+// Tahtayı ekrana sığdır: oyun alanının yüksekliğinden başlık, oyuncu şeritleri ve düğmeler çıkarılır,
+// kalan alana 15:11 oranında en büyük tahta yerleştirilir. Kısa ekranlarda düğmeler kendi şeridinin yanına geçer.
+let tvObs = null;
+function tvFit(root){
+  root = root || document.querySelector('.tavla');
+  if (!root || !root.isConnected) return;
+  const deck = root.closest('.deck') || root.parentElement;
+  if (!tvObs && typeof ResizeObserver !== 'undefined'){
+    tvObs = new ResizeObserver(() => requestAnimationFrame(() => tvFit()));
+    tvObs.observe(deck);
+    window.addEventListener('resize', () => tvFit());
+  }
+  if (window.matchMedia('(max-width:860px)').matches){ root.classList.remove('side'); root.style.removeProperty('--tv-w'); return; }
+  const board = root.querySelector('.tv-board');
+  const calc = side => {
+    root.classList.toggle('side', side);
+    const cs = getComputedStyle(deck);
+    const padB = parseFloat(cs.paddingBottom) || 0;
+    const top = root.getBoundingClientRect().top - deck.getBoundingClientRect().top + deck.scrollTop;
+    const other = side ? 0 : root.offsetHeight - board.offsetHeight;      // altta/üstte kalan şeritler ve düğmeler
+    const availH = deck.clientHeight - top - other - padB - 6;
+    const availW = root.clientWidth - (side ? 234 : 0);
+    return Math.floor(Math.max(280, Math.min(availW, availH * TV.W / TV.H, 1100)));
+  };
+  const wStack = calc(false), wSide = calc(true);
+  const side = wSide > wStack + 40;
+  root.classList.toggle('side', side);
+  const w = side ? wSide : wStack;
+  root.style.setProperty('--tv-w', w + 'px');
 }
