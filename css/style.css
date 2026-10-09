@@ -19,7 +19,7 @@ a{color:var(--accent)}
 
 /* ---------- Ortak parçalar ---------- */
 label{display:grid;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-input[type=text],select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:16px;text-transform:none;letter-spacing:0;width:100%;min-width:0}
+input[type=text],input[type=search],select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:16px;text-transform:none;letter-spacing:0;width:100%;min-width:0}
 input.code{font-family:var(--display);letter-spacing:.3em;text-transform:uppercase}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .row>*{flex:1 1 140px}
@@ -58,7 +58,8 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 .only-mobile{display:none!important}
 
 /* ---------- Giriş ---------- */
-.lobby{height:100%;overflow:auto;display:grid;place-items:center;padding:24px 16px}
+.lobby{height:100%;height:100dvh;overflow:auto;-webkit-overflow-scrolling:touch;display:grid;place-items:center;padding:24px 16px}
+.lobby-card{margin-block:auto}
 .lobby-card{width:100%;max-width:440px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 24px;display:grid;gap:18px}
 .brand{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:.02em;margin:0;line-height:1.1;display:flex;align-items:center;gap:12px}
 .logo-big{width:64px;height:64px;flex:none;filter:drop-shadow(0 6px 18px rgb(94 224 181 / .35));animation:float 4s ease-in-out infinite}
@@ -86,7 +87,7 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 .net-result li.bad{color:var(--warn)}
 
 /* ---------- Oda iskeleti ---------- */
-.room{height:100%;display:grid;grid-template-rows:auto 1fr auto}
+.room{height:100%;height:100dvh;display:grid;grid-template-rows:auto 1fr auto}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap;position:relative;z-index:5;background:var(--bg)}
 .top h1{font-family:var(--display);font-size:20px;margin:0}
 .top-mid{display:flex;align-items:center;gap:8px}
@@ -273,6 +274,48 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 .q-item .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .q-item .o{font-size:12px;color:var(--muted)}
 .q-item button{background:none;border:0;color:var(--muted);padding:2px 6px}
+/* ---------- müzik kütüphanesi ---------- */
+.lib{position:relative;display:grid;gap:10px;background:color-mix(in srgb,var(--panel) 85%,transparent);border:1px solid var(--line);border-radius:18px;padding:16px;backdrop-filter:blur(10px);animation:screenIn .45s ease}
+.lib-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.lib-head h4{margin:0 0 2px;font-family:var(--display);font-size:17px}
+.lib-acts{display:flex;gap:8px;flex-wrap:wrap}
+.lib-newlist{display:flex;gap:8px;flex-wrap:wrap}
+.lib-newlist input{flex:1 1 220px}
+.lib-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.lib-tab{flex:none;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;transition:background .15s,border-color .15s}
+.lib-tab:hover{border-color:color-mix(in srgb,#ff7ab6 50%,var(--line))}
+.lib-tab.on{background:color-mix(in srgb,#ff7ab6 18%,var(--bg));border-color:#ff7ab6}
+.lib-tools{display:flex;gap:8px;flex-wrap:wrap}
+.lib-tools .lib-q{flex:1 1 200px}
+.lib-tools select{flex:0 1 220px}
+.lib-viewhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lib-viewhead .note{flex:1;min-width:160px}
+.lib-list{display:grid;gap:2px;max-height:min(46vh,420px);overflow:auto;margin:0 -6px;padding:0 6px}
+.lib-row{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;font-size:14px;transition:background .15s}
+.lib-row:hover{background:color-mix(in srgb,var(--text) 6%,transparent)}
+.lib-row.now{background:color-mix(in srgb,#ff7ab6 14%,transparent)}
+.lib-row.now .n{color:#ff7ab6;animation:breathe 1.4s ease-in-out infinite}
+.lib-row .n{width:22px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;flex:none}
+.lib-row .t{flex:1;min-width:0;display:grid}
+.lib-row .t b,.lib-row .t small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-row .t b{font-weight:600}
+.lib-row .t small{font-size:12px}
+.lib-row .d{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+.lib-b{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--text);cursor:pointer;font-size:13px;transition:transform .15s,background .15s}
+.lib-b:hover{transform:scale(1.1);background:color-mix(in srgb,#ff7ab6 20%,var(--bg))}
+.lib-empty{padding:18px 4px;text-align:center}
+.lib-up{display:flex;align-items:center;gap:10px;font-size:13px}
+.lib-up .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-up .bar{flex:0 0 140px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.lib-up .bar i{display:block;height:100%;background:linear-gradient(90deg,#ff7ab6,#7aa2ff);transition:width .3s}
+.lib-up .p{width:44px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.lib-up.err .p{color:var(--warn)}
+.lib-menu{position:absolute;z-index:20;display:grid;gap:2px;min-width:200px;max-height:260px;overflow:auto;padding:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 40px -12px rgb(0 0 0 / .6);animation:pop-in .2s ease}
+.lib-menu b{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:4px 6px}
+.lib-menu button{text-align:left;background:none;border:0;color:var(--text);padding:8px;border-radius:8px;cursor:pointer;font:inherit}
+.lib-menu button:hover:not(:disabled){background:color-mix(in srgb,#ff7ab6 16%,transparent)}
+.lib-menu button:disabled{color:var(--muted);cursor:default}
+.lib-menu .new{color:#ff7ab6}
 .film-start{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .film-card{display:grid;gap:8px;text-align:left;background:color-mix(in srgb,var(--panel) 85%,transparent);border:1px solid var(--line);border-radius:18px;padding:20px;transition:transform .2s,border-color .2s,box-shadow .2s}
 .film-card:hover:not(:disabled){transform:translateY(-3px);border-color:var(--warn);box-shadow:0 14px 40px -18px var(--warn)}
@@ -370,8 +413,18 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   .chan-panel{position:fixed;top:0;bottom:0;left:0;width:min(280px,85vw);transform:translateX(-102%);transition:transform .25s ease;z-index:40;box-shadow:20px 0 40px rgb(0 0 0 / .5)}
   .chan-panel.open{transform:none}
   .chat{position:fixed;inset:0;width:auto;z-index:45;padding-bottom:env(safe-area-inset-bottom,0px)}
-  .main{overflow:auto}
-  .stage{height:auto;min-height:100%}
+  /* Telefonda iç içe kaydırma alanı yerine SAYFANIN KENDİSİ kayar: iPhone Safari'de en güvenilir yol.
+     Alttaki düğme çubuğu ekranın altında yapışık kalır. */
+  html,body{height:auto;min-height:100%;overflow:visible}
+  body{overflow-x:hidden}
+  .lobby{height:auto;min-height:100dvh;overflow:visible}
+  .room{height:auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+  .top{padding-top:max(8px,env(safe-area-inset-top,0px))}
+  .layout{flex:1 0 auto;display:block}
+  .bar{position:sticky;bottom:0;z-index:30}
+  .main,.room.sharing .stage,.room.gaming .deck{overflow:visible}
+  .stage{height:auto;min-height:0}
+  .main::before,.main::after{position:fixed;inset:0}
   .person{--av:70px;width:calc(50% - 9px)}
   #people{gap:12px}
   .room.sharing .stage{grid-template-columns:1fr;grid-template-rows:auto auto}

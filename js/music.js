@@ -20,7 +20,8 @@ function validItem(it, from){
   return it && typeof it === 'object' && typeof it.id === 'string' && it.id.length <= 40 &&
     typeof it.owner === 'string' && (!from || it.owner === from) && typeof it.title === 'string';
 }
-const cleanItem = it => ({ id: it.id, owner: it.owner, ownerName: clip(it.ownerName, 20), title: clip(it.title, 80) || 'Şarkı', ts: Number(it.ts) || Date.now() });
+const cleanItem = it => ({ id: it.id, owner: it.owner, ownerName: clip(it.ownerName, 20), title: clip(it.title, 100) || 'Şarkı', ts: Number(it.ts) || Date.now(),
+  lib: typeof it.lib === 'string' && /^[a-f0-9]{32}$/.test(it.lib) ? it.lib : undefined });
 
 // ---------- ses seviyesi ----------
 function applyMusicVolume(){
@@ -85,7 +86,19 @@ function ensureMusicGraph(){
 }
 function playLocal(id){
   const f = localFiles.get(id);
-  if (!f){ skipItem(id); return; }
+  if (!f){
+    // kütüphane şarkısı: önce sunucudan indir (bir kez; sonra tarayıcıda saklanır)
+    const it = queue.find(x => x.id === id);
+    if (it && it.lib && typeof ensureLibFile === 'function'){
+      if (current && current.id === id) current.loading = true;
+      refreshMusicUI();
+      ensureLibFile(it).then(() => {
+        if (current && current.id === id){ current.loading = false; playLocal(id); prefetchNextLib(); }
+      }, () => { toast('“' + clip(it.title, 40) + '” indirilemedi, sıradakine geçiliyor.'); if (current && current.id === id) skipItem(id); });
+      return;
+    }
+    skipItem(id); return;
+  }
   ensureMusicGraph();
   if (musicEl._url) URL.revokeObjectURL(musicEl._url);
   musicEl._url = URL.createObjectURL(f);
@@ -155,6 +168,7 @@ function addFiles(files){
   toast(list.length === 1 ? '🎵 Sıraya eklendi' : '🎵 ' + list.length + ' şarkı sıraya eklendi');
   if (!current && !radio) startItem(queue[0].id);
   refreshMusicUI();
+  if (typeof uploadMany === 'function') uploadMany(list);   // kütüphaneye de kaydet (kalıcı)
 }
 $('musicInput').onchange = e => { const f = e.target.files; if (f && f.length) addFiles(f); e.target.value = ''; };
 
@@ -163,7 +177,7 @@ function applyStart(id){
   const it = queue.find(x => x.id === id); if (!it) return;
   if (radio){ radio = null; playRadio(); renderRadioChip(); }
   if (current && current.owner === peer.id && current.id !== id) stopLocal();
-  current = { id, owner: it.owner, ownerName: it.ownerName, title: it.title, pos: 0, dur: 0, paused: false, at: performance.now() };
+  current = { id, owner: it.owner, ownerName: it.ownerName, title: it.title, lib: it.lib, pos: 0, dur: 0, paused: false, at: performance.now() };
   if (it.owner === peer.id) playLocal(id);
   syncMusicOut(); refreshMusicUI();
 }
@@ -354,6 +368,7 @@ function musicOnData(id, d){
       return true;
     }
     case 'radio': applyRadio(d.station, id); return true;
+    case 'lib-changed': if (typeof loadLibrary === 'function') loadLibrary(); return true;
   }
   return false;
 }
@@ -368,7 +383,7 @@ function applyMusicState(s){
   sortQueue();
   if (s.current && queue.some(x => x.id === s.current.id)){
     const it = queue.find(x => x.id === s.current.id);
-    current = { id: it.id, owner: it.owner, ownerName: it.ownerName, title: it.title, pos: Number(s.current.pos) || 0, dur: Number(s.current.dur) || 0, paused: !!s.current.paused, at: performance.now() };
+    current = { id: it.id, owner: it.owner, ownerName: it.ownerName, title: it.title, lib: it.lib, pos: Number(s.current.pos) || 0, dur: Number(s.current.dur) || 0, paused: !!s.current.paused, at: performance.now() };
   }
   if (s.radio) applyRadio(s.radio, s.radio.by, true);
   refreshMusicUI();
@@ -397,13 +412,15 @@ function renderMusicDeck(d){
     title.textContent = radio.name;
     sub.textContent = [radio.tags, radio.byName ? radio.byName + ' açtı' : '', 'odadaki herkes dinliyor'].filter(Boolean).join(' · ');
   } else if (current){
-    tag.textContent = current.paused ? '⏸ Duraklatıldı' : '🎵 Şimdi çalıyor';
+    tag.textContent = current.loading ? '⏳ İndiriliyor…' : current.paused ? '⏸ Duraklatıldı' : '🎵 Şimdi çalıyor';
     title.textContent = current.title;
-    sub.textContent = (current.owner === peer.id ? 'Sen yükledin' : (current.ownerName || 'Biri') + ' yükledi') + (queue.length > 1 ? ' · Sırada ' + (queue.length - 1) + ' şarkı' : '');
+    const ls = current.lib && typeof songById === 'function' && songById(current.lib);
+    const who = current.owner === peer.id ? 'sen' : (current.ownerName || 'biri');
+    sub.textContent = (ls ? ls.by + ' yükledi · ' + who + ' çalıyor' : current.owner === peer.id ? 'Sen yükledin' : (current.ownerName || 'Biri') + ' yükledi') + (queue.length > 1 ? ' · Sırada ' + (queue.length - 1) + ' şarkı' : '');
   } else {
     tag.textContent = '🎵 Müzik Odası';
     title.textContent = 'Henüz bir şey çalmıyor';
-    sub.textContent = 'Bilgisayarından müzik yükle ya da bir radyo aç. Bu kanaldaki herkes aynı anda dinler.';
+    sub.textContent = 'Kütüphaneden bir şarkı ya da playlist seç, müzik yükle ya da radyo aç. Bu kanaldaki herkes aynı anda dinler.';
   }
   const viz = document.createElement('canvas'); viz.className = 'np-viz'; viz.id = 'npViz'; viz._c = color;
   info.append(tag, title, sub, viz);
@@ -456,10 +473,11 @@ function renderMusicDeck(d){
       }
       q.append(row);
     });
-    const note = document.createElement('p'); note.className = 'note'; note.textContent = 'Şarkıyı yükleyen kişi odadan çıkarsa onun şarkıları sıradan düşer.';
+    const note = document.createElement('p'); note.className = 'note'; note.textContent = 'Şarkıyı sıraya ekleyen kişi odadan çıkarsa onun eklediği şarkılar sıradan düşer (kütüphanede kalır).';
     q.append(note);
     d.append(q);
   }
+  if (typeof libSection === 'function') d.append(libSection());
   updateMusicProgress();
 }
 function updateMusicProgress(){

@@ -9,7 +9,8 @@ Arkadaşlarla oyun oynarken kullanmak için tarayıcıda çalışan sesli sohbet
 - **Ekran paylaşımı:** Oyun / Dengeli / Film / Yazı / Zayıf internet kalite seçenekleri, yayın sırasında kalite değiştirme, canlı FPS / hız / donma göstergesi, büyütme ve tam ekran
 - **Sohbet:** herkese açık sohbet, kişiye özel mesaj, fotoğraf gönderme (seç, yapıştır ya da sürükle). Sohbet kalıcıdır: odadan çıkıp dönünce durur, **🧹 Temizle** ile herkes için silinir
 - **📻 Radyo:** odadaki herkes dinler (hangi kanalda olursa olsun); herkes kendi radyo sesini ayarlar ya da sadece kendisi için susturur
-- **Müzik Odası:** herkes bilgisayarından müzik yükleyebilir (ortak sıra)
+- **Müzik Odası:** herkes müzik yükleyebilir (ortak sıra)
+- **📚 Müzik Kütüphanesi:** yüklenen her şarkı kalıcı olarak saklanır ve yükleyenin adı yazar (silinmez). Herkes kendi adına playlist oluşturur; tüm şarkılar, bir playlist ya da birinin yükledikleri tek tuşla (istersen karışık) çalınır
 - **Son odana dön:** girişte tek tıkla son odaya kodsuz dönülür. Odadaki herkes çıkınca oda kapanır ve bu kart kendiliğinden kaybolur. “Oda oluştur” her zaman yeni kodla yeni oda kurar
 - **Film Odası:** bilgisayardan film yayını, YouTube'u birlikte senkron izleme, Film modunda ekran paylaşımı
 - **🎲 Oyun Salonu:** Tavla (1/3/5/7 sayılık maç, mars, kırma, zar animasyonu) ve Okey (Klasik, Eşli, 101). Boş koltuklara bot oturur, oyundan çıkanın yerine bot geçer. Oyun sırasında radyo çalmaya devam eder
@@ -70,6 +71,13 @@ Aynı oda için 3 dakikada bir, toplamda saatte en fazla 20 "oda açıldı" bild
 - **Android:** aynısı; istersen “Uygulama olarak yükle” ile ana ekrana ekle.
 - **iPhone / iPad (iOS 16.4+):** Safari'de Paylaş ⬆ → “Ana Ekrana Ekle”, sonra ana ekrandaki simgeden açıp “Bildirimleri aç”.
 
+## Müzik kütüphanesi nasıl çalışır
+
+`netlify/functions/muzik.mjs` şarkıları 2,5 MB'lık parçalar hâlinde Netlify Blobs'a kaydeder; ayar gerekmez.
+Sınırlar: şarkı başına 30 MB, toplam 600 şarkı / 3 GB. Aynı şarkı iki kez yüklenirse kopya oluşmaz.
+Sıraya ekleyen kişi şarkıyı bir kez indirir (tarayıcısında saklanır) ve Müzik Odası'ndakilere canlı aktarır;
+dinleyenler ayrıca indirmez. Netlify'ın ücretsiz planı aylık kredi ile çalışır; şarkı indirmeleri bu krediden düşer.
+
 ## Sınırlar
 
 - Herkes herkese bağlandığı için sesli sohbette 8–10 kişi, ekran paylaşımında 4–5 izleyici rahat çalışır.
@@ -92,6 +100,7 @@ js/ui.js          kanallar, kutucuklar, ses ayarları
 js/screen.js      ekran paylaşımı, kalite, FPS göstergesi
 js/chat.js        sohbet, özel mesaj, fotoğraf
 js/music.js       müzik sırası, radyo
+js/library.js     müzik kütüphanesi ve playlistler
 js/film.js        film yayını, YouTube senkron izleme
 js/main.js        giriş ekranı
 js/games/         tavla ve okey kuralları, masalar, ikramlar
