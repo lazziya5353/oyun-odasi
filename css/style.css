@@ -60,9 +60,17 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 /* ---------- Giriş ---------- */
 .lobby{height:100%;overflow:auto;display:grid;place-items:center;padding:24px 16px}
 .lobby-card{width:100%;max-width:440px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 24px;display:grid;gap:18px}
-.brand{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:.02em;margin:0;line-height:1.1}
+.brand{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:.02em;margin:0;line-height:1.1;display:flex;align-items:center;gap:12px}
+.logo-big{width:64px;height:64px;flex:none;filter:drop-shadow(0 6px 18px rgb(94 224 181 / .35));animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-4px) rotate(3deg)}}
+.top-brand{display:flex;align-items:center;gap:8px}
+.top-brand img{width:30px;height:30px;flex:none}
 .brand span{color:var(--accent)}
 .sub{margin:0;color:var(--muted)}
+.rejoin{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px;border-radius:12px;
+  border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));background:color-mix(in srgb,var(--accent) 8%,var(--bg));animation:pop-in .35s cubic-bezier(.3,1.4,.5,1)}
+.rejoin-info{display:grid;gap:2px;min-width:0}
+.rejoin-info b{font-family:var(--display);font-size:22px;letter-spacing:.2em;color:var(--accent)}
 .mictest{display:grid;gap:12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px}
 .hint{font-size:13px;margin:0;min-height:1.4em;color:var(--muted)}
 .hint.ok{color:var(--accent)}
@@ -77,6 +85,21 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 .top h1{font-family:var(--display);font-size:20px;margin:0}
 .top-mid{display:flex;align-items:center;gap:8px}
 .count-pill{font-size:13px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-variant-numeric:tabular-nums}
+/* Mini radyo çalar: odadaki herkes için çalan radyo, her kanalda görünür */
+.radio-chip{--c:var(--accent);display:flex;align-items:center;gap:8px;background:color-mix(in srgb,var(--c) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));
+  border-radius:99px;padding:4px 6px 4px 12px;max-width:440px;min-width:0;animation:pop-in .35s cubic-bezier(.3,1.5,.5,1)}
+.radio-chip.muted{filter:saturate(.3);opacity:.8}
+.rc-eq{display:flex;align-items:flex-end;gap:2px;height:14px;flex:none}
+.rc-eq i{width:3px;height:4px;border-radius:2px;background:var(--c)}
+.radio-chip.playing .rc-eq i{animation:eq .8s ease-in-out infinite}
+.radio-chip.playing .rc-eq i:nth-child(2){animation-delay:.2s}
+.radio-chip.playing .rc-eq i:nth-child(3){animation-delay:.4s}
+.radio-chip.playing .rc-eq i:nth-child(4){animation-delay:.1s}
+.rc-name{background:none;border:0;padding:0;font-size:13px;font-weight:600;min-width:0;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.rc-name:hover{text-decoration:underline}
+.radio-chip input[type=range]{width:90px;accent-color:var(--c);flex:none}
+.rc-btn{background:none;border:0;border-radius:50%;width:28px;height:28px;display:grid;place-items:center;font-size:14px;flex:none}
+.rc-btn:hover{background:var(--panel-2)}
 .sig-pill{font-size:12px;color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);border-radius:99px;padding:4px 10px;animation:breathe 2s ease-in-out infinite}
 .codebox{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .codebox b{font-family:var(--display);letter-spacing:.25em;font-size:18px;color:var(--accent)}
@@ -107,11 +130,11 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 .main{position:relative;min-height:0;min-width:0;overflow:hidden}
 .stage{position:relative;z-index:1;height:100%;padding:16px;display:flex;flex-direction:column;gap:14px;min-height:0;overflow:auto}
 .room.sharing .stage{display:grid;grid-template-columns:minmax(0,1fr) 200px;grid-template-rows:minmax(0,1fr);overflow:hidden}
-.room.sharing .deck{display:none}
+.room.sharing:not(.gaming) .deck{display:none}
 .deck:empty{display:none}
 .screens{min-height:0;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));grid-auto-rows:minmax(0,1fr)}
 .screens:empty{display:none}
-.people-area{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:8px}
+.people-area{flex:1 0 auto;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:8px}
 .room.sharing .people-area{justify-content:flex-start;padding:0;overflow:auto}
 #people{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:18px;width:100%;max-width:1100px}
 .room.sharing #people{flex-direction:column;flex-wrap:nowrap;gap:10px}
@@ -171,7 +194,7 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 @keyframes tileIn{from{opacity:0;transform:translateY(24px) scale(.7)}to{opacity:1;transform:none}}
 @keyframes tileOut{to{opacity:0;transform:scale(.6) translateY(10px)}}
 .person-head{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
-.av-wrap{position:relative;width:calc(var(--av) * 1.9);height:calc(var(--av) * 1.9);display:grid;place-items:center;margin:calc(var(--av) * -.45) 0 calc(var(--av) * -.3)}
+.av-wrap{pointer-events:none;position:relative;width:calc(var(--av) * 1.9);height:calc(var(--av) * 1.9);display:grid;place-items:center;margin:calc(var(--av) * -.45) 0 calc(var(--av) * -.3)}
 .viz{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .avatar{--lv:0;width:var(--av);height:var(--av);border-radius:50%;position:relative;display:grid;place-items:center;
   background:radial-gradient(circle at 30% 25%, color-mix(in srgb,var(--c) 70%,#fff), var(--c) 55%, color-mix(in srgb,var(--c) 55%,#000));
@@ -214,8 +237,8 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 .spark{position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:var(--c);pointer-events:none;animation:spark .8s cubic-bezier(.2,.7,.3,1) forwards}
 @keyframes spark{from{transform:translate(-50%,-50%) scale(1);opacity:1}to{transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(.2);opacity:0}}
 /* müzik/film kanalında katılımcılar daha küçük */
-.room.ch-music:not(.sharing) .person,.room.ch-film:not(.sharing) .person{--av:60px;width:160px;padding:14px 10px 10px}
-.room.ch-music:not(.sharing) .pname,.room.ch-film:not(.sharing) .pname{font-size:13px}
+.room.ch-music:not(.sharing) .person,.room.ch-film:not(.sharing) .person,.room.ch-game:not(.sharing) .person{--av:60px;width:160px;padding:14px 10px 10px}
+.room.ch-music:not(.sharing) .pname,.room.ch-film:not(.sharing) .pname,.room.ch-game:not(.sharing) .pname{font-size:13px}
 
 /* ---------- Müzik ve film paneli (deck) ---------- */
 .deck{display:grid;gap:14px;width:100%;max-width:1000px;justify-self:center;animation:screenIn .45s ease}
@@ -255,6 +278,9 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 /* ---------- Sohbet ---------- */
 .chat{width:340px;border-left:1px solid var(--line);background:color-mix(in srgb,var(--panel) 80%,var(--bg));display:flex;flex-direction:column;min-height:0;z-index:4;animation:slide-in .25s ease}
 @keyframes slide-in{from{transform:translateX(20px);opacity:0}}
+.chat-tools{display:flex;gap:6px;text-transform:none;letter-spacing:0}
+.clear-confirm{display:grid;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--danger) 8%,var(--panel));font-size:13px;animation:msg-in .2s ease}
+.clear-confirm .row>*{flex:0 1 auto}
 .convos{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;border-bottom:1px solid var(--line);flex:none}
 .convo{--c:var(--accent);display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);border-radius:99px;padding:5px 10px;font-size:13px;font-weight:600;white-space:nowrap;position:relative}
 .convo .dot{width:8px;height:8px;border-radius:50%;background:var(--c)}
@@ -330,6 +356,9 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   .bar .btn{padding:10px 12px}
   .top{padding:8px 10px;gap:8px}
   .top h1{font-size:17px}
+  .top-mid{order:3;width:100%;flex-wrap:wrap}
+  .radio-chip{flex:1 1 100%;max-width:none}
+  .rc-name{max-width:none;flex:1}
   .codebox b{font-size:15px;letter-spacing:.15em}
   .layout{grid-template-columns:minmax(0,1fr)}
   .chan-panel{position:fixed;top:0;bottom:0;left:0;width:min(280px,85vw);transform:translateX(-102%);transition:transform .25s ease;z-index:40;box-shadow:20px 0 40px rgb(0 0 0 / .5)}
@@ -350,10 +379,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   .np-ctl{justify-content:center}
   .vinyl{width:120px;height:120px}
   .reactions{left:16px}
-  .room.ch-music:not(.sharing) .person,.room.ch-film:not(.sharing) .person{width:calc(33% - 8px)}
+  .room.ch-music:not(.sharing) .person,.room.ch-film:not(.sharing) .person,.room.ch-game:not(.sharing) .person{width:calc(33% - 8px)}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important}
-  .avatar::after,.wave i,.main::before,.alone,.person.enter,.screen,.spark,.vinyl,.msg,.sys,.deck,.chat,.toast{animation:none!important}
+  .avatar::after,.wave i,.main::before,.alone,.logo-big,.person.enter,.screen,.spark,.vinyl,.msg,.sys,.deck,.chat,.toast{animation:none!important}
   .wave i{height:10px}
 }

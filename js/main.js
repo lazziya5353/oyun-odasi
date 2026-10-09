@@ -35,6 +35,45 @@ $('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') (urlCod
 // davet bağlantısıyla gelene katıl düğmesini öne çıkar
 if (urlCode){ $('joinBtn').classList.add('primary'); $('createBtn').classList.remove('primary'); }
 
+// ---------- son odaya kodsuz geri dönüş ----------
+// Girilen son oda bu tarayıcıda hatırlanır (7 gün). "Odaya dön" önce odaya katılmayı dener;
+// oda kapanmışsa aynı kodla yeniden açar. "Oda oluştur" ise her zaman yeni bir kodla yeni oda kurar.
+const LAST_KEY = 'oyunodasi-last';
+function rememberRoom(){ store.set(LAST_KEY, JSON.stringify({ code: roomCode, ts: Date.now() })); }
+function forgetRoom(){ try { localStorage.removeItem(LAST_KEY); } catch(e){} }
+function lastRoom(){
+  try {
+    const r = JSON.parse(store.get(LAST_KEY) || 'null');
+    if (r && typeof r.code === 'string' && r.code.length >= 3 && cleanCode(r.code) === r.code && Date.now() - r.ts < 7 * 864e5) return r;
+  } catch(e){}
+  return null;
+}
+function agoText(ts){
+  const m = Math.round((Date.now() - ts) / 60000);
+  if (m < 1) return 'az önce';
+  if (m < 60) return m + ' dk önce';
+  const h = Math.round(m / 60);
+  if (h < 24) return h + ' saat önce';
+  return Math.round(h / 24) + ' gün önce';
+}
+(function showRejoin(){
+  const r = lastRoom();
+  if (!r || urlCode) return;
+  $('rejoin').hidden = false;
+  $('rejoinCode').textContent = r.code;
+  $('rejoinWhen').textContent = agoText(r.ts);
+  $('createBtn').classList.remove('primary');
+})();
+$('rejoinBtn').onclick = async () => {
+  ensureCtx();
+  const n = readName(); if (!n) return;
+  const r = lastRoom(); if (!r) return;
+  myName = n; rejoining = true;
+  $('rejoinBtn').disabled = true;
+  await start(r.code, false);
+  if (!joined) $('rejoinBtn').disabled = false;
+};
+
 try {
   if (sessionStorage.getItem('oyunodasi-kicked')){
     sessionStorage.removeItem('oyunodasi-kicked');

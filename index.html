@@ -6,10 +6,12 @@
 <meta name="theme-color" content="#0f1218">
 <title>Oyun Odası</title>
 <meta name="description" content="Arkadaşlarınla sesli sohbet, ekran paylaşımı, müzik ve film odası.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%235ee0b5'/%3E%3Cpath d='M20 26v12M28 20v24M36 24v16M44 28v8' stroke='%230f1218' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="apple-touch-icon" href="logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Figtree:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/games.css">
 </head>
 <body>
 
@@ -17,8 +19,16 @@
 <section class="lobby" id="lobby">
   <div class="lobby-card">
     <div>
-      <h1 class="brand">Oyun<span>Odası</span></h1>
+      <h1 class="brand"><img class="logo-big" src="logo.svg" alt="" width="64" height="64">Oyun<span>Odası</span></h1>
       <p class="sub">Sesli sohbet, ekran paylaşımı, müzik ve film odası. Kurulum yok, bağlantıyla gir.</p>
+    </div>
+    <div class="rejoin" id="rejoin" hidden>
+      <div class="rejoin-info">
+        <span class="tag">Son odan</span>
+        <b id="rejoinCode"></b>
+        <span class="note" id="rejoinWhen"></span>
+      </div>
+      <button class="btn primary" id="rejoinBtn">↩ Odaya dön</button>
     </div>
     <label for="nameInput">Adın
       <input type="text" id="nameInput" maxlength="20" placeholder="örn. Kaan" autocomplete="off">
@@ -62,11 +72,19 @@
 <section class="room ch-voice" id="room" hidden>
   <header class="top">
     <button class="btn icon-btn only-mobile" id="chanToggle" aria-label="Kanallar">☰</button>
-    <h1>Oyun Odası</h1>
+    <h1 class="top-brand"><img src="logo.svg" alt="" width="30" height="30">Oyun Odası</h1>
     <div class="top-mid">
       <span class="count-pill" id="peopleTitle">👥 1 kişi</span>
       <span class="sig-pill" id="sigStatus" hidden title="Eşleştirme sunucusuna yeniden bağlanılıyor. Odadakilerle konuşma devam ediyor; bu sırada yeni gelenler katılamayabilir.">⟳ <span class="lbl">Sunucuya bağlanıyor</span></span>
       <button class="btn small" id="mixerBtn2">🎚 <span class="lbl">Sesleri ayarla</span></button>
+      <button class="btn small" id="radioOpenBtn" title="Odadaki herkes için radyo aç">📻 <span class="lbl">Radyo</span></button>
+      <div class="radio-chip" id="radioChip" hidden>
+        <span class="rc-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <button class="rc-name" id="rcChange" title="İstasyon değiştir"><span id="rcName"></span></button>
+        <input type="range" data-radiovol min="0" max="100" aria-label="Radyo sesi (sadece senin için)">
+        <button class="rc-btn" id="rcMute" aria-pressed="false">🔊</button>
+        <button class="rc-btn" id="rcStop" title="Radyoyu herkes için kapat">⏹</button>
+      </div>
     </div>
     <div class="codebox">
       <span class="tag hide-mobile">Oda kodu</span>
@@ -101,7 +119,17 @@
     <aside class="chat" id="chat" hidden>
       <div class="panel-head">
         <span>Sohbet</span>
-        <button class="btn small" id="chatClose" aria-label="Sohbeti kapat">✕</button>
+        <div class="chat-tools">
+          <button class="btn small" id="chatClear" title="Sohbeti temizle">🧹 <span class="lbl">Temizle</span></button>
+          <button class="btn small" id="chatClose" aria-label="Sohbeti kapat">✕</button>
+        </div>
+      </div>
+      <div class="clear-confirm" id="clearConfirm" hidden>
+        <span id="clearText">Sohbet herkes için temizlensin mi?</span>
+        <div class="row">
+          <button class="btn small off" id="clearYes">Evet, temizle</button>
+          <button class="btn small" id="clearNo">Vazgeç</button>
+        </div>
       </div>
       <div class="convos" id="convos" role="tablist"></div>
       <div class="msgs" id="msgs" aria-live="polite"></div>
@@ -145,7 +173,11 @@
       <div class="vol"><input type="range" id="masterVol2" min="0" max="100" value="100" aria-label="Genel ses"><output id="masterOut2">100%</output></div>
     </div>
     <div class="mix-row">
-      <div class="mix-top"><span class="pname">🎵 Müzik ve radyo</span></div>
+      <div class="mix-top"><span class="pname">📻 Radyo</span><span class="mix-sub">odadaki herkes dinler</span></div>
+      <div class="vol"><input type="range" id="radioVol2" min="0" max="100" value="50" aria-label="Radyo sesi"><output id="radioOut2">50%</output></div>
+    </div>
+    <div class="mix-row">
+      <div class="mix-top"><span class="pname">🎵 Yüklenen müzik</span><span class="mix-sub">Müzik Odası'nda çalar</span></div>
       <div class="vol"><input type="range" id="musicVol2" min="0" max="100" value="70" aria-label="Müzik sesi"><output id="musicOut2">70%</output></div>
     </div>
     <div class="quick">
@@ -233,6 +265,13 @@
 <script src="js/chat.js"></script>
 <script src="js/music.js"></script>
 <script src="js/film.js"></script>
+<script src="js/games/tavla-core.js"></script>
+<script src="js/games/okey-core.js"></script>
+<script src="js/games/okey-game.js"></script>
+<script src="js/games/tables.js"></script>
+<script src="js/games/tavla-ui.js"></script>
+<script src="js/games/okey-ui.js"></script>
+<script src="js/games/ikram.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

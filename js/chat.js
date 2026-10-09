@@ -28,6 +28,86 @@ function openChat(key){
   renderConvos(); renderMsgs();
 }
 
+// ---------- kalıcı sohbet ----------
+// "Herkes" sohbeti bu tarayıcıda oda koduna göre saklanır: odadan çıkıp dönünce, sayfa kapansa bile durur.
+// Biri "Sohbeti temizle" derse herkesin ekranından ve kaydından silinir; temizlenme anı da saklanır ki
+// o andan önceki mesajlar sonradan gelen birinin kaydından geri dönmesin.
+let chatClearedAt = 0, saveTimer = null;
+const chatKey = () => 'oyunodasi-chat-' + roomCode;
+const clearKey = () => 'oyunodasi-chatclr-' + roomCode;
+function loadSavedChat(){
+  chatClearedAt = Math.max(chatClearedAt, Number(store.get(clearKey())) || 0);
+  let saved = [];
+  try { saved = JSON.parse(store.get(chatKey()) || '[]'); } catch(e){}
+  if (Array.isArray(saved)) mergeChat(saved, true);
+}
+function saveChatSoon(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveChat, 600);
+}
+function saveChat(){
+  if (!roomCode) return;
+  const msgs = convo('all').msgs.filter(m => !m.sys).slice(-150);
+  // fotoğraflar yer kaplar: sadece son 6 fotoğrafı sakla, eskilerini "[fotoğraf]" yap
+  const imgIdx = msgs.map((m, i) => m.img ? i : -1).filter(i => i >= 0).slice(-6);
+  const pack = keepImgs => msgs.map((m, i) => ({
+    mid: m.mid, from: m.from, name: m.mine ? myName : m.name, ts: m.ts, mine: !!m.mine,
+    text: m.text || (m.img && !(keepImgs && imgIdx.includes(i)) ? '[fotoğraf]' : ''),
+    img: keepImgs && imgIdx.includes(i) ? m.img : null
+  }));
+  try { localStorage.setItem(chatKey(), JSON.stringify(pack(true))); }
+  catch(e){ try { localStorage.setItem(chatKey(), JSON.stringify(pack(false))); } catch(_){} }
+}
+// Mesaj listesini mevcut sohbete ekle: aynı mesaj iki kez girmez, temizlenmeden önceki mesajlar alınmaz, sıra zamana göre
+function mergeChat(list, fromDisk){
+  const c = convo('all');
+  const have = new Set(c.msgs.map(m => m.mid).filter(Boolean));
+  let added = 0;
+  list.forEach(m => {
+    if (!m || typeof m !== 'object') return;
+    const x = {
+      mid: clip(m.mid, 40), from: clip(m.from, 80), name: clip(m.name, 20) || 'Biri', ts: Number(m.ts) || 0,
+      text: typeof m.text === 'string' ? clip(m.text, 2000) : '',
+      img: typeof m.img === 'string' && m.img.length <= MAX_IMG && IMG_RE.test(m.img) ? m.img : null,
+      mine: fromDisk && !!m.mine
+    };
+    if (!x.mid || have.has(x.mid) || (!x.text && !x.img) || x.ts <= chatClearedAt) return;
+    have.add(x.mid); c.msgs.push(x); added++;
+  });
+  if (!added) return;
+  c.msgs.sort((a, b) => a.ts - b.ts);
+  if (c.msgs.length > 300) c.msgs.splice(0, c.msgs.length - 300);
+  if (!fromDisk) saveChatSoon();
+  if (chatOpen && activeConvo === 'all') renderMsgs();
+}
+
+// ---------- sohbeti temizle ----------
+$('chatClear').onclick = () => {
+  const dm = activeConvo !== 'all';
+  const p = dm ? peers.get(activeConvo) : null;
+  $('clearText').textContent = dm
+    ? (p ? p.name : 'Bu kişi') + ' ile özel konuşman sadece senin ekranından temizlensin mi?'
+    : 'Sohbet odadaki herkes için temizlensin mi? Bu geri alınamaz.';
+  $('clearConfirm').hidden = false;
+};
+$('clearNo').onclick = () => { $('clearConfirm').hidden = true; };
+$('clearYes').onclick = () => {
+  $('clearConfirm').hidden = true;
+  if (activeConvo !== 'all'){ convo(activeConvo).msgs = []; renderMsgs(); toast('Özel konuşma temizlendi'); return; }
+  broadcast({ t: 'chat-clear' });
+  clearAllChat(myName);
+};
+function clearAllChat(byName){
+  chatClearedAt = Date.now();
+  store.set(clearKey(), String(chatClearedAt));
+  const c = convo('all');
+  c.msgs = []; c.unread = 0;
+  saveChat();
+  addSys('🧹 ' + (byName === myName ? 'Sohbeti temizledin' : byName + ' sohbeti temizledi'));
+  updateChatBadge(); renderConvos();
+  if (chatOpen && activeConvo === 'all') renderMsgs();
+}
+
 // ---------- gönderme ----------
 function sendChat(text, img){
   text = clip(text, 2000).trim();
@@ -125,6 +205,10 @@ function chatOnData(id, d){
     typingFrom.delete(id); renderTyping();
     return true;
   }
+  if (d.t === 'chat-clear'){
+    clearAllChat(p ? p.name : 'Biri');
+    return true;
+  }
   if (d.t === 'typing'){
     typingFrom.set(id, { to: d.to === 'dm' ? id : 'all', until: Date.now() + 3500 });
     renderTyping();
@@ -139,6 +223,7 @@ function addMsg(key, m){
   if (m.mid && c.msgs.some(x => x.mid === m.mid)) return;
   c.msgs.push(m);
   if (c.msgs.length > 300) c.msgs.splice(0, c.msgs.length - 300);
+  if (key === 'all' && !m.sys) saveChatSoon();
   const visible = chatOpen && activeConvo === key;
   if (!m.mine && !m.sys && !visible){
     c.unread++;
@@ -272,16 +357,14 @@ function chatHistoryForSync(){
     img: imgIdx.includes(i) ? m.img : null
   }));
 }
-function applyChatHistory(list){
-  const c = convo('all');
-  if (c.historyApplied) return;      // geçmiş hem kapıcıdan hem oda sahibinden gelebilir; bir kez yeter
-  c.historyApplied = true;
-  const clean = list.filter(m => m && typeof m === 'object').map(m => ({
-    mid: clip(m.mid, 40), from: clip(m.from, 80), name: clip(m.name, 20) || 'Biri', ts: Number(m.ts) || Date.now(),
-    text: typeof m.text === 'string' ? clip(m.text, 2000) : '',
-    img: typeof m.img === 'string' && m.img.length <= MAX_IMG && IMG_RE.test(m.img) ? m.img : null
-  })).filter(m => m.text || m.img);
-  if (!clean.length) return;
-  c.msgs = clean.concat([{ sys: true, text: '↑ Sen gelmeden önceki mesajlar', ts: Date.now() }], c.msgs.filter(m => m.sys));
-  if (chatOpen && activeConvo === 'all') renderMsgs();
+function applyChatHistory(list, clearedAt){
+  // oda sahibinin temizleme anı bizimkinden yeniyse (biz yokken temizlenmiş) eski mesajlarımızı da sil
+  const ca = Number(clearedAt) || 0;
+  if (ca > chatClearedAt){
+    chatClearedAt = ca; store.set(clearKey(), String(ca));
+    const c = convo('all');
+    c.msgs = c.msgs.filter(m => m.sys || m.ts > ca);
+    saveChat();
+  }
+  mergeChat(list, false);
 }

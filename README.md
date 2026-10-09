@@ -7,9 +7,13 @@ Arkadaşlarla oyun oynarken kullanmak için tarayıcıda çalışan sesli sohbet
 - **Sesli sohbet:** gürültü azaltma (normal / güçlü), kişi kişi ses ayarı, konuşanın etrafında ses dalgaları
 - **Kanallar:** Genel Sohbet, Müzik Odası, Film Odası. Oda sahibi yeni ses kanalları ekleyebilir. Ses sadece aynı kanaldakilere gider.
 - **Ekran paylaşımı:** Oyun / Dengeli / Film / Yazı / Zayıf internet kalite seçenekleri, yayın sırasında kalite değiştirme, canlı FPS / hız / donma göstergesi, büyütme ve tam ekran
-- **Sohbet:** herkese açık sohbet, kişiye özel mesaj, fotoğraf gönderme (seç, yapıştır ya da sürükle), sonradan gelene geçmiş
-- **Müzik Odası:** herkes bilgisayarından müzik yükleyebilir (ortak sıra), Türk ve dünya radyoları
+- **Sohbet:** herkese açık sohbet, kişiye özel mesaj, fotoğraf gönderme (seç, yapıştır ya da sürükle). Sohbet kalıcıdır: odadan çıkıp dönünce durur, **🧹 Temizle** ile herkes için silinir
+- **📻 Radyo:** odadaki herkes dinler (hangi kanalda olursa olsun); herkes kendi radyo sesini ayarlar ya da sadece kendisi için susturur
+- **Müzik Odası:** herkes bilgisayarından müzik yükleyebilir (ortak sıra)
+- **Son odana dön:** girişte tek tıkla son odaya kodsuz dönülür; oda kapanmışsa aynı kodla yeniden açılır. “Oda oluştur” her zaman yeni kodla yeni oda kurar
 - **Film Odası:** bilgisayardan film yayını, YouTube'u birlikte senkron izleme, Film modunda ekran paylaşımı
+- **🎲 Oyun Salonu:** Tavla (1/3/5/7 sayılık maç, mars, kırma, zar animasyonu) ve Okey (Klasik, Eşli, 101). Boş koltuklara bot oturur, oyundan çıkanın yerine bot geçer. Oyun sırasında radyo çalmaya devam eder
+- **🍵 İkram:** kişinin kutucuğundaki İkram düğmesiyle çay, simit, Türk kahvesi, ayran, çekirdek, Maraş dondurması, lokum ya da su ikram edilir; ikram uçarak gider, 1 dakika masada durur
 - **Diğer:** emoji tepkileri, odadan atma, oda sahibi çıkınca odanın devam etmesi, telefondan katılım (mikrofonsuz da olur)
 
 ## Nasıl kullanılır
@@ -64,6 +68,7 @@ Odada biri olduğu sürece sunucu uyumaz.
 
 ```
 index.html        sayfa iskeleti
+logo.svg          logo (oyun kolu + ses dalgası)
 js/config.js      AYARLAR: kendi eşleştirme sunucunun adresi
 sinyal-sunucusu/  kendi eşleştirme sunucun (Render'da çalışır)
 render.yaml       Render kurulum dosyası
@@ -77,6 +82,8 @@ js/chat.js        sohbet, özel mesaj, fotoğraf
 js/music.js       müzik sırası, radyo
 js/film.js        film yayını, YouTube senkron izleme
 js/main.js        giriş ekranı
+js/games/         tavla ve okey kuralları, masalar, ikramlar
+css/games.css     oyun görünümü
 netlify.toml      Netlify ayarı
 ```
 

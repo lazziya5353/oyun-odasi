@@ -5,7 +5,7 @@
 // doğrudan bağlanır. Ses, ekran ve müzik bu doğrudan bağlantılardan akar (araya sunucu girmez).
 const PREFIX = 'oyunodasi-v1-';
 let peer = null, lobbyPeer = null;
-let myName = '', roomCode = '', isHost = false, joined = false, customCode = false;
+let myName = '', roomCode = '', isHost = false, joined = false, customCode = false, rejoining = false;
 let currentHostId = '';
 const peers = new Map();
 const blocked = new Set();
@@ -89,13 +89,24 @@ async function start(code, asHost){
   setBusy(true);
   if (typeof Peer === 'undefined'){ lobbyError('Bağlantı kitaplığı yüklenemedi. İnternet bağlantını kontrol edip sayfayı yenile.'); return; }
   ensureCtx();
+  // Mikrofon odaya girmeyi ASLA engellemez: 3 sn içinde hazır değilse (izin penceresi cevaplanmadı,
+  // mikrofon yok, izin verilmedi) dinleyici olarak girilir; mikrofon sonradan hazır olursa ses kendiliğinden açılır.
   if (!localStream){
-    try {
+    const micP = (async () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no-media');
       await openMic(store.get('oyunodasi-mic') || undefined).catch(() => openMic());
-    } catch(e){
+    })();
+    const r = await Promise.race([
+      micP.then(() => 'ok', () => 'fail'),
+      new Promise(res => setTimeout(() => res('wait'), 3000))
+    ]);
+    if (r !== 'ok' && !rawStream){
       useSilentMic();
-      toast('Mikrofon izni yok: dinleyici olarak katılıyorsun. Sonra mikrofon düğmesinden izin verebilirsin.');
+      if (r === 'fail') toast('Mikrofon açılamadı: dinleyici olarak katılıyorsun. Sonra mikrofon düğmesinden izin verebilirsin.');
+      else {
+        toast('Mikrofon izni bekleniyor. Odaya giriyorsun; izin verince sesin kendiliğinden açılır.');
+        micP.then(() => toast('🎙 Mikrofonun açıldı'), () => {});
+      }
     }
   }
   if (peer){ try { peer.destroy(); } catch(e){} peer = null; }
@@ -188,6 +199,14 @@ async function guestFlow(code){
     throw 'Oda bulundu ama bağlanılamadı. Senin ya da oda sahibinin ağı doğrudan bağlantıyı engelliyor olabilir. Giriş ekranındaki “Ağ testi”ni dene.';
   }
   if (unreachable === list.length) throw noServerMessage();
+  if (rejoining){
+    // "Son odana dön": oda kapanmışsa aynı kodla yeniden aç (eski davet bağlantıları çalışmaya devam eder)
+    lobbyStatus('Oda kapanmış, aynı kodla yeniden açılıyor…');
+    customCode = true;
+    await hostFlow(code);
+    toast('Oda kapanmıştı; aynı kodla yeniden açtın. Arkadaşların eski davet bağlantısıyla girebilir.');
+    return;
+  }
   throw 'Bu kodla açık bir oda bulunamadı. Kodu kontrol et; oda sahibinin odası açık olmalı.';
 }
 // Sunucuya kayıt olduk; şimdi oda sahibine bağlan. Sonuç: 'ok' | 'no-room' | 'timeout'
@@ -298,12 +317,15 @@ function enterRoom(){
   $('recBtn').disabled = false;
   setHint('Konuşunca çubuk dolmalı. Kaydedip kendi sesini dinleyebilirsin.', '');
   if (isHost) colorMap[peer.id] = 0;
+  loadSavedChat();            // bu odanın daha önce kaydedilmiş sohbeti
+  rememberRoom();             // "Son odana dön" için
   updateMicButton();
   renderSelf();
   renderChannels();
   setRoomChannelClass();
   renderDeck();
   refreshHostUI();
+  playRadio(); renderRadioChip();   // girerken çalan bir radyo varsa hemen başlasın
   startMeters();
   addSys('Odaya girdin. Kod: ' + roomCode);
 }
@@ -406,6 +428,7 @@ function onData(id, d){
       p.channel = chanById(d.channel) ? d.channel : 'genel';
       if (!p.helloed){
         p.helloed = true;
+        gamesOnHello(p);
         toast(p.name + ' odaya katıldı'); chime(true);
         addSys(p.name + ' odaya katıldı');
       }
@@ -466,6 +489,8 @@ function onData(id, d){
       }
       return;
   }
+  if (gamesOnData(id, d)) return;
+  if (ikramOnData(id, d)) return;
   if (chatOnData(id, d)) return;
   if (musicOnData(id, d)) return;
   if (filmOnData(id, d)) return;
@@ -582,6 +607,7 @@ function removePeer(id, opts = {}){
   }
   musicPeerLeft(id);
   chatPeerLeft(id);
+  gamesPeerLeft(id);
   updateCount(); renderMixer(); renderChannels();
   if (wasHost && joined && !p.kicked) migrateHost(p.name);
 }
@@ -635,7 +661,7 @@ async function claimLobby(tries = 0){
 function makeSync(){
   return {
     channels, colorMap, blocked: [...blocked],
-    chat: chatHistoryForSync(), music: musicStateForSync(), yt: ytStateForSync()
+    chat: chatHistoryForSync(), chatClearedAt, music: musicStateForSync(), yt: ytStateForSync()
   };
 }
 function applySync(s){
@@ -643,7 +669,7 @@ function applySync(s){
   if (Array.isArray(s.channels)) setChannels(s.channels);
   if (s.colorMap) applyColorMap(s.colorMap);
   if (Array.isArray(s.blocked)) s.blocked.forEach(b => typeof b === 'string' && blocked.add(b));
-  if (Array.isArray(s.chat)) applyChatHistory(s.chat);
+  if (Array.isArray(s.chat)) applyChatHistory(s.chat, s.chatClearedAt);
   if (s.music) applyMusicState(s.music);
   if (s.yt) applyYT(s.yt, currentHostId, true);
 }
@@ -658,6 +684,7 @@ function kick(p){
 }
 function kickedOut(){
   try { sessionStorage.setItem('oyunodasi-kicked', '1'); } catch(e){}
+  forgetRoom();   // atılan kişiye "Son odana dön" gösterme
   leaveRoom();
 }
 function leaveRoom(){

@@ -1,6 +1,7 @@
-// Müzik Odası: herkes bilgisayarından müzik yükleyebilir (ortak sıra), ya da bir internet radyosu seçilir.
-// Yüklenen şarkı, yükleyenin bilgisayarından odadakilere stereo ve yüksek kalitede canlı aktarılır.
-// Radyoyu ise herkes kendi bilgisayarında doğrudan dinler (kimsenin internetini yormaz).
+// Müzik Odası: herkes bilgisayarından müzik yükleyebilir (ortak sıra); yüklenen şarkı yükleyenin bilgisayarından
+// Müzik Odası'ndakilere stereo ve yüksek kalitede canlı aktarılır.
+// Radyo ise ODADAKİ HERKES içindir (hangi kanalda olursa olsun): herkes kendi bilgisayarında doğrudan dinler,
+// kimsenin internetini yormaz. Herkes kendi radyo sesini ayarlayabilir ya da sadece kendisi için susturabilir.
 let queue = [];            // { id, owner, ownerName, title, ts }
 let current = null;        // { id, owner, ownerName, title, pos, dur, paused, at }
 let radio = null;          // { name, url, favicon, tags, by, byName }
@@ -9,6 +10,8 @@ const outMusic = new Map();
 let musicVol = Math.min(1, Math.max(0, parseFloat(store.get('oyunodasi-mv') || '0.7')));
 let musicEl = null, musicSrc = null, musicMon = null, musicDest = null, musicLocalAn = null, musicOutStream = null;
 let radioEl = null, lastPosSent = 0;
+let radioVol = Math.min(1, Math.max(0, parseFloat(store.get('oyunodasi-rv') || '0.5')));
+let radioMuted = store.get('oyunodasi-rmute') === '1';    // sadece benim için sustur
 
 const musicCurrentTitle = () => current ? current.title : '';
 const sortQueue = () => queue.sort((a, b) => a.ts - b.ts || (a.id < b.id ? -1 : 1));
@@ -25,7 +28,7 @@ function applyMusicVolume(){
   const v = Math.min(1, musicVol * masterVol);
   if (musicMon) musicMon.gain.value = (here && !deafened) ? v : 0;
   if (typeof peers !== 'undefined') peers.forEach(p => { if (p.musicAudio){ p.musicAudio.volume = v; p.musicAudio.muted = deafened || !here; } });
-  if (radioEl){ radioEl.volume = v; radioEl.muted = deafened; }
+  if (radioEl){ radioEl.volume = Math.min(1, radioVol * masterVol); radioEl.muted = deafened || radioMuted; }
 }
 function setMusicVol(v){
   musicVol = v; store.set('oyunodasi-mv', String(v));
@@ -34,8 +37,22 @@ function setMusicVol(v){
   ['musicOut', 'musicOut2'].forEach(id => { const o = $(id); if (o) o.textContent = pct + '%'; });
   applyMusicVolume();
 }
+function setRadioVol(v){
+  radioVol = v; store.set('oyunodasi-rv', String(v));
+  const pct = Math.round(v * 100);
+  document.querySelectorAll('[data-radiovol]').forEach(r => { if (+r.value !== pct) r.value = pct; });
+  document.querySelectorAll('[data-radioout]').forEach(o => o.textContent = pct + '%');
+  if (radioMuted && v > 0) setRadioMuted(false);
+  applyMusicVolume();
+}
+function setRadioMuted(on){
+  radioMuted = on; store.set('oyunodasi-rmute', on ? '1' : '0');
+  playRadio(); renderRadioChip();
+}
 $('musicVol2').value = Math.round(musicVol * 100); $('musicOut2').textContent = Math.round(musicVol * 100) + '%';
 $('musicVol2').oninput = e => setMusicVol(e.target.value / 100);
+$('radioVol2').value = Math.round(radioVol * 100); $('radioOut2').textContent = Math.round(radioVol * 100) + '%';
+$('radioVol2').oninput = e => setRadioVol(e.target.value / 100);
 
 // ---------- yükleyenin bilgisayarındaki çalar ----------
 function ensureMusicGraph(){
@@ -144,7 +161,7 @@ $('musicInput').onchange = e => { const f = e.target.files; if (f && f.length) a
 function startItem(id){ broadcast({ t: 'q-start', id }); applyStart(id); }
 function applyStart(id){
   const it = queue.find(x => x.id === id); if (!it) return;
-  if (radio){ radio = null; playRadioIfHere(); }
+  if (radio){ radio = null; playRadio(); renderRadioChip(); }
   if (current && current.owner === peer.id && current.id !== id) stopLocal();
   current = { id, owner: it.owner, ownerName: it.ownerName, title: it.title, pos: 0, dur: 0, paused: false, at: performance.now() };
   if (it.owner === peer.id) playLocal(id);
@@ -197,7 +214,7 @@ function setRadio(st){
   broadcast({ t: 'radio', station });
   applyRadio(station, peer.id);
 }
-function applyRadio(st, by){
+function applyRadio(st, by, quiet){
   if (st){
     if (typeof st.url !== 'string' || !/^https:\/\//i.test(st.url) || st.url.length > 500) return;
     const byName = by === (peer && peer.id) ? myName : ((peers.get(by) || {}).name || '');
@@ -205,21 +222,56 @@ function applyRadio(st, by){
       favicon: typeof st.favicon === 'string' && /^https:\/\//i.test(st.favicon) ? st.favicon : '', tags: clip(st.tags, 80) };
     if (current){ if (current.owner === peer.id) stopLocal(); current = null; }
   } else radio = null;
-  playRadioIfHere(); syncMusicOut(); refreshMusicUI();
+  if (joined && peer && by !== peer.id && !quiet){
+    const n = (peers.get(by) || {}).name || 'Biri';
+    if (st) addSys('📻 ' + n + ' radyoyu açtı: ' + radio.name);
+    else addSys('📻 ' + n + ' radyoyu kapattı');
+  }
+  playRadio(); syncMusicOut(); refreshMusicUI(); renderRadioChip();
 }
-function playRadioIfHere(){
-  if (!radio || me.channel !== 'muzik'){
+// Radyo odadaki herkes için çalar; sadece "benim için sustur" diyen ya da sesleri kapatan duymaz
+function playRadio(){
+  const on = !!radio && !radioMuted && joined;
+  if (!on){
     if (radioEl && radioEl._url){ radioEl._url = ''; radioEl.pause(); radioEl.removeAttribute('src'); radioEl.load(); }
     return;
   }
   if (!radioEl){
     radioEl = new Audio(); radioEl.preload = 'none';
     radioEl.addEventListener('error', () => { if (radioEl._url) toast('Bu radyo şu an açılamadı, başka bir istasyon dene.'); });
+    radioEl.addEventListener('playing', renderRadioChip);
+    radioEl.addEventListener('waiting', renderRadioChip);
   }
   if (radioEl._url !== radio.url){ radioEl._url = radio.url; radioEl.src = radio.url; }
   applyMusicVolume();
   radioEl.play().catch(() => toast('Radyoyu başlatmak için sayfaya bir kez tıkla.'));
 }
+// eski adı: kanal değiştirirken çağrılıyor (artık kanaldan bağımsız)
+const playRadioIfHere = playRadio;
+
+// ---------- üst şeritteki mini radyo çalar ----------
+function renderRadioChip(){
+  const chip = $('radioChip'), open = $('radioOpenBtn');
+  if (!chip) return;
+  chip.hidden = !radio || !joined;
+  open.hidden = !!radio || !joined;
+  if (!radio) return;
+  chip.style.setProperty('--c', colorFor(radio.by));
+  $('rcName').textContent = radio.name;
+  chip.title = radio.name + (radio.byName ? ' · ' + radio.byName + ' açtı' : '');
+  const playing = radioEl && !radioEl.paused && radioEl.readyState >= 3 && !radioMuted;
+  chip.classList.toggle('playing', !!playing);
+  chip.classList.toggle('muted', radioMuted);
+  $('rcMute').textContent = radioMuted ? '🔇' : '🔊';
+  $('rcMute').title = radioMuted ? 'Radyoyu benim için aç' : 'Radyoyu sadece benim için sustur';
+  $('rcMute').setAttribute('aria-pressed', radioMuted);
+}
+$('radioOpenBtn').onclick = openRadioDialog;
+$('rcChange').onclick = openRadioDialog;
+$('rcMute').onclick = () => setRadioMuted(!radioMuted);
+$('rcStop').onclick = () => { setRadio(null); toast('📻 Radyo herkes için kapatıldı'); };
+document.querySelectorAll('[data-radiovol]').forEach(r => { r.value = Math.round(radioVol * 100); r.oninput = () => setRadioVol(r.value / 100); });
+document.querySelectorAll('[data-radioout]').forEach(o => o.textContent = Math.round(radioVol * 100) + '%');
 
 // Radio Browser: ücretsiz, açık radyo dizini. Birkaç sunucusu var, biri cevap vermezse diğeri denenir.
 const RB_HOSTS = ['https://de1.api.radio-browser.info', 'https://fi1.api.radio-browser.info', 'https://nl1.api.radio-browser.info', 'https://de2.api.radio-browser.info'];
@@ -318,7 +370,7 @@ function applyMusicState(s){
     const it = queue.find(x => x.id === s.current.id);
     current = { id: it.id, owner: it.owner, ownerName: it.ownerName, title: it.title, pos: Number(s.current.pos) || 0, dur: Number(s.current.dur) || 0, paused: !!s.current.paused, at: performance.now() };
   }
-  if (s.radio) applyRadio(s.radio, s.radio.by);
+  if (s.radio) applyRadio(s.radio, s.radio.by, true);
   refreshMusicUI();
 }
 
@@ -343,7 +395,7 @@ function renderMusicDeck(d){
   if (radio){
     tag.textContent = '📻 Radyo';
     title.textContent = radio.name;
-    sub.textContent = [radio.tags, radio.byName ? radio.byName + ' açtı' : ''].filter(Boolean).join(' · ');
+    sub.textContent = [radio.tags, radio.byName ? radio.byName + ' açtı' : '', 'odadaki herkes dinliyor'].filter(Boolean).join(' · ');
   } else if (current){
     tag.textContent = current.paused ? '⏸ Duraklatıldı' : '🎵 Şimdi çalıyor';
     title.textContent = current.title;
@@ -373,13 +425,19 @@ function renderMusicDeck(d){
   if (radio) btn('⏹ Radyoyu kapat', () => setRadio(null));
   if (!current && !radio && queue.length) btn('▶ Sırayı başlat', () => startItem(queue[0].id));
   const vol = document.createElement('div'); vol.className = 'vol';
-  vol.innerHTML = '<span>🔊</span><input type="range" id="musicVol" min="0" max="100" aria-label="Müzik sesi"><output id="musicOut"></output>';
+  if (radio){
+    // radyo çalarken bu kaydırıcı radyonun sesini ayarlar (üst şeritteki radyo sesiyle aynı)
+    vol.innerHTML = '<span>📻</span><input type="range" data-radiovol min="0" max="100" aria-label="Radyo sesi"><output data-radioout></output>';
+  } else {
+    vol.innerHTML = '<span>🔊</span><input type="range" id="musicVol" min="0" max="100" aria-label="Müzik sesi"><output id="musicOut"></output>';
+  }
   ctl.append(vol);
   info.append(ctl);
   np.append(vinyl, info);
   d.append(np);
-  const r = vol.querySelector('input'); r.value = Math.round(musicVol * 100); vol.querySelector('output').textContent = r.value + '%';
-  r.oninput = () => setMusicVol(r.value / 100);
+  const r = vol.querySelector('input'), o = vol.querySelector('output');
+  if (radio){ r.value = Math.round(radioVol * 100); o.textContent = r.value + '%'; r.oninput = () => setRadioVol(r.value / 100); }
+  else { r.value = Math.round(musicVol * 100); o.textContent = r.value + '%'; r.oninput = () => setMusicVol(r.value / 100); }
 
   const upcoming = queue.filter(x => !current || x.id !== current.id);
   if (upcoming.length){

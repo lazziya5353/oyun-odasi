@@ -4,7 +4,8 @@
 const DEFAULT_CHANNELS = [
   { id: 'genel', name: 'Genel Sohbet', icon: '🎮', type: 'voice' },
   { id: 'muzik', name: 'Müzik Odası',  icon: '🎵', type: 'music' },
-  { id: 'film',  name: 'Film Odası',   icon: '🎬', type: 'film' }
+  { id: 'film',  name: 'Film Odası',   icon: '🎬', type: 'film' },
+  { id: 'oyun',  name: 'Oyun Salonu',  icon: '🎲', type: 'game' }
 ];
 let channels = DEFAULT_CHANNELS.map(c => Object.assign({}, c));
 const chanById = id => channels.find(c => c.id === id);
@@ -17,7 +18,7 @@ function setChannels(list){
     if (!c || typeof c !== 'object') return;
     if (typeof c.id !== 'string' || !/^[a-z0-9-]{1,24}$/.test(c.id)) return;
     if (clean.some(x => x.id === c.id)) return;
-    const type = ['voice', 'music', 'film'].includes(c.type) ? c.type : 'voice';
+    const type = ['voice', 'music', 'film', 'game'].includes(c.type) ? c.type : 'voice';
     clean.push({ id: c.id, name: clip(c.name, 24) || 'Kanal', icon: clip(c.icon, 4) || '🎮', type });
   });
   DEFAULT_CHANNELS.forEach(d => { if (!clean.some(c => c.id === d.id)) clean.unshift(Object.assign({}, d)); });
@@ -48,7 +49,7 @@ function switchChannel(id, quiet){
 }
 function setRoomChannelClass(){
   const r = $('room');
-  r.classList.remove('ch-voice', 'ch-music', 'ch-film');
+  r.classList.remove('ch-voice', 'ch-music', 'ch-film', 'ch-game');
   r.classList.add('ch-' + myChan().type);
 }
 
@@ -71,7 +72,7 @@ function renderChannels(){
     peers.forEach(p => { if (p.helloed && p.linked && p.channel === c.id) members.push(p); });
     const live = [];
     if (members.some(m => m.sharing)) live.push('🔴');
-    if (c.type === 'music' && (musicCurrentTitle() || radio)) live.push(radio ? '📻' : '🎵');
+    if (c.type === 'music' && musicCurrentTitle() && !radio) live.push('🎵');
     if (c.type === 'film' && yt) live.push('▶️');
     if (live.length){ const l = document.createElement('span'); l.className = 'live'; l.textContent = live.join(' '); top.append(l); }
     if (isHost && !DEFAULT_CHANNELS.some(d => d.id === c.id)){
@@ -95,11 +96,14 @@ function renderChannels(){
   });
 }
 function chanSubtitle(c){
-  if (c.type === 'music'){
-    if (radio) return '📻 ' + radio.name;
+  if (c.type === 'music' && !radio){
     const t = musicCurrentTitle(); if (t) return '🎵 ' + t;
   }
   if (c.type === 'film' && yt) return '▶️ YouTube birlikte izleniyor';
+  if (c.type === 'game' && tables.size){
+    const playing = [...tables.values()].filter(t => t.status === 'playing').length;
+    return '🎲 ' + tables.size + ' masa' + (playing ? ' · ' + playing + ' oyunda' : '');
+  }
   return '';
 }
 function setMiniSpeaking(id, on){
@@ -130,6 +134,7 @@ function renderDeck(){
   const t = myChan().type;
   if (t === 'music') renderMusicDeck(d);
   else if (t === 'film') renderFilmDeck(d);
+  else if (t === 'game') renderGameDeck(d);
   else d.innerHTML = '';
 }
 
@@ -188,8 +193,11 @@ function flip(change){
   });
 }
 // ekran paylaşımı başlayınca katılımcılar kenara kayar, bitince ortaya döner
+const gamingActive = () => typeof openTable !== 'undefined' && !!openTable && myChan().type === 'game';
 function updateStage(){
-  const sharing = $('screens').children.length > 0;
+  const gaming = gamingActive();
+  $('room').classList.toggle('gaming', gaming);
+  const sharing = $('screens').children.length > 0 || gaming;
   if ($('room').classList.contains('sharing') !== sharing) flip(() => $('room').classList.toggle('sharing', sharing));
   updateCount();
 }
@@ -257,7 +265,10 @@ function renderPeer(p){
     const row = document.createElement('div'); row.className = 'kick-row';
     const dm = document.createElement('button'); dm.className = 'btn dm-btn'; dm.textContent = '💬 Özel mesaj';
     dm.onclick = () => openChat(p.id);
-    row.append(dm);
+    const ik = document.createElement('button'); ik.className = 'btn dm-btn'; ik.textContent = '🍵 İkram';
+    ik.title = 'Çay, simit, kahve ısmarla';
+    ik.onclick = e => { e.stopPropagation(); openIkramMenu(p.id, ik); };
+    row.append(dm, ik);
     ctl.append(meter, volControl(p), row);
     c.append(ctl);
     p.card = c;
