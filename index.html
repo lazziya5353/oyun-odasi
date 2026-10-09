@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1218">
+<title>Oyun Odası</title>
+<meta name="description" content="Arkadaşlarınla sesli sohbet, ekran paylaşımı, müzik ve film odası.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%235ee0b5'/%3E%3Cpath d='M20 26v12M28 20v24M36 24v16M44 28v8' stroke='%230f1218' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============ GİRİŞ ============ -->
+<section class="lobby" id="lobby">
+  <div class="lobby-card">
+    <div>
+      <h1 class="brand">Oyun<span>Odası</span></h1>
+      <p class="sub">Sesli sohbet, ekran paylaşımı, müzik ve film odası. Kurulum yok, bağlantıyla gir.</p>
+    </div>
+    <label for="nameInput">Adın
+      <input type="text" id="nameInput" maxlength="20" placeholder="örn. Kaan" autocomplete="off">
+    </label>
+
+    <div class="mictest" id="micPanel">
+      <span class="tag">Mikrofon testi</span>
+      <select id="micSelect" aria-label="Mikrofon seç" hidden></select>
+      <label for="nsSelect">Gürültü azaltma
+        <select id="nsSelect">
+          <option value="off">Kapalı</option>
+          <option value="normal" selected>Normal – tarayıcının gürültü azaltması</option>
+          <option value="strong">Güçlü – klavye, fan, uğultu sesini de keser</option>
+        </select>
+      </label>
+      <div class="meter big" aria-hidden="true"><i id="micMeter"></i></div>
+      <p class="hint" id="micHint">Mikrofonunu odaya girmeden önce dene.</p>
+      <div class="row">
+        <button class="btn" id="testBtn">🎙 Mikrofonu test et</button>
+        <button class="btn" id="recBtn" disabled>⏺ 3 sn kaydet, dinle</button>
+      </div>
+      <button class="btn" id="netBtn">📡 Ağ testi</button>
+      <ul class="net-result" id="netResult" hidden></ul>
+    </div>
+
+    <label for="codeInput">Oda kodu
+      <input type="text" id="codeInput" class="code" maxlength="12" placeholder="örn. KAANLAR" autocomplete="off">
+    </label>
+    <p class="note" style="margin-top:-10px">Oda kurarken boş bırakırsan kod otomatik verilir. Katılmak için arkadaşının kodunu yaz.</p>
+    <div class="row">
+      <button class="btn primary" id="createBtn">Oda oluştur</button>
+      <button class="btn" id="joinBtn">Odaya katıl</button>
+    </div>
+    <p class="err" id="lobbyErr" role="alert"></p>
+    <p class="note">Mikrofon izni istenecek. İzin vermezsen de dinleyici olarak katılıp yazışabilirsin. En iyi sonuç için Chrome veya Edge.</p>
+  </div>
+</section>
+
+<!-- ============ ODA ============ -->
+<section class="room ch-voice" id="room" hidden>
+  <header class="top">
+    <button class="btn icon-btn only-mobile" id="chanToggle" aria-label="Kanallar">☰</button>
+    <h1>Oyun Odası</h1>
+    <div class="top-mid">
+      <span class="count-pill" id="peopleTitle">👥 1 kişi</span>
+      <button class="btn small" id="mixerBtn2">🎚 <span class="lbl">Sesleri ayarla</span></button>
+    </div>
+    <div class="codebox">
+      <span class="tag hide-mobile">Oda kodu</span>
+      <b id="roomCode">-----</b>
+      <button class="btn small" id="copyBtn">Daveti kopyala</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Kanallar -->
+    <aside class="chan-panel" id="chanPanel">
+      <div class="panel-head">
+        <span>Kanallar</span>
+        <button class="btn small" id="addChanBtn" hidden title="Yeni ses kanalı">＋</button>
+      </div>
+      <nav id="chanList"></nav>
+    </aside>
+
+    <!-- Sahne -->
+    <div class="main">
+      <div class="stage" id="stage">
+        <div class="deck" id="deck"></div>
+        <div class="screens" id="screens"></div>
+        <div class="people-area">
+          <div id="people"></div>
+          <p class="alone" id="emptyStage">Bu kanalda şimdilik yalnızsın.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sohbet -->
+    <aside class="chat" id="chat" hidden>
+      <div class="panel-head">
+        <span>Sohbet</span>
+        <button class="btn small" id="chatClose" aria-label="Sohbeti kapat">✕</button>
+      </div>
+      <div class="convos" id="convos" role="tablist"></div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div class="typing" id="typing"></div>
+      <form class="composer" id="composer" autocomplete="off">
+        <button type="button" class="btn icon-btn" id="imgBtn" title="Fotoğraf gönder" aria-label="Fotoğraf gönder">🖼</button>
+        <input type="file" id="imgInput" accept="image/*" hidden>
+        <textarea id="msgInput" rows="1" maxlength="2000" placeholder="Mesaj yaz…"></textarea>
+        <button type="submit" class="btn primary icon-btn" aria-label="Gönder">➤</button>
+      </form>
+    </aside>
+  </div>
+
+  <footer class="bar">
+    <button class="btn on" id="micBtn" title="Mikrofonu aç/kapat">🎙 <span class="lbl">Mikrofon açık</span></button>
+    <button class="btn" id="deafBtn" title="Herkesi sustur">🔊 <span class="lbl">Sesler açık</span></button>
+    <button class="btn" id="shareBtn">🖥 <span class="lbl">Ekran paylaş</span></button>
+    <div class="react-wrap">
+      <button class="btn" id="reactBtn" aria-expanded="false">😀 <span class="lbl">Tepki</span></button>
+      <div class="emoji-pop" id="emojiPop" hidden></div>
+    </div>
+    <button class="btn" id="chatBtn">💬 <span class="lbl">Sohbet</span><b class="badge-count" id="chatBadge" hidden>0</b></button>
+    <button class="btn hide-mobile" id="mixerBtn">🎚 <span class="lbl">Ses mikseri</span></button>
+    <button class="btn" id="micTestBtn" title="Mikrofon testi">🎧 <span class="lbl">Mikrofon testi</span></button>
+    <div class="vol hide-mobile">
+      <span>Genel ses</span>
+      <input type="range" id="masterVol" min="0" max="100" value="100" aria-label="Genel ses">
+      <output id="masterOut">100%</output>
+    </div>
+    <button class="btn leave" id="leaveBtn">Ayrıl</button>
+  </footer>
+</section>
+
+<!-- ============ PENCERELER ============ -->
+<dialog id="mixerDlg" aria-labelledby="mixerTitle">
+  <div class="dlg-head"><h3 id="mixerTitle">Ses mikseri</h3><button class="btn small" data-close>Kapat</button></div>
+  <div class="dlg-body">
+    <p class="note">Sesi çok gelen birini buradan kıs ya da tamamen sustur. Bu ayarlar sadece senin duyduğunu değiştirir.</p>
+    <div class="mix-row">
+      <div class="mix-top"><span class="pname">Genel ses</span></div>
+      <div class="vol"><input type="range" id="masterVol2" min="0" max="100" value="100" aria-label="Genel ses"><output id="masterOut2">100%</output></div>
+    </div>
+    <div class="mix-row">
+      <div class="mix-top"><span class="pname">🎵 Müzik ve radyo</span></div>
+      <div class="vol"><input type="range" id="musicVol2" min="0" max="100" value="70" aria-label="Müzik sesi"><output id="musicOut2">70%</output></div>
+    </div>
+    <div class="quick">
+      <button class="btn small" id="allHalf">Herkesi %50 yap</button>
+      <button class="btn small" id="allReset">Herkesi %100 yap</button>
+    </div>
+    <p class="mix-group">Bu kanaldaki oyuncular</p>
+    <div id="mixPeople" class="stack"></div>
+    <p class="mix-group" id="mixScreensTitle">Ekran paylaşımı sesleri</p>
+    <div id="mixScreens" class="stack"></div>
+  </div>
+</dialog>
+
+<dialog id="shareDlg" aria-labelledby="shareTitle">
+  <div class="dlg-head"><h3 id="shareTitle">Ne paylaşacaksın?</h3><button class="btn small" data-close>Kapat</button></div>
+  <div class="dlg-body" id="shareOpts"></div>
+</dialog>
+
+<dialog id="micDlg" aria-labelledby="micDlgTitle">
+  <div class="dlg-head"><h3 id="micDlgTitle">Mikrofon testi</h3><button class="btn small" data-close>Kapat</button></div>
+  <div class="dlg-body" id="micDlgBody"></div>
+</dialog>
+
+<dialog id="radioDlg" aria-labelledby="radioTitle" class="wide">
+  <div class="dlg-head"><h3 id="radioTitle">📻 Radyo seç</h3><button class="btn small" data-close>Kapat</button></div>
+  <div class="dlg-body">
+    <form class="row" id="radioForm">
+      <input type="text" id="radioQuery" placeholder="İstasyon ara: Power, Kral, Joy, Metro…" autocomplete="off">
+      <select id="radioScope" aria-label="Bölge">
+        <option value="TR">Türkiye</option>
+        <option value="">Tüm dünya</option>
+      </select>
+      <button class="btn primary" type="submit">Ara</button>
+    </form>
+    <div id="radioList" class="radio-list"><p class="note">Yükleniyor…</p></div>
+    <p class="note">Liste Radio Browser'dan geliyor. Radyoyu her kişi kendi bilgisayarında dinler, kimsenin internetini yormaz.</p>
+  </div>
+</dialog>
+
+<dialog id="ytDlg" aria-labelledby="ytTitle">
+  <div class="dlg-head"><h3 id="ytTitle">▶️ YouTube'dan birlikte izle</h3><button class="btn small" data-close>Kapat</button></div>
+  <form class="dlg-body" id="ytForm">
+    <label for="ytUrl">YouTube bağlantısı
+      <input type="text" id="ytUrl" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
+    </label>
+    <p class="note">Video herkesin bilgisayarında YouTube'dan doğrudan açılır ve birbirine senkron oynar. Kimse yayın yapmadığı için donma olmaz.</p>
+    <button class="btn primary" type="submit">Birlikte izle</button>
+    <p class="err" id="ytErr"></p>
+  </form>
+</dialog>
+
+<dialog id="chanDlg" aria-labelledby="chanDlgTitle">
+  <div class="dlg-head"><h3 id="chanDlgTitle">Yeni kanal</h3><button class="btn small" data-close>Kapat</button></div>
+  <form class="dlg-body" id="chanForm">
+    <label for="chanName">Kanal adı
+      <input type="text" id="chanName" maxlength="24" placeholder="örn. Valorant takımı" autocomplete="off">
+    </label>
+    <label for="chanIcon">Simge
+      <select id="chanIcon">
+        <option>🎮</option><option>🔫</option><option>⚽</option><option>🏎</option><option>🧱</option><option>🗣</option><option>📚</option><option>😴</option>
+      </select>
+    </label>
+    <button class="btn primary" type="submit">Kanal oluştur</button>
+  </form>
+</dialog>
+
+<dialog id="lightbox" class="lightbox" aria-label="Fotoğraf">
+  <img id="lightboxImg" alt="">
+  <button class="btn small" data-close>Kapat</button>
+</dialog>
+
+<input type="file" id="musicInput" accept="audio/*" multiple hidden>
+<input type="file" id="filmInput" accept="video/*" hidden>
+
+<div class="reactions" id="reactions" aria-live="polite"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="js/util.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/net.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/screen.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/music.js"></script>
+<script src="js/film.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
