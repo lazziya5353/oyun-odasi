@@ -1,8 +1,4 @@
-// ===== AYARLAR =====
-// Kendi eşleştirme sunucunun adresi (Render'daki "oyun-odasi-sinyal" servisinin adresi, başında https:// olmadan).
-// Örnek:  sunucu: 'oyun-odasi.onrender.com'
-// Boş bırakılırsa herkese açık ücretsiz PeerJS sunucusu kullanılır.
-// Kendi sunucun cevap vermezse site otomatik olarak herkese açık sunucuyu yedek olarak dener.
+// Kendi eşleştirme sunucunun adresi (Render). Cevap vermezse herkese açık sunucu yedek olarak denenir.
 window.OYUNODASI_CONFIG = {
-  sunucu: ''
+  sunucu: 'oyun-odasi.onrender.com'
 };
