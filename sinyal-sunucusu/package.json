@@ -1,0 +1,17 @@
+{
+  "name": "oyun-odasi-sinyal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Oyun Odası için eşleştirme (sinyal) sunucusu",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "peer": "1.0.2"
+  }
+}

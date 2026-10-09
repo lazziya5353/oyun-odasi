@@ -110,10 +110,31 @@ async function buildStrongChain(raw){
 }
 
 // ---------- mikrofon ----------
-async function openMic(deviceId){
+// Gerçek mikrofon olmayan sanal cihazlar: sessizlik ya da bilgisayarın kendi sesini gönderirler.
+const VIRTUAL_MIC = /steam streaming|stereo mix|stereo karışımı|what u hear|wave out mix|cable output/i;
+async function getMicStream(deviceId){
   const audio = { echoCancellation: true, noiseSuppression: nsMode !== 'off', autoGainControl: true };
   if (deviceId) audio.deviceId = { exact: deviceId };
-  const raw = await navigator.mediaDevices.getUserMedia({ audio, video: false });
+  return navigator.mediaDevices.getUserMedia({ audio, video: false });
+}
+// Kişi kendisi seçmediyse ve açılan cihaz sanal bir mikrofonsa, varsa gerçek bir mikrofona geç
+async function avoidVirtualMic(raw){
+  if (store.get('oyunodasi-mic-manual') === '1') return raw;
+  const tr = raw.getAudioTracks()[0];
+  if (!tr || !VIRTUAL_MIC.test(tr.label)) return raw;
+  try {
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput' && d.label);
+    const real = devs.find(d => !VIRTUAL_MIC.test(d.label) && d.deviceId !== 'default' && d.deviceId !== 'communications');
+    if (!real) return raw;
+    const next = await getMicStream(real.deviceId);
+    raw.getTracks().forEach(t => t.stop());
+    toast('“' + tr.label + '” gerçek bir mikrofon değil; “' + real.label + '” seçildi. İstersen mikrofon testinden değiştirebilirsin.');
+    return next;
+  } catch(e){ return raw; }
+}
+
+async function openMic(deviceId){
+  const raw = await avoidVirtualMic(await getMicStream(deviceId));
   ensureCtx();
   try { if (audioCtx && audioCtx.state !== 'running') await Promise.race([audioCtx.resume(), new Promise(r => setTimeout(r, 1000))]); } catch(e){}
 
@@ -166,6 +187,7 @@ async function fillMicList(){
   } catch(e){}
 }
 $('micSelect').onchange = async e => {
+  store.set('oyunodasi-mic-manual', '1');   // kişi kendisi seçti: sanal mikrofon olsa bile değiştirme
   try {
     await openMic(e.target.value); toast('Mikrofon değiştirildi');
     heardVoice = false; quietSince = performance.now();
@@ -229,7 +251,7 @@ $('recBtn').onclick = () => {
 // ---------- ağ testi: bu bilgisayar dışarıya hangi yollarla ulaşabiliyor? ----------
 $('netBtn').onclick = async () => {
   const out = $('netResult'); out.hidden = false;
-  out.innerHTML = '<li>Test ediliyor, 6 saniye sürer…</li>';
+  out.innerHTML = '<li>Test ediliyor, 15 saniye kadar sürer…</li>';
   $('netBtn').disabled = true;
   const types = new Set();
   let pc;
@@ -246,7 +268,16 @@ $('netBtn').onclick = async () => {
   }
   try { pc.close(); } catch(e){}
   const row = (ok, text) => '<li class="' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓ ' : '✗ ') + text + '</li>';
-  out.innerHTML =
+  // eşleştirme sunucularına ulaşılıyor mu?
+  let sigRows = '';
+  if (typeof Peer !== 'undefined'){
+    const results = await Promise.all(signalServers().map(s =>
+      openPeer(PREFIX + 'test-' + rid() + rid(), s, 9000).then(pr => { try { pr.destroy(); } catch(e){} return true; }, () => false)));
+    signalServers().forEach((s, i) => {
+      sigRows += row(results[i], 'Eşleştirme sunucusu (' + s.label + '): ' + (results[i] ? 'ulaşılıyor.' : 'ulaşılamıyor' + (s.own ? ' (uykudaysa 1 dk sonra tekrar dene).' : '.')));
+    });
+  }
+  out.innerHTML = sigRows +
     row(types.has('srflx'), types.has('srflx') ? 'İnternet adresin bulundu, doğrudan bağlantı denenebilir.' : 'İnternet adresin bulunamadı. Güvenlik duvarı ya da VPN engelliyor olabilir.') +
     row(types.has('relay'), types.has('relay') ? 'Aktarma sunucusuna ulaşılıyor. Doğrudan bağlantı olmasa da ses gelmeli.' : 'Aktarma sunucusuna ulaşılamadı. Doğrudan bağlantı da kurulamazsa ses gelmez.') +
     (!types.has('srflx') && !types.has('relay') ? '<li class="bad">Bu ağ sesli bağlantıyı tamamen engelliyor. VPN, okul/iş ağı ya da Mac\'te “Gizli mod” güvenlik duvarı olabilir. Başka bir ağ ya da telefon hotspot\'u ile dene.</li>' : '');

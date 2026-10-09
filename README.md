@@ -28,6 +28,32 @@ Ses, görüntü, müzik ve mesajlar kişiler arasında doğrudan (WebRTC) gider,
 - [Open Relay](https://www.metered.ca/tools/openrelay/) ücretsiz aktarma sunucusu (doğrudan bağlanamayanlar için)
 - [Radio Browser](https://www.radio-browser.info/) açık radyo dizini
 
+## Kendi eşleştirme sunucunu kurma (önerilir, ücretsiz)
+
+Herkese açık PeerJS sunucusu ücretsizdir ama zaman zaman cevap vermez. Kendi sunucun olursa site önce onu kullanır,
+o cevap vermezse herkese açık sunucuyu yedek olarak dener.
+
+1. [render.com](https://render.com) adresinde **GitHub ile giriş yap**.
+2. **New → Web Service** → bu depoyu (`oyun-odasi`) seç.
+3. Ayarlar:
+   - **Name:** `oyun-odasi-sinyal`
+   - **Root Directory:** `sinyal-sunucusu`
+   - **Runtime:** Node
+   - **Build Command:** `npm install`
+   - **Start Command:** `node server.js`
+   - **Instance Type:** Free
+4. **Deploy Web Service**'e bas. Birkaç dakika sonra üstte `https://oyun-odasi-sinyal.onrender.com` gibi bir adres çıkar.
+   Adresin sonuna `/saglik` ekleyip açınca `ok` yazıyorsa sunucu çalışıyor.
+5. GitHub'da `js/config.js` dosyasını aç, kalem simgesiyle düzenle ve adresi yaz:
+   ```js
+   sunucu: 'oyun-odasi-sinyal.onrender.com'
+   ```
+   **Commit changes**'a bas. Netlify siteyi birkaç saniyede günceller.
+
+Ücretsiz Render sunucusu 15 dakika kimse kullanmazsa uyur; ilk açılışta uyanması yaklaşık 1 dakika sürer.
+Site sayfa açılır açılmaz sunucuyu uyandırmaya başlar ve bu sırada “Sunucu uyanıyor…” yazar.
+Odada biri olduğu sürece sunucu uyumaz.
+
 ## Sınırlar
 
 - Herkes herkese bağlandığı için sesli sohbette 8–10 kişi, ekran paylaşımında 4–5 izleyici rahat çalışır.
@@ -38,6 +64,9 @@ Ses, görüntü, müzik ve mesajlar kişiler arasında doğrudan (WebRTC) gider,
 
 ```
 index.html        sayfa iskeleti
+js/config.js      AYARLAR: kendi eşleştirme sunucunun adresi
+sinyal-sunucusu/  kendi eşleştirme sunucun (Render'da çalışır)
+render.yaml       Render kurulum dosyası
 css/style.css     görünüm
 js/util.js        küçük yardımcılar
 js/audio.js       mikrofon, gürültü azaltma, ses dalgaları

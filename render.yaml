@@ -1,0 +1,10 @@
+# Render "Blueprint" dosyası: Render bu depoyu bağladığında eşleştirme sunucusunu kendiliğinden kurar.
+services:
+  - type: web
+    name: oyun-odasi-sinyal
+    runtime: node
+    plan: free
+    rootDir: sinyal-sunucusu
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /saglik

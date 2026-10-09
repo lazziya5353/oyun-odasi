@@ -27,7 +27,32 @@ async function iceServers(){
   } catch(e){ console.warn('TURN ayarlanamadı', e); }
   return list;
 }
-const peerOpts = async () => Object.assign({ debug: 1, config: { iceServers: await iceServers() } }, window.OYUNODASI_PEER_OPTS || {});
+// ---------- eşleştirme sunucuları ----------
+// Önce kendi sunucumuz (config.js'te yazılıysa), cevap vermezse herkese açık PeerJS sunucusu.
+// Bir odadaki herkes aynı sunucuda olmalı; bu yüzden herkes aynı sırayla dener ve misafir odayı
+// bir sunucuda bulamazsa diğerinde de arar.
+function signalServers(){
+  if (Array.isArray(window.OYUNODASI_TEST_SERVERS)) return window.OYUNODASI_TEST_SERVERS;
+  const list = [];
+  const own = String((window.OYUNODASI_CONFIG || {}).sunucu || '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  if (own) list.push({ label: 'kendi sunucun', own: true, host: own, port: 443, secure: true, path: '/' });
+  list.push({ label: 'herkese açık sunucu', host: '0.peerjs.com', port: 443, secure: true, path: '/' });
+  return list;
+}
+let serverInUse = null;
+const peerOpts = async srv => {
+  const s = srv || serverInUse || signalServers()[0];
+  return { debug: 1, host: s.host, port: s.port, secure: s.secure, path: s.path, config: { iceServers: await iceServers() } };
+};
+// Render'daki ücretsiz sunucu boştayken uyur; sayfa açılır açılmaz uyandırmaya başla ki "Oda oluştur"a basıldığında hazır olsun
+function wakeServers(){
+  signalServers().forEach(s => {
+    if (!s.own) return;
+    const url = (s.secure ? 'https://' : 'http://') + s.host + (s.port && s.port !== 443 && s.port !== 80 ? ':' + s.port : '') + '/saglik';
+    fetch(url, { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
+  });
+}
+wakeServers();
 
 // Müzik/film/ekran için SDP ayarı: stereo ve yüksek kaliteli ses, görüntü ilk andan itibaren iyi kalitede başlasın
 function setFmtp(sdp, pt, add){
@@ -55,7 +80,7 @@ function sdpHiFi(sdp){
 
 function send(conn, msg){ try { if (conn && conn.open) conn.send(msg); } catch(e){} }
 function broadcast(msg){ peers.forEach(p => { if (p.linked) send(p.conn, msg); }); }
-function lobbyError(msg){ $('lobbyErr').textContent = msg; setBusy(false); }
+function lobbyError(msg){ $('lobbyStatus').hidden = true; $('lobbyErr').textContent = msg; setBusy(false); }
 function setBusy(b){ $('createBtn').disabled = b; $('joinBtn').disabled = b; }
 
 // ---------- odaya giriş ----------
@@ -75,19 +100,125 @@ async function start(code, asHost){
   }
   if (peer){ try { peer.destroy(); } catch(e){} peer = null; }
   roomCode = code;
-
-  if (asHost){
-    peer = new Peer(PREFIX + code, await peerOpts());
-    peer.on('open', () => { isHost = true; currentHostId = peer.id; enterRoom(); });
-  } else {
-    peer = new Peer(PREFIX + code + '-' + rid(), await peerOpts());
-    peer.on('open', () => {
-      currentHostId = PREFIX + code;
-      connectTo(PREFIX + code);
-      setTimeout(() => { if (!joined) lobbyError('Odaya bağlanılamadı. Kodu kontrol et ya da tekrar dene.'); }, 12000);
-    });
+  try {
+    if (asHost) await hostFlow(code);
+    else await guestFlow(code);
+  } catch(e){
+    lobbyStatus('');
+    lobbyError(typeof e === 'string' ? e : 'Odaya bağlanılamadı. Biraz sonra tekrar dene.');
   }
-  setupPeer(peer, asHost);
+}
+
+// Giriş ekranında ne olduğunu göster (hatadan ayrı, sakin bir durum satırı)
+function lobbyStatus(text){ $('lobbyErr').textContent = ''; const s = $('lobbyStatus'); s.textContent = text; s.hidden = !text; }
+
+// Bir sunucuda verilen adla kayıt olmayı dener. Sonuç: açık Peer ya da hata türü ('unavailable-id', 'network', 'timeout'…)
+function openPeer(id, srv, timeoutMs){
+  return new Promise(async (res, rej) => {
+    let pr;
+    try { pr = new Peer(id, await peerOpts(srv)); } catch(e){ rej('network'); return; }
+    let done = false;
+    const fail = t => { if (done) return; done = true; clearTimeout(tm); try { pr.destroy(); } catch(e){} rej(t); };
+    const tm = setTimeout(() => fail('timeout'), timeoutMs);
+    pr.on('open', () => { if (done) return; done = true; clearTimeout(tm); res(pr); });
+    pr.on('error', e => fail((e && e.type) || 'network'));
+  });
+}
+// Bir sunucuya, belirli bir süre boyunca aralıklarla tekrar deneyerek bağlan.
+// Kendi sunucumuz uykudaysa uyanması ~1 dakika sürebilir, bu yüzden ona daha uzun süre tanınır.
+async function openPeerRetry(id, srv, onTry){
+  const budget = (srv.own ? 80000 : 25000) * (window.OYUNODASI_TEST_FAST || 1);
+  const t0 = Date.now();
+  let n = 0, last = 'network';
+  const tickMsg = () => onTry && onTry(Math.max(1, n), Date.now() - t0);
+  const iv = setInterval(tickMsg, 1000);    // geçen süreyi her saniye göster
+  try {
+    while (Date.now() - t0 < budget){
+      n++;
+      tickMsg();
+      try { return await openPeer(id, srv, 9000); }
+      catch(t){
+        last = t;
+        if (t === 'unavailable-id' || t === 'invalid-id' || t === 'browser-incompatible') throw t;   // tekrar denemek işe yaramaz
+      }
+      await new Promise(r => setTimeout(r, Math.min(6000, 1500 * n)));
+    }
+    throw last;
+  } finally { clearInterval(iv); }
+}
+function tryMessage(srv, n, elapsed, many){
+  if (srv.own && elapsed > 6000) return 'Sunucu uyanıyor… İlk açılışta 1 dakika kadar sürebilir (' + Math.round(elapsed / 1000) + ' sn)';
+  if (n === 1) return many && !srv.own ? 'Yedek sunucu deneniyor…' : 'Sunucuya bağlanılıyor…';
+  return (many && !srv.own ? 'Yedek sunucu deneniyor' : 'Sunucuya bağlanılıyor') + ' (deneme ' + n + ')…';
+}
+
+async function hostFlow(code){
+  const list = signalServers();
+  for (let i = 0; i < list.length; i++){
+    const srv = list[i];
+    try {
+      const pr = await openPeerRetry(PREFIX + code, srv, (n, el) => lobbyStatus(tryMessage(srv, n, el, list.length > 1)));
+      peer = pr; serverInUse = srv;
+      setupPeer(pr);
+      isHost = true; currentHostId = pr.id;
+      lobbyStatus('');
+      enterRoom();
+      return;
+    } catch(t){
+      if (t === 'unavailable-id'){
+        if (customCode) throw '“' + code + '” adında bir oda zaten açık. Ona katılmak için “Odaya katıl”a bas ya da başka bir kod yaz.';
+        roomCode = code = genCode(); i--; continue;     // rastgele kod çakıştı: yenisiyle aynı sunucuda tekrar dene
+      }
+    }
+  }
+  throw noServerMessage();
+}
+
+async function guestFlow(code){
+  const list = signalServers();
+  let unreachable = 0;
+  for (const srv of list){
+    let pr;
+    try { pr = await openPeerRetry(PREFIX + code + '-' + rid(), srv, (n, el) => lobbyStatus(tryMessage(srv, n, el, list.length > 1))); }
+    catch(t){ unreachable++; continue; }
+    lobbyStatus('Odaya bağlanılıyor…');
+    const r = await joinVia(pr, srv, code);
+    if (r === 'ok') return;
+    if (r === 'no-room') continue;                       // oda bu sunucuda değil: diğerinde ara
+    throw 'Oda bulundu ama bağlanılamadı. Senin ya da oda sahibinin ağı doğrudan bağlantıyı engelliyor olabilir. Giriş ekranındaki “Ağ testi”ni dene.';
+  }
+  if (unreachable === list.length) throw noServerMessage();
+  throw 'Bu kodla açık bir oda bulunamadı. Kodu kontrol et; oda sahibinin odası açık olmalı.';
+}
+// Sunucuya kayıt olduk; şimdi oda sahibine bağlan. Sonuç: 'ok' | 'no-room' | 'timeout'
+function joinVia(pr, srv, code){
+  return new Promise(res => {
+    peer = pr; serverInUse = srv;
+    setupPeer(pr);
+    currentHostId = PREFIX + code;
+    let done = false;
+    const finish = r => {
+      if (done) return; done = true;
+      clearInterval(iv); clearTimeout(tm); pr.off('error', onErr);
+      if (r !== 'ok'){
+        removePeer(currentHostId, { silent: true });
+        try { pr.destroy(); } catch(e){}
+        if (peer === pr) peer = null;
+      }
+      res(r);
+    };
+    const onErr = e => { if (e && e.type === 'peer-unavailable' && !joined) finish('no-room'); };
+    pr.on('error', onErr);
+    const iv = setInterval(() => { if (joined) finish('ok'); }, 150);
+    const tm = setTimeout(() => finish(joined ? 'ok' : 'timeout'), 20000);
+    connectTo(currentHostId);
+  });
+}
+function noServerMessage(){
+  const own = signalServers().some(s => s.own);
+  return own
+    ? 'Eşleştirme sunucularının hiçbirine ulaşılamadı. İnternet bağlantını kontrol edip biraz sonra tekrar dene.'
+    : 'Eşleştirme sunucusuna ulaşılamıyor. Bu, herkese açık ücretsiz sunucunun geçici bir sorunu olabilir. Birkaç dakika sonra tekrar dene; kalıcı çözüm için kendi sunucunu kur (README’de anlatılıyor).';
 }
 
 // ---------- eşleştirme sunucusuyla bağlantı ----------
@@ -139,7 +270,8 @@ document.addEventListener('visibilitychange', () => {
   [peer, lobbyPeer].forEach(pr => { if (pr && pr.disconnected && !pr.destroyed) scheduleReconnect(pr, true); });
 });
 
-function setupPeer(pr, asHost){
+// Sunucuya kayıt olmuş bir Peer'e oda olaylarını bağla. (Giriş sırasındaki hatalar hostFlow/guestFlow'da ele alınır.)
+function setupPeer(pr){
   pr.on('connection', conn => handleConn(conn));
   pr.on('call', call => handleCall(call));
   pr.on('open', () => { pr._tries = 0; if (pr === peer) sigUp(); });
@@ -147,25 +279,7 @@ function setupPeer(pr, asHost){
   pr.on('error', err => {
     const t = err && err.type;
     if (pr !== peer) return;
-    if (!joined){
-      // odaya girmeden önceki hatalar: kullanıcıya açıkça söyle
-      if (t === 'unavailable-id' && asHost){
-        pr.destroy(); peer = null;
-        if (customCode) lobbyError('“' + roomCode + '” adında bir oda zaten açık. Ona katılmak için “Odaya katıl”a bas ya da başka bir kod yaz.');
-        else start(genCode(), true);
-        return;
-      }
-      if (t === 'peer-unavailable'){ lobbyError('Bu kodla bir oda bulunamadı.'); return; }
-      if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed'){
-        try { pr.destroy(); } catch(e){}
-        peer = null;
-        lobbyError('Sunucuya bağlanılamadı. İnternet bağlantını kontrol edip biraz sonra tekrar dene.');
-        return;
-      }
-      console.warn(err);
-      return;
-    }
-    // odadayken: sunucu hataları geçicidir, bağlantılar asla kapatılmaz; yeniden bağlanma 'disconnected' ile sürer
+    // sunucu hataları geçicidir: bağlantılar asla kapatılmaz, yeniden bağlanma 'disconnected' ile sürer
     if (t === 'peer-unavailable') return;
     if (['network', 'server-error', 'socket-error', 'socket-closed', 'unavailable-id'].includes(t)){ sigDown(); return; }
     console.warn(err);

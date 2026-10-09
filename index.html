@@ -52,6 +52,7 @@
       <button class="btn primary" id="createBtn">Oda oluştur</button>
       <button class="btn" id="joinBtn">Odaya katıl</button>
     </div>
+    <p class="lobby-status" id="lobbyStatus" role="status" hidden></p>
     <p class="err" id="lobbyErr" role="alert"></p>
     <p class="note">Mikrofon izni istenecek. İzin vermezsen de dinleyici olarak katılıp yazışabilirsin. En iyi sonuç için Chrome veya Edge.</p>
   </div>
@@ -223,6 +224,7 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="js/config.js"></script>
 <script src="js/util.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/net.js"></script>
