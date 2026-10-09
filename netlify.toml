@@ -1,6 +1,8 @@
 # Netlify ayarları: derleme yok, klasör olduğu gibi yayınlanır.
 [build]
   publish = "."
+  # Bildirim gönderen sunucu fonksiyonu (ek kurulum gerektirmez)
+  functions = "netlify/functions"
 
 # Güncelleme yaptığımızda herkes yeni sürümü hemen alsın (tarayıcı eski dosyayı önbellekte tutmasın)
 [[headers]]

@@ -70,6 +70,12 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 .rejoin{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px;border-radius:12px;
   border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));background:color-mix(in srgb,var(--accent) 8%,var(--bg));animation:pop-in .35s cubic-bezier(.3,1.4,.5,1)}
 .rejoin-info{display:grid;gap:2px;min-width:0}
+.notif-card{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg)}
+.notif-card[data-state="on"]{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.notif-card[data-state="on"] #notifTitle{color:var(--accent)}
+.notif-info{display:grid;gap:3px;min-width:0;flex:1 1 220px}
+.notif-acts{display:flex;gap:8px;flex-wrap:wrap}
+.notif-top.on{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
 .rejoin-info b{font-family:var(--display);font-size:22px;letter-spacing:.2em;color:var(--accent)}
 .mictest{display:grid;gap:12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px}
 .hint{font-size:13px;margin:0;min-height:1.4em;color:var(--muted)}

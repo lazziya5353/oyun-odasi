@@ -112,7 +112,10 @@ async function start(code, asHost){
   if (peer){ try { peer.destroy(); } catch(e){} peer = null; }
   roomCode = code;
   try {
-    if (asHost) await hostFlow(code);
+    if (asHost){
+      await hostFlow(code);
+      if (joined && typeof notifyRoomOpened === 'function') notifyRoomOpened();   // yeni oda: arkadaşlara bildirim
+    }
     else await guestFlow(code);
   } catch(e){
     lobbyStatus('');

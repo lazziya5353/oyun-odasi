@@ -14,6 +14,8 @@ Arkadaşlarla oyun oynarken kullanmak için tarayıcıda çalışan sesli sohbet
 - **Film Odası:** bilgisayardan film yayını, YouTube'u birlikte senkron izleme, Film modunda ekran paylaşımı
 - **🎲 Oyun Salonu:** Tavla (1/3/5/7 sayılık maç, mars, kırma, zar animasyonu) ve Okey (Klasik, Eşli, 101). Boş koltuklara bot oturur, oyundan çıkanın yerine bot geçer. Oyun sırasında radyo çalmaya devam eder
 - **🍵 İkram:** kişinin kutucuğundaki İkram düğmesiyle çay, simit, Türk kahvesi, ayran, çekirdek, Maraş dondurması, lokum ya da su ikram edilir; ikram uçarak gider, 1 dakika masada durur
+- **📲 Uygulama gibi yükleme:** telefonda ana ekrana, bilgisayarda masaüstüne eklenir; kendi simgesiyle tam ekran açılır
+- **🔔 Bildirimler:** biri oda açınca bildirimleri açmış herkese bildirim gider (site kapalıyken de). iPhone'da önce Ana Ekrana eklenmeli
 - **Diğer:** emoji tepkileri, odadan atma, oda sahibi çıkınca odanın devam etmesi, telefondan katılım (mikrofonsuz da olur)
 
 ## Nasıl kullanılır
@@ -58,6 +60,16 @@ o cevap vermezse herkese açık sunucuyu yedek olarak dener.
 Site sayfa açılır açılmaz sunucuyu uyandırmaya başlar ve bu sırada “Sunucu uyanıyor…” yazar.
 Odada biri olduğu sürece sunucu uyumaz.
 
+## Bildirimler nasıl çalışır
+
+`netlify/functions/bildirim.mjs` Netlify'da kendiliğinden çalışan küçük bir sunucu fonksiyonudur; ayrı bir kurulum ya da ayar gerekmez.
+Bildirimi açan cihazların listesi ve bildirim anahtarı Netlify Blobs'ta saklanır (anahtar ilk kullanımda kendiliğinden üretilir).
+Aynı oda için 3 dakikada bir, toplamda saatte en fazla 20 "oda açıldı" bildirimi gider.
+
+- **Bilgisayar (Chrome, Edge, Firefox, Mac Safari):** giriş ekranında “Bildirimleri aç” → izin ver.
+- **Android:** aynısı; istersen “Uygulama olarak yükle” ile ana ekrana ekle.
+- **iPhone / iPad (iOS 16.4+):** Safari'de Paylaş ⬆ → “Ana Ekrana Ekle”, sonra ana ekrandaki simgeden açıp “Bildirimleri aç”.
+
 ## Sınırlar
 
 - Herkes herkese bağlandığı için sesli sohbette 8–10 kişi, ekran paylaşımında 4–5 izleyici rahat çalışır.
@@ -84,6 +96,10 @@ js/film.js        film yayını, YouTube senkron izleme
 js/main.js        giriş ekranı
 js/games/         tavla ve okey kuralları, masalar, ikramlar
 css/games.css     oyun görünümü
+js/push.js        bildirimler, uygulama olarak yükleme
+sw.js             bildirimleri gösteren servis çalışanı
+manifest.webmanifest, icons/   ana ekran simgesi ve uygulama bilgileri
+netlify/          bildirim gönderen sunucu fonksiyonu
 netlify.toml      Netlify ayarı
 ```
 
