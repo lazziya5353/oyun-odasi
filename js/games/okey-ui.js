@@ -371,7 +371,7 @@ function okControls(ctl, s, v, seat, ctx, ui, names){
       note('Taşı seçip “At”a bas, çift tıkla ya da sağ alttaki alana sürükle');
     } else {
       const opened = v.opened[seat];
-      if (v.tookTile !== null && v.tookTile !== undefined && !v.turnActs) B('↩ Yandan aldığımı geri ver', () => tableAct({ type: 'giveBack' }), 'small');
+      if (v.tookTile !== null && v.tookTile !== undefined && (v.hand || []).includes(v.tookTile)) B('↩ Yandan aldığımı geri ver', () => tableAct({ type: 'giveBack' }), 'small');
       if (!opened){
         B('➕ Seçileni pere ekle', () => {
           if (sel.length < 2) { toast('Per için en az 2 taş seç (çift için 2, seri/per için 3+)'); return; }

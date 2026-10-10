@@ -74,7 +74,7 @@ let openThemeDlg = function(){ renderThemeDlg(); $('temaDlg').showModal(); };
   document.querySelectorAll('#temaBody [data-style]').forEach(b => { b.onclick = () => { theme.style = b.dataset.style; saveTheme(); }; });
   $('temaSpeed').oninput = e => { theme.speed = +e.target.value; saveTheme(); };
   $('temaGlow').oninput = e => { theme.glow = +e.target.value; saveTheme(); };
-  $('temaReset').onclick = () => { theme = Object.assign({}, THEME_DEFAULT); saveTheme(); if (typeof OyunBG !== 'undefined'){ OyunBG.set(null); renderBgPicker(); } };
+  $('temaReset').onclick = () => { theme = Object.assign({}, THEME_DEFAULT); saveTheme(); if (typeof OyunBG !== 'undefined'){ OyunBG.set(null); renderBgPicker(); } if (typeof OyunHava !== 'undefined'){ OyunHava.set(null); renderHavaPicker(); } };
   ['temaBtn', 'temaBtn2'].forEach(id => { const b = $(id); if (b) b.onclick = openThemeDlg; });
 })();
 
@@ -84,12 +84,17 @@ function renderBgPicker(){
   const box = $('bgPicks'); if (!box || typeof OyunBG === 'undefined') return;
   const st = bgState();
   if (!box.children.length){
+    let lastGrup = null;
     OyunBG.list.forEach(item => {
+      if (item.grup && item.grup !== lastGrup && item.grup !== 'Genel'){ lastGrup = item.grup; const h = document.createElement('div'); h.className = 'bg-grup'; h.textContent = item.grup; box.append(h); }
       const b = document.createElement('button'); b.type = 'button'; b.className = 'bg-pick'; b.dataset.bg = item.id; b.title = item.desc || item.name;
       const cv = document.createElement('canvas'); cv.width = 320; cv.height = 200;
       const t = document.createElement('span'); t.textContent = (item.icon ? item.icon + ' ' : '') + item.name;
       b.append(cv, t);
-      b.onclick = () => { const s2 = bgState(); OyunBG.set(item.id, { animate: s2.animate, dim: s2.dim }); renderBgPicker(); };
+      b.onclick = async () => {
+        if (item.id === 'ozel' && OyunBG.hasCustom && !(await OyunBG.hasCustom())){ $('bgOzelFile').click(); return; }
+        const s2 = bgState(); OyunBG.set(item.id, { animate: s2.animate, dim: s2.dim }); renderBgPicker();
+      };
       box.append(b);
     });
     // önizlemeler pencere açıldıktan sonra sırayla çizilsin (pencere takılmasın)
@@ -98,12 +103,57 @@ function renderBgPicker(){
   box.querySelectorAll('.bg-pick').forEach(b => b.classList.toggle('on', b.dataset.bg === st.id));
   document.querySelectorAll('[data-bganim]').forEach(b => b.classList.toggle('on', (b.dataset.bganim === '1') === st.animate));
   $('bgDim').value = Math.round(st.dim * 100);
+  if (OyunBG.hasCustom) OyunBG.hasCustom().then(has => {
+    $('bgOzelSil').hidden = !has;
+    $('bgOzelSec').textContent = has ? '📷 Görseli değiştir' : '📷 Görsel seç';
+    $('bgEfekt').hidden = !has;
+    document.querySelectorAll('[data-efekt]').forEach(b => b.classList.toggle('on', b.dataset.efekt === OyunBG.efekt));
+  });
 }
 (function initBg(){
   if (typeof OyunBG === 'undefined' || !$('bgPicks')) return;
   document.querySelectorAll('[data-bganim]').forEach(b => { b.onclick = () => { const s = bgState(); OyunBG.set(s.id === 'yok' ? null : s.id, { animate: b.dataset.bganim === '1', dim: s.dim }); renderBgPicker(); }; });
+  $('bgOzelSec').onclick = () => $('bgOzelFile').click();
+  $('bgOzelFile').onchange = async e => {
+    const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+    try {
+      await OyunBG.setCustomImage(f);
+      const c = document.querySelector('.bg-pick[data-bg="ozel"] canvas'); if (c) OyunBG.thumb('ozel', c);
+      renderBgPicker(); toast('🖼 Arka plan görselin ayarlandı (sadece bu cihazda)');
+    } catch(err){ toast(err.message || 'Görsel ayarlanamadı'); }
+  };
+  $('bgOzelSil').onclick = async () => { await OyunBG.removeCustom(); const c = document.querySelector('.bg-pick[data-bg="ozel"] canvas'); if (c) OyunBG.thumb('ozel', c); renderBgPicker(); };
+  document.querySelectorAll('[data-efekt]').forEach(b => { b.onclick = () => { const s = bgState(); OyunBG.set('ozel', { efekt: b.dataset.efekt, animate: s.animate, dim: s.dim }); renderBgPicker(); }; });
   $('bgDim').oninput = e => { const s = bgState(); if (s.id !== 'yok') OyunBG.set(s.id, { animate: s.animate, dim: e.target.value / 100 }); };
   const open0 = openThemeDlg;
   openThemeDlg = function(){ open0(); renderBgPicker(); };
+  ['temaBtn', 'temaBtn2'].forEach(id => { const b = $(id); if (b) b.onclick = openThemeDlg; });
+})();
+
+// ---------- hava durumu (js/hava.js) ----------
+function renderHavaPicker(){
+  const box = $('havaPicks'); if (!box || typeof OyunHava === 'undefined') return;
+  if (!box.children.length){
+    OyunHava.list.forEach(h => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'hava-pick'; b.dataset.hava = h.id; b.title = h.desc || h.name;
+      const i = document.createElement('span'); i.className = 'hava-ico'; i.textContent = h.icon;
+      const t = document.createElement('span'); t.textContent = h.name;
+      b.append(i, t);
+      b.onclick = () => { OyunHava.set(h.id === 'yok' ? null : h.id, { yogunluk: +$('havaYog').value || OyunHava.yogunluk }); renderHavaPicker(); };
+      box.append(b);
+    });
+  }
+  const cur = OyunHava.current || 'yok';
+  box.querySelectorAll('.hava-pick').forEach(b => b.classList.toggle('on', b.dataset.hava === cur));
+  $('havaYog').value = OyunHava.yogunluk || 0.6;
+  $('havaAyar').hidden = cur === 'yok';
+  $('havaTemizle').textContent = cur === 'kar' ? '🧹 Karı temizle' : cur === 'yaprak' ? '🧹 Yaprakları temizle' : '🧹 Damlaları sil';
+}
+(function initHava(){
+  if (typeof OyunHava === 'undefined' || !$('havaPicks')) return;
+  $('havaYog').oninput = e => { if (OyunHava.current && OyunHava.current !== 'yok') OyunHava.set(OyunHava.current, { yogunluk: +e.target.value }); };
+  $('havaTemizle').onclick = () => OyunHava.clear();
+  const open1 = openThemeDlg;
+  openThemeDlg = function(){ open1(); renderHavaPicker(); };
   ['temaBtn', 'temaBtn2'].forEach(id => { const b = $(id); if (b) b.onclick = openThemeDlg; });
 })();

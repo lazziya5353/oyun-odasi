@@ -65,3 +65,5 @@ html:root[data-bg] body{background:transparent}
 .bg-pick:hover{transform:translateY(-2px)}
 .bg-pick.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .bg-pick canvas{width:100%;aspect-ratio:16/10;height:auto;border-radius:8px;display:block;background:#0b0d14}
+
+.bg-grup{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:6px 0 -2px}

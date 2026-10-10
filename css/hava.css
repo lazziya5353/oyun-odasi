@@ -1,0 +1,15 @@
+/* Oyun Odası – Hava durumu modu (js/hava.js). Efekt tuvali arayüzün üstündedir ama tıklamaları asla yakalamaz.
+   Aşağıdaki .hava-* sınıfları Görünüm penceresindeki "Hava durumu" satırı için hazır stillerdir. */
+canvas.havafx{position:fixed;inset:0;width:100%;height:100%;z-index:55;pointer-events:none!important;display:block;user-select:none}
+@media print{canvas.havafx{display:none!important}}
+
+/* ---------- Görünüm penceresi: hava seçici ---------- */
+.hava-picks{display:flex;flex-wrap:wrap;gap:8px}
+.hava-pick{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;font:inherit;font-size:14px;font-weight:600;transition:border-color .2s,transform .15s,background .2s}
+.hava-pick:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
+.hava-pick.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--bg));box-shadow:0 0 0 1px var(--accent)}
+.hava-pick .hava-ico{font-size:17px;line-height:1}
+.hava-ayar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.hava-ayar input[type=range]{flex:1 1 160px;min-width:120px;accent-color:var(--accent)}
+.hava-ayar[hidden]{display:none}
+@media (max-width:480px){.hava-pick{padding:7px 10px;font-size:13px}}

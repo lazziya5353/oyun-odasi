@@ -21,7 +21,7 @@ const sha = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 const token = () => crypto.randomBytes(32).toString('base64url');
 const same = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 // varsayılan yönetici şifresinin özeti (şifrenin kendisi kodda yazılmaz)
-const DEFAULT_ADMIN = '2fa0711a8b5ddb525f55fdb91024ed6b5cfac528274748792c0474b1e894e4e2';
+const DEFAULT_ADMIN = 'c884240bc2367d1eaae80e94dbc4486b663184137bed5899d0a53e6102d526da';
 
 function pub(u){
   return { id: u.id, kadi: u.kadi, adSoyad: u.adSoyad, name: u.name, durum: u.durum, created: u.created, approvedAt: u.approvedAt || null,
@@ -130,7 +130,7 @@ export default async (req, context) => {
       await putUser(u);
       // yöneticiye haber ver
       const ap = (await st.get('adminpush', { type: 'json' })) || [];
-      const gone = await pushTo(ap, { title: '🆕 Yeni üyelik başvurusu', body: adSoyad + ' (@' + kadi + ') onay bekliyor', url: '/admin.html', tag: 'basvuru' }, origin);
+      const gone = await pushTo(ap, { title: '🆕 Yeni üyelik başvurusu', body: adSoyad + ' (@' + kadi + ') onay bekliyor', url: '/admin', tag: 'basvuru-' + Date.now() }, origin);
       if (gone.length) await st.setJSON('adminpush', ap.filter(s => !gone.includes(s.endpoint)));
       return json({ ok: true, durum: 'bekliyor' });
     }
@@ -174,8 +174,8 @@ export default async (req, context) => {
     // ---------- yönetici ----------
     if (islem === 'admin-giris'){
       if (!(await adminLimit())) return json({ hata: 'Çok fazla yanlış deneme. 15 dakika sonra tekrar dene.' }, 429);
-      const want = process.env.ADMIN_SIFRE ? hashPw(process.env.ADMIN_SIFRE, ADMIN_SALT) : DEFAULT_ADMIN;
-      const ok = same(hashPw(b.sifre || '', ADMIN_SALT), want);
+      const want = process.env.ADMIN_SIFRE ? hashPw(process.env.ADMIN_SIFRE.trim(), ADMIN_SALT) : DEFAULT_ADMIN;
+      const ok = same(hashPw(String(b.sifre || '').trim(), ADMIN_SALT), want);   // baştaki/sondaki boşluk önemsiz
       await adminLimit(ok);
       if (!ok) return json({ hata: 'Şifre yanlış.' }, 401);
       const t = token();
@@ -199,7 +199,7 @@ export default async (req, context) => {
       if (b.onay) u.approvedAt = Date.now();
       await putUser(u);
       if (b.onay && was !== 'onayli'){
-        const gone = await pushTo(u.push, { title: '✅ Üyeliğin onaylandı!', body: 'Merhaba ' + u.name + '! Artık giriş yapıp sadece oda koduyla girebilirsin.', url: '/?uye=onay', tag: 'uyelik' }, origin);
+        const gone = await pushTo(u.push, { title: '✅ Üyeliğin onaylandı!', body: 'Merhaba ' + u.name + '! Artık giriş yapıp sadece oda koduyla girebilirsin.', url: '/?uye=onay', tag: 'uyelik-' + Date.now() }, origin);
         if (gone.length){ u.push = u.push.filter(s => !gone.includes(s.endpoint)); await putUser(u); }
       }
       return json({ ok: true, uye: pub(u) });

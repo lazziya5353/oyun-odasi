@@ -121,7 +121,7 @@
     s.shown[p] = true;
     penalize(s, p, 1);
     s.last = { type: 'show', p, tile: twin, at: ++s.seq };
-    checkGameOverClassic(s);
+    // oyun el ortasında bitmez: puanı sıfıra inen olursa el bitince kontrol edilir
     return ok();
   }
   function penalize(s, winner, pts){
@@ -153,6 +153,7 @@
     } else {
       s.result = { type: 'draw' };
       s.phase = 'handover';
+      checkGameOverClassic(s);
     }
     s.last = { type: 'handdraw', at: ++s.seq };
   }
@@ -237,8 +238,9 @@
     return ok();
   }
   function giveBack101(s, p){
-    // yandan aldığı taşı kullanamayan, başka bir şey yapmadıysa geri koyup ortadan çekebilir
-    if (s.tookTile === null || s.turnActs) return fail('Geri verilecek taş yok');
+    // yandan aldığı taşı kullanamayan, taşı geri koyup ortadan çekebilir
+    // aldığı taşı kullanamayan oyuncu takılı kalmasın: taş hâlâ elindeyse her zaman geri verebilir
+    if (s.tookTile === null || !s.hands[p].includes(s.tookTile)) return fail('Geri verilecek taş yok');
     const h = s.hands[p];
     h.splice(h.indexOf(s.tookTile), 1);
     s.discards[prev(p)].push(s.tookTile);
@@ -348,6 +350,19 @@
       while (pairs.length < 5 && wl.length && sg.length) pairs.push([sg.shift(), wl.shift()]);
       if (pairs.length >= 5 && h.length - pairs.length * 2 >= 1) return { type: 'open', melds: pairs };
     } else {
+      // yandan alınan taş önce kullanılmalı: işle, içeren peri indir ya da geri ver
+      if (s.tookTile !== null && h.includes(s.tookTile)){
+        const mt = s.table.find(x => OC.canLayOff(x, s.tookTile, s.ctx));
+        if (mt && h.length >= 2) return { type: 'layoff', tile: s.tookTile, mid: mt.mid };
+        if (s.opened[p] === 'melds'){
+          const bt = OC.bestMelds(h, s.ctx, 40).melds.find(x => x.ids.includes(s.tookTile));
+          if (bt && h.length - bt.ids.length >= 1) return { type: 'meld', ids: bt.ids };
+        } else {
+          const pt = OC.pairsIn(h, s.ctx).pairs.find(x => x.includes(s.tookTile));
+          if (pt && h.length - 2 >= 1) return { type: 'meld', ids: pt };
+        }
+        return { type: 'giveBack' };
+      }
       // işle
       for (const id of h){
         if (h.length < 2) break;

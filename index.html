@@ -32,6 +32,7 @@
 <link rel="stylesheet" href="css/g-hafiza.css">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/bg.css">
+<link rel="stylesheet" href="css/hava.css">
 <script>try{var t=JSON.parse(localStorage.getItem("oyunodasi-tema")||"{}");if(t.mode==="cyber"||t.mode==="led")document.documentElement.dataset.tema=t.mode;}catch(e){}</script>
 </head>
 <body>
@@ -59,6 +60,7 @@
       </div>
       <div class="notif-acts">
         <button class="btn" id="installBtn" hidden>📲 Uygulama olarak yükle</button>
+        <button class="btn" id="notifTest" hidden title="Bu cihaza deneme bildirimi gönder">🧪 Test et</button>
         <button class="btn" id="notifBtn">🔔 Bildirimleri aç</button>
       </div>
     </div>
@@ -97,7 +99,7 @@
     </div>
 
     <label for="codeInput">Oda kodu
-      <input type="text" id="codeInput" class="code" maxlength="12" placeholder="örn. KAANLAR" autocomplete="off">
+      <input type="text" id="codeInput" name="oda-kodu" class="code" maxlength="12" placeholder="Oda kodunu giriniz" autocomplete="off" autocapitalize="characters" spellcheck="false" data-lpignore="true" data-1p-ignore>
     </label>
     <p class="note" style="margin-top:-10px">Oda kurarken boş bırakırsan kod otomatik verilir. Katılmak için arkadaşının kodunu yaz.</p>
     <div class="row">
@@ -247,11 +249,12 @@
       <div class="row" style="gap:8px"><input type="text" id="pName" maxlength="20" style="flex:1 1 160px"><button class="btn small" id="pNameSave" style="flex:0 0 auto">Kaydet</button></div>
     </label>
     <details class="prof-pw"><summary>🔑 Şifre değiştir</summary>
-      <div class="stack" style="margin-top:10px">
+      <form class="stack" id="pwForm" style="margin-top:10px" onsubmit="return false">
+        <input type="text" id="pUser" autocomplete="username" hidden>
         <input type="password" id="pEski" placeholder="Eski şifre" autocomplete="current-password">
         <input type="password" id="pYeni" placeholder="Yeni şifre" autocomplete="new-password">
-        <button class="btn small" id="pSifreSave">Şifreyi değiştir</button>
-      </div>
+        <button class="btn small" id="pSifreSave" type="button">Şifreyi değiştir</button>
+      </form>
     </details>
     <p class="uye-msg" id="pMsg" aria-live="polite"></p>
   </div>
@@ -275,8 +278,16 @@
     <div class="tema-led tema-bg">
       <div class="tema-row"><span>Arka plan</span><small class="note">Hareketli manzaralar; sadece senin ekranında</small></div>
       <div class="bg-picks" id="bgPicks"></div>
+      <div class="tema-row" id="bgOzelRow"><span>Kendi görselin</span><button type="button" class="btn small" id="bgOzelSec">📷 Görsel seç</button><button type="button" class="btn small" id="bgOzelSil" hidden>Kaldır</button>
+        <div class="seg" id="bgEfekt" hidden><button type="button" data-efekt="kenburns">🎞 Yakınlaşma</button><button type="button" data-efekt="parilti">✨ Parıltı</button><button type="button" data-efekt="sabit">▬ Sabit</button></div>
+        <input type="file" id="bgOzelFile" accept="image/*" hidden></div>
       <div class="tema-row"><span>Hareket</span><div class="seg"><button type="button" data-bganim="1">▶ Hareketli</button><button type="button" data-bganim="0">⏸ Sabit</button></div></div>
       <div class="tema-row"><span>Karartma</span><input type="range" id="bgDim" min="0" max="80" step="5" aria-label="Arka planı karart"></div>
+    </div>
+    <div class="tema-led tema-hava">
+      <div class="tema-row"><span>Hava durumu</span><small class="note">Kar yağınca ekranda birikir, yağmurda damlalar camdan süzülür</small></div>
+      <div class="hava-picks" id="havaPicks"></div>
+      <div class="tema-row" id="havaAyar"><span>Yoğunluk</span><input type="range" id="havaYog" min="0.2" max="1" step="0.1" aria-label="Hava yoğunluğu"><button type="button" class="btn small" id="havaTemizle">🧹 Temizle</button></div>
     </div>
     <div class="row"><button class="btn small" id="temaReset" style="flex:0 0 auto">Varsayılana dön</button><p class="note" style="flex:1 1 200px;align-self:center">Görünüm sadece senin ekranını değiştirir.</p></div>
   </div>
@@ -378,6 +389,7 @@
 <script src="js/config.js"></script>
 <script src="js/util.js"></script>
 <script src="js/backgrounds.js"></script>
+<script src="js/hava.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/net.js"></script>

@@ -2,7 +2,8 @@
 const $ = id => document.getElementById(id);
 const API = '/api/uye/';
 let tok = sessionStorage.getItem('oyunodasi-admin') || '';
-let users = [], tab = 'bekliyor', armed = null;
+let users = [], tab = 'bekliyor', armed = null, known = null, push = null;
+const baseTitle = document.title;
 
 function toast(m){ const t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 3500); }
 async function api(path, body){
@@ -16,18 +17,43 @@ function logout(){ tok = ''; sessionStorage.removeItem('oyunodasi-admin'); $('pa
 const fmt = ts => ts ? new Date(ts).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 const initial = n => (n || '?').trim().charAt(0).toLocaleUpperCase('tr-TR');
 
-async function load(){
-  try { const d = await api('admin-liste'); users = d.uyeler; $('pushBtn').textContent = d.adminBildirim ? '🔔 Bildirim açık' : '🔔 Başvuru bildirimi al'; render(); }
-  catch(e){ toast(e.message); }
+// yeni başvuru gelince sayfayı yenilemeden listeye düşer; ses + başlıkta sayı
+function ding(){
+  try { const a = new (window.AudioContext || window.webkitAudioContext)(); [880, 1175].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.frequency.value = f; g.gain.setValueAtTime(.12, a.currentTime + i * .12); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + i * .12 + .25); o.connect(g); g.connect(a.destination); o.start(a.currentTime + i * .12); o.stop(a.currentTime + i * .12 + .3); }); } catch(e){}
+}
+async function load(quiet){
+  try {
+    const d = await api('admin-liste'); users = d.uyeler;
+    $('pushBtn').textContent = d.adminBildirim ? '🔔 Bildirim açık' : '🔔 Başvuru bildirimi al';
+    const pend = users.filter(u => u.durum === 'bekliyor');
+    if (known){
+      const fresh = pend.filter(u => !known.has(u.id));
+      if (fresh.length){ ding(); toast('🆕 Yeni başvuru: ' + fresh.map(u => u.adSoyad).join(', ')); if (tab !== 'bildirim') tab = 'bekliyor'; }
+    }
+    known = new Set(users.map(u => u.id));
+    document.title = (pend.length ? '(' + pend.length + ') ' : '') + baseTitle;
+    if (tab === 'bildirim') await loadPush();
+    // yönetici bir üyenin adını yazarken liste altından değişmesin
+    const typing = document.activeElement && document.activeElement.tagName === 'INPUT' && document.activeElement.closest('.u-acts');
+    if (!quiet || !typing) render();
+  } catch(e){ if (!quiet) toast(e.message); }
+}
+async function loadPush(){
+  try {
+    const r = await fetch('/api/bildirim/admin-durum', { headers: { 'x-admin': tok } });
+    push = r.ok ? await r.json() : null;
+  } catch(e){ push = null; }
 }
 function render(){
   const counts = { bekliyor: 0, onayli: 0, red: 0 };
   users.forEach(u => { counts[u.durum] = (counts[u.durum] || 0) + 1; });
   const tabs = $('tabs'); tabs.innerHTML = '';
-  [['bekliyor', '⏳ Onay bekleyen'], ['onayli', '✅ Üyeler'], ['red', '✗ Reddedilen']].forEach(([k, n]) => {
-    const b = document.createElement('button'); b.textContent = n + ' (' + (counts[k] || 0) + ')'; b.classList.toggle('on', tab === k);
-    b.onclick = () => { tab = k; render(); }; tabs.append(b);
+  [['bekliyor', '⏳ Onay bekleyen'], ['onayli', '✅ Üyeler'], ['red', '✗ Reddedilen'], ['bildirim', '🔔 Bildirimler']].forEach(([k, n]) => {
+    const b = document.createElement('button'); b.textContent = n + (k === 'bildirim' ? (push ? ' (' + push.cihazlar.length + ')' : '') : ' (' + (counts[k] || 0) + ')'); b.classList.toggle('on', tab === k);
+    b.onclick = async () => { tab = k; if (k === 'bildirim') await loadPush(); render(); }; tabs.append(b);
   });
+  $('q').hidden = tab === 'bildirim';
+  if (tab === 'bildirim'){ renderPush(); return; }
   const q = $('q').value.trim().toLocaleLowerCase('tr-TR');
   const list = $('list'); list.innerHTML = '';
   const shown = users.filter(u => u.durum === tab && (!q || (u.adSoyad + ' ' + u.kadi + ' ' + u.name).toLocaleLowerCase('tr-TR').includes(q)));
@@ -69,6 +95,43 @@ function render(){
     list.append(row);
   });
 }
+// bildirim durumu: hangi cihazlar kayıtlı, son gönderimler başarılı mı
+function renderPush(){
+  const list = $('list'); list.innerHTML = '';
+  if (!push){ const p = document.createElement('p'); p.className = 'note'; p.textContent = 'Bildirim bilgisi alınamadı.'; list.append(p); return; }
+  const head = document.createElement('div'); head.className = 'u-acts'; head.style.justifyContent = 'flex-start';
+  const t = document.createElement('button'); t.className = 'btn small primary'; t.textContent = '🧪 Hepsine deneme bildirimi gönder';
+  t.onclick = async () => {
+    t.disabled = true;
+    try { const r = await fetch('/api/bildirim/admin-test', { method: 'POST', headers: { 'x-admin': tok } }); const d = await r.json(); toast('Deneme: ' + d.sent + '/' + d.total + ' cihaza ulaştı' + (d.gone ? ' · ' + d.gone + ' eski kayıt silindi' : '')); await loadPush(); render(); }
+    catch(e){ toast('Gönderilemedi'); }
+    t.disabled = false;
+  };
+  const n = document.createElement('span'); n.className = 'note'; n.textContent = push.cihazlar.length + ' cihazda bildirim açık. Oda açanın kendi cihazına bildirim gitmez.';
+  head.append(t, n); list.append(head);
+  push.cihazlar.slice().sort((a, b) => (b.last ? b.last.at : 0) - (a.last ? a.last.at : 0)).forEach(c => {
+    const row = document.createElement('div'); row.className = 'u';
+    const av = document.createElement('div'); av.className = 'u-av'; av.textContent = /Apple/.test(c.platform) ? '🍎' : /Android|Chrome/.test(c.platform) ? '🤖' : '💻';
+    const info = document.createElement('div'); info.className = 'u-info';
+    const b = document.createElement('b'); b.textContent = c.name || '—';
+    const s1 = document.createElement('span'); s1.textContent = c.platform + ' · kayıt: ' + fmt(c.ts);
+    const s2 = document.createElement('span');
+    const ok = c.last && c.last.st >= 200 && c.last.st < 300;
+    s2.textContent = !c.last ? 'Henüz bildirim gönderilmedi' : (ok ? '✅ Son bildirim ulaştı · ' : '❌ Son bildirim ulaşmadı (kod ' + (c.last.st || c.last.err || '?') + ') · ') + fmt(c.last.at);
+    if (c.last && !ok) s2.style.color = 'var(--danger)';
+    info.append(b, s1, s2);
+    row.append(av, info);
+    list.append(row);
+  });
+  if (push.gecmis.length){
+    const h = document.createElement('p'); h.className = 'note'; h.style.marginTop = '8px'; h.textContent = 'Son “oda açıldı” bildirimleri:'; list.append(h);
+    push.gecmis.slice(0, 10).forEach(g => {
+      const p = document.createElement('p'); p.className = 'note'; p.style.margin = '0';
+      p.textContent = fmt(g.at) + ' · ' + g.by + ' “' + g.code + '” açtı → ' + g.sent + '/' + g.total + ' cihaza ulaştı' + (g.fails && g.fails.length ? ' · ulaşmayan: ' + g.fails.map(f => f.name + ' (' + (f.st || f.err || '?') + ')').join(', ') : '');
+      list.append(p);
+    });
+  }
+}
 async function act(path, body, msg){
   try { await api(path, body); toast(msg); await load(); } catch(e){ toast(e.message); }
 }
@@ -95,5 +158,11 @@ $('pushBtn').onclick = async () => {
     toast('🔔 Yeni başvuru gelince bu cihaza bildirim gelecek'); load();
   } catch(e){ toast(e.message); }
 };
-function start(){ $('loginCard').hidden = true; $('panel').hidden = false; load(); clearInterval(start.t); start.t = setInterval(() => { if (!document.hidden && tok) load(); }, 30000); }
+function start(){
+  $('loginCard').hidden = true; $('panel').hidden = false; load();
+  clearInterval(start.t);
+  // sayfa açıkken 5 saniyede bir yeni başvuruya bak (yenilemeye gerek yok)
+  start.t = setInterval(() => { if (tok && !document.hidden) load(true); }, 5000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && tok) load(true); });
+}
 if (tok) start();

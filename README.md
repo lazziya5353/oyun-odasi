@@ -17,7 +17,7 @@ Arkadaşlarla oyun oynarken kullanmak için tarayıcıda çalışan sesli sohbet
 - **Masa oyunları:** Tavla, Okey (Klasik / Eşli / 101), **Batak** (İhaleli, Eşli, Koz Maça; botlu), **İsim-Şehir** (2-8 kişi, itiraz oylaması), **Çiz ve Tahmin Et** (2-8 kişi, canlı çizim)
 - **Tek kişilik oyunlar (skor tablolu):** Günün Sudokusu, Kelime Bul (Türkçe Wordle), Resimli Yapboz, Engel Koşusu, Ördek Avı, Adam Asmaca, Yılan, 2048, Mayın Tarlası, Hafıza Kartları. Günlük ve haftalık + tüm zamanlar tablosu; rekor odaya duyurulur
 - **👤 Üyelik:** ad soyad + kullanıcı adı + şifreyle üye olunur, yönetici onaylar (onaylanınca bildirim gider). Üye her seferinde ad yazmaz, sadece oda koduyla girer; profilinden adını ve fotoğrafını değiştirir. Skor tablosunda üyeler ✓ ile görünür, adları başkası tarafından kullanılamaz
-- **🎨 Görünüm:** Standart, Cyberpunk ve LED modu (kayan / nabız / sabit ışık, renk ya da otomatik RGB, hız, parlama). Hareketli arka planlar: Galaksi, Samanyolu, Kayan yıldızlar, İstanbul gecesi, Cyberpunk şehir, Kuzey ışıkları, Gece okyanusu. Herkes kendi görünümünü seçer
+- **🎨 Görünüm:** Standart, Cyberpunk ve LED modu (kayan / nabız / sabit ışık, renk ya da otomatik RGB, hız, parlama). Hareketli arka planlar: Galaksi, Samanyolu, Kayan yıldızlar, Kuzey ışıkları, Gece okyanusu, İstanbul gecesi, Kapadokya, Ateşböcekleri, Cyberpunk şehir, Neon sokak, Neon dalgalar; Fantastik paket: Ejderha Vadisi, Büyülü Orman, Gece Şatosu, Büyücü Kulesi, Kristal Mağara. **📷 Kendi görselin:** herkes kendi resmini arka plan yapabilir (yalnızca o cihazda saklanır; Yakınlaşma / Parıltı / Sabit efekt). Hava durumu: Kar (ekranda birikir), Yağmur (camdan süzülen damlalar), Fırtına, Sonbahar. Herkes kendi görünümünü seçer
 - **🍵 İkram:** kişinin kutucuğundaki İkram düğmesiyle çay, simit, Türk kahvesi, ayran, çekirdek, Maraş dondurması, lokum ya da su ikram edilir; ikram uçarak gider, 1 dakika masada durur
 - **📲 Uygulama gibi yükleme:** telefonda ana ekrana, bilgisayarda masaüstüne eklenir; kendi simgesiyle tam ekran açılır
 - **🔔 Bildirimler:** biri oda açınca bildirimleri açmış herkese bildirim gider (site kapalıyken de). iPhone'da önce Ana Ekrana eklenmeli
@@ -120,6 +120,8 @@ js/film.js        film yayını, YouTube senkron izleme
 js/main.js        giriş ekranı
 js/games/         oyunlar: tavla, okey, batak, isim-şehir, çiz-tahmin, tekli oyunlar, skor çerçevesi, ikramlar
 js/theme.js       görünüm modları (css/theme.css)
+js/backgrounds.js hareketli arka planlar (css/bg.css, img/)
+js/hava.js        hava durumu: kar, yağmur, fırtına, yaprak (css/hava.css)
 css/games.css     oyun görünümü
 js/push.js        bildirimler, uygulama olarak yükleme
 sw.js             bildirimleri gösteren servis çalışanı

@@ -96,6 +96,7 @@ async function doLogin(e){
     store.set('oyunodasi-name', d.uye.name);
     $('uyeDlg').close(); $('gSifre').value = '';
     toast('👋 Hoş geldin ' + d.uye.name + '! Artık sadece oda koduyla girebilirsin.');
+    if (typeof clearAutofilledCode === 'function') setTimeout(clearAutofilledCode, 50);
     $('codeInput').focus();
   } catch(err){ uyeMsg(err.message); }
   btn.disabled = false;
@@ -139,6 +140,7 @@ function openProfil(){
   if (!account) return;
   paintAvatar($('pAv'), account.uye.name, myFoto);
   $('pName').value = account.uye.name;
+  $('pUser').value = account.uye.kadi;
   $('pInfo').textContent = account.uye.adSoyad + ' · @' + account.uye.kadi;
   $('pFotoSil').hidden = !myFoto;
   $('pMsg').textContent = '';

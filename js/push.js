@@ -66,7 +66,12 @@ async function notifyRoomOpened(){
   try {
     let endpoint = '';
     try { const sub = swReg && await swReg.pushManager.getSubscription(); endpoint = sub ? sub.endpoint : ''; } catch(e){}
-    await pushApi('oda', { code: roomCode, name: myName, endpoint });
+    const r = await pushApi('oda', { code: roomCode, name: myName, endpoint });
+    // oda açana kısa bilgi: kaç kişiye gitti
+    if (r.sinir === 'kod') toast('🔔 Bu oda için 1 dakika içinde zaten bildirim gönderildi');
+    else if (r.sinir) toast('🔔 Son bir saatte çok fazla oda açıldı; bildirim gönderilmedi');
+    else if (r.total === 0) toast('🔔 Bildirim gidecek kimse yok: arkadaşların önce “Bildirimleri aç” demeli (senin cihazına kendi odanın bildirimi gelmez)');
+    else toast('🔔 ' + r.sent + ' cihaza “oda açıldı” bildirimi gitti' + (r.failed ? ' · ' + r.failed + ' cihaza ulaşılamadı' : ''));
   } catch(e){ /* bildirim gitmezse oda yine de açık */ }
 }
 
@@ -76,6 +81,7 @@ function renderNotifUI(){
   card.hidden = st === 'unsupported' && !installEvt;
   card.dataset.state = st;
   btn.hidden = st === 'unsupported' || st === 'ios-install';
+  const tb = $('notifTest'); if (tb) tb.hidden = st !== 'on';
   btn.textContent = st === 'on' ? 'Kapat' : '🔔 Bildirimleri aç';
   btn.classList.toggle('primary', st === 'off');
   $('notifTitle').textContent = st === 'on' ? '🔔 Bildirimler açık' : '🔔 Oda açılınca haber al';
@@ -98,6 +104,15 @@ const toggleNotifs = () => (notifState() === 'on' ? disableNotifs() : notifState
 
 (async function initPush(){
   $('notifBtn').onclick = toggleNotifs;
+  $('notifTest').onclick = async () => {
+    try {
+      const sub = swReg && await swReg.pushManager.getSubscription();
+      if (!sub){ await subscribePush(); }
+      const s2 = await swReg.pushManager.getSubscription();
+      const r = await pushApi('test', { endpoint: s2 && s2.endpoint });
+      toast(r.sent ? '🧪 Deneme bildirimi gönderildi; birkaç saniye içinde gelmeli' : '⚠ Bu cihaz kayıtlı görünmüyor, bildirimleri kapatıp yeniden aç');
+    } catch(e){ toast('Deneme bildirimi gönderilemedi: ' + e.message); }
+  };
   $('notifBtn2').onclick = toggleNotifs;
   $('installBtn').onclick = async () => {
     if (!installEvt) return;

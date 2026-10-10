@@ -2,6 +2,14 @@
 $('nameInput').value = store.get('oyunodasi-name') || '';
 const urlCode = new URLSearchParams(location.search).get('oda');
 if (urlCode) $('codeInput').value = cleanCode(urlCode);
+// Tarayıcının şifre yöneticisi bazen kullanıcı adını oda kodu kutusuna yazıyor: bunu temizle
+function clearAutofilledCode(){
+  const v = $('codeInput').value, acc = typeof account !== 'undefined' && account;
+  if (!v || urlCode) return;
+  if (acc && v.toLocaleLowerCase('tr-TR') === acc.uye.kadi.toLocaleLowerCase('tr-TR')) $('codeInput').value = '';
+  else { try { if ($('codeInput').matches(':-webkit-autofill')) $('codeInput').value = ''; } catch(e){} }
+}
+[0, 300, 1200].forEach(ms => setTimeout(clearAutofilledCode, ms));
 $('codeInput').addEventListener('input', e => {
   const c = cleanCode(e.target.value);
   if (e.target.value !== c) e.target.value = c;
