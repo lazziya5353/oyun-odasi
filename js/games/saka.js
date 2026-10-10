@@ -1,7 +1,8 @@
 // Şakalar: yönetici panelden odadakilere domates, yumurta, korku efekti… atar; kişinin ekranında birden çıkar.
 //
-// Nasıl ulaşır: yönetim paneli odaya görünmez bir bağlantıyla (oda sahibine) bağlanır. Bağlantı, sunucunun
-// imzaladığı bir "bilet" taşır; oda sahibi bileti açık anahtarla doğrular, sonra şakayı odadaki herkese iletir.
+// Nasıl ulaşır: yönetim paneli odaya görünmez bir bağlantıyla (önce oda sahibine, olmazsa odadaki başka birine)
+// bağlanır. Bağlantı, sunucunun imzaladığı bir "bilet" taşır; bağlanılan kişi bileti açık anahtarla doğrular ve
+// şakayı bilet ile birlikte herkese iletir; alan herkes bileti yine kendisi doğrular.
 // Böylece sunucuya sürekli sorgu gerekmez ve efekt anında görünür. Kimse kişi listesinde yönetici görmez.
 // Herkes Görünüm penceresinden şaka efektlerini kapatabilir.
 (() => {
@@ -24,30 +25,36 @@ const SAKA = {
 const SAKA_KEY = 'oyunodasi-saka';
 const sakaAcik = () => store.get(SAKA_KEY) !== 'kapali';
 
-// ---------- oda sahibi: yönetici bağlantısını doğrula ve şakaları ilet ----------
+// ---------- odadaki herhangi biri: yönetici bağlantısını doğrula ve şakaları herkese ilet ----------
+// (Eskiden sadece oda sahibi iletiyordu; oda sahibinin sayfası eski kaldıysa şaka hiç ulaşmıyordu.)
 let sakaPub = null;
+const sakaOkSigs = new Map();
 async function sakaVerify(b){
   try {
-    if (!b || typeof b.sig !== 'string' || !(b.exp > Date.now()) || b.exp > Date.now() + 13 * 3600e3) return false;
+    if (!b || typeof b.sig !== 'string' || b.sig.length > 200 || !(b.exp > Date.now()) || b.exp > Date.now() + 13 * 3600e3) return false;
+    if (sakaOkSigs.get(b.sig) === b.exp) return true;
     if (!sakaPub){
       const { jwk } = await (await fetch('/api/uye/saka-anahtar')).json();
       sakaPub = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
     }
     const sig = Uint8Array.from(atob(b.sig.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-    return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, sakaPub, sig, new TextEncoder().encode('oyunodasi-saka-v1|' + b.exp));
+    const ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, sakaPub, sig, new TextEncoder().encode('oyunodasi-saka-v1|' + b.exp));
+    if (ok) sakaOkSigs.set(b.sig, b.exp);
+    return ok;
   } catch(e){ return false; }
 }
 function sakaAdminConn(conn){
   let ok = false;
+  const ticket = conn.metadata && conn.metadata.saka;
   conn.on('open', async () => {
-    ok = isHost && await sakaVerify(conn.metadata && conn.metadata.saka);
-    if (!ok){ send(conn, { t: 'saka-red', host: isHost }); setTimeout(() => { try { conn.close(); } catch(e){} }, 400); return; }
+    ok = joined && !!peer && await sakaVerify(ticket);
+    if (!ok){ send(conn, { t: 'saka-red', joined }); setTimeout(() => { try { conn.close(); } catch(e){} }, 400); return; }
     sakaRoster(conn);
   });
   conn.on('data', d => {
     if (!ok || !d || typeof d !== 'object') return;
     if (d.t === 'saka-liste') sakaRoster(conn);
-    else if (d.t === 'saka') sakaRelay(d, conn);
+    else if (d.t === 'saka') sakaRelay(d, conn, ticket);
   });
   conn.on('error', () => {});
 }
@@ -56,19 +63,20 @@ function sakaRoster(conn){
   peers.forEach(p => { if (p.linked && p.helloed) list.push({ id: p.id, name: p.name }); });
   send(conn, { t: 'saka-liste', oda: roomCode, list });
 }
-function sakaRelay(d, conn){
+function sakaRelay(d, conn, ticket){
   if (!SAKA[d.e]) return;
   const now = Date.now();
   if (now - (conn._sakaT || 0) < 700) return;
   conn._sakaT = now;
-  const msg = { t: 'saka', e: d.e, to: typeof d.to === 'string' ? d.to : '*', m: clip(d.m || '', 90) };
+  const msg = { t: 'saka', e: d.e, to: typeof d.to === 'string' ? d.to : '*', m: clip(d.m || '', 90), b: { exp: ticket.exp, sig: ticket.sig } };
   broadcast(msg);
   sakaShow(msg);
   send(conn, { t: 'saka-ok', e: d.e, to: msg.to });
 }
+// başka biri iletti: içindeki yönetici biletini doğrula, sonra göster
 function sakaOnData(id, d){
   if (d.t !== 'saka') return false;
-  if (id === currentHostId && SAKA[d.e]) sakaShow(d);
+  if (SAKA[d.e]) sakaVerify(d.b).then(ok => { if (ok) sakaShow(d); });
   return true;
 }
 let sakaLast = 0;

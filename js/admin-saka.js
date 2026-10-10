@@ -31,41 +31,69 @@ function sakaDisconnect(){
   const p = SK.peer; SK.peer = null; SK.conn = null; SK.list = []; SK.listSig = '';
   try { p && p.destroy(); } catch(e){}
 }
+// Bir sunucuda dene: önce oda kodunun adresine (oda sahibi), o eski sürümse odadaki diğer kişilere.
+// Sonuç: bağlanınca resolve; reject: 'yok' (oda bu sunucuda yok) | 'eski' (odadakilerin sayfası eski) | 'red' | 'timeout'
 function sakaTry(srv, code){
   return new Promise(async (res, rej) => {
     let pr;
     try { pr = new Peer({ debug: 0, host: srv.host, port: srv.port, secure: srv.secure, path: srv.path, config: { iceServers: await sakaIce() } }); }
     catch(e){ rej('network'); return; }
-    let done = false;
-    const fail = t => { if (done) return; done = true; clearTimeout(tm); try { pr.destroy(); } catch(e){} rej(t); };
-    const tm = setTimeout(() => fail('timeout'), 15000);
-    pr.on('error', e => fail(e && e.type));
-    pr.on('open', () => {
-      const c = pr.connect(SAKA_PREFIX + code, { reliable: true, metadata: { saka: SK.ticket } });
+    let done = false, cur = null, stepT = null, old = false, found = false;
+    const queue = [SAKA_PREFIX + code], tried = new Set();
+    const fail = t => { if (done) return; done = true; clearTimeout(allT); clearTimeout(stepT); try { pr.destroy(); } catch(e){} rej(t); };
+    const allT = setTimeout(() => fail(old ? 'eski' : found ? 'timeout' : 'timeout'), 40000);
+    const next = () => {
+      if (done) return;
+      clearTimeout(stepT);
+      if (cur){ const c = cur; cur = null; try { c.close(); } catch(e){} }
+      const id = queue.shift();
+      if (!id){ fail(old ? 'eski' : found ? 'timeout' : 'yok'); return; }
+      tried.add(id);
+      const c = pr.connect(id, { reliable: true, metadata: { saka: SK.ticket } });
+      cur = c;
+      stepT = setTimeout(() => { if (cur === c) next(); }, 9000);
+      c.on('open', () => { if (cur === c) found = true; });
       c.on('data', d => {
         if (!d || typeof d !== 'object') return;
-        if (d.t === 'saka-red'){ fail(d.host === false ? 'redirect' : 'red'); return; }
         if (d.t === 'saka-liste'){
-          if (!done){ done = true; clearTimeout(tm); SK.peer = pr; SK.conn = c; res(true); }
+          if (!done && cur === c){ done = true; clearTimeout(allT); clearTimeout(stepT); SK.peer = pr; SK.conn = c; res(true); }
           if (SK.conn !== c) return;
           SK.list = Array.isArray(d.list) ? d.list : [];
           if (SK.to !== '*' && !SK.list.some(x => x.id === SK.to)) SK.to = '*';
           const s = JSON.stringify(SK.list);
           if (s !== SK.listSig){ SK.listSig = s; if (tab === 'saka' && !document.activeElement.matches('#list input')) renderList(); }
+          return;
         }
         if (d.t === 'saka-ok' && SK.conn === c){
           const e = SAKA_LIST.find(x => x[0] === d.e) || ['mesaj', '📣', 'Mesaj'];
           const who = d.to === '*' ? 'herkese' : ((SK.list.find(x => x.id === d.to) || {}).name || 'kişiye');
           toast(e[1] + ' ' + e[2] + ' → ' + who + ' gönderildi');
+          return;
         }
+        if (cur !== c || done) return;
+        if (d.t === 'saka-red'){ if (d.joined === false) next(); else fail('red'); return; }
+        // eski sürüm bizi normal bir kişi sanıp odaya alıyor: içerideki kişileri öğren, onlardan birini dene
+        if (d.t === 'peers' || d.t === 'redirect'){
+          old = true;
+          (Array.isArray(d.ids) ? d.ids : []).forEach(i => { if (typeof i === 'string' && i.startsWith(SAKA_PREFIX) && !tried.has(i) && !queue.includes(i)) queue.push(i); });
+          next(); return;
+        }
+        if (d.t === 'hello' || d.t === 'sync'){ old = true; clearTimeout(stepT); stepT = setTimeout(() => { if (cur === c) next(); }, 1500); }
       });
       c.on('close', () => {
-        if (SK.conn !== c) return;
-        sakaDisconnect(); SK.status = 'Bağlantı koptu (oda kapanmış ya da oda sahibi değişmiş olabilir). Tekrar bağlan.';
-        if (tab === 'saka') renderList();
+        if (SK.conn === c){
+          sakaDisconnect(); SK.status = 'Bağlantı koptu (bağlandığın kişi odadan çıkmış olabilir). Tekrar bağlan.';
+          if (tab === 'saka') renderList();
+        }
       });
       c.on('error', () => {});
+    };
+    pr.on('error', e => {
+      const t = e && e.type;
+      if (t === 'peer-unavailable'){ next(); return; }      // denenen adres yok: sıradakine geç
+      if (!SK.conn || SK.peer !== pr) fail(t || 'network');
     });
+    pr.on('open', next);
   });
 }
 async function sakaConnect(code){
@@ -79,9 +107,13 @@ async function sakaConnect(code){
     let last = '';
     for (const srv of sakaServers()){
       try { await sakaTry(srv, code); SK.status = ''; last = ''; break; }
-      catch(e){ last = e; if (e === 'red') break; }
+      catch(e){ last = e; if (e === 'red' || e === 'eski') break; }
     }
-    if (last) SK.status = last === 'red' ? 'Oda, yönetici biletini kabul etmedi. Sayfayı yenileyip tekrar dene.' : '“' + code + '” kodlu açık oda bulunamadı. Kod doğru mu, odada biri var mı?';
+    if (last) SK.status = {
+      red: 'Oda, yönetici biletini kabul etmedi. Sayfayı yenileyip tekrar dene.',
+      eski: 'Oda açık ama odadakilerin sayfası eski sürümde kalmış. Odadakiler sayfayı bir kez yenilesin (telefonda uygulamayı kapatıp açsın), sonra tekrar bağlan.',
+      timeout: 'Oda bulundu ama bağlantı kurulamadı (ağ engeli olabilir). Biraz sonra tekrar dene.'
+    }[last] || '“' + code + '” kodlu açık oda bulunamadı. Kod doğru mu, odada biri var mı?';
   } catch(e){ SK.status = e.message; }
   SK.busy = false;
   if (tab === 'saka') renderList();
@@ -111,7 +143,7 @@ function renderSaka(list){
     const go = button(SK.busy ? 'Bağlanıyor…' : '🔌 Bağlan', 'primary', () => sakaConnect(inp.value)); go.disabled = SK.busy;
     row.append(inp, go);
     box.append(row);
-    if (SK.status) box.append(note(SK.status, /bulunamadı|kabul|koptu/.test(SK.status) ? 'err' : ''));
+    if (SK.status) box.append(note(SK.status, /bulunamadı|kabul|koptu|eski|kurulamadı/.test(SK.status) ? 'err' : ''));
     list.append(box);
     return;
   }
