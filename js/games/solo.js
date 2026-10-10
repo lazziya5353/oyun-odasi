@@ -40,7 +40,9 @@ async function loadBoard(def, lv, force){
 }
 async function sendScore(def, lv, score, day){
   if (!soloApiOK()) throw new Error('yerel');
-  const r = await fetch(SKOR_API + 'gonder', { method: 'POST', headers: { 'content-type': 'application/json' },
+  const hd = { 'content-type': 'application/json' };
+  if (typeof account !== 'undefined' && account) hd.authorization = 'Bearer ' + account.token;     // üye: tabloda ✓ ile, adı korunur
+  const r = await fetch(SKOR_API + 'gonder', { method: 'POST', headers: hd,
     body: JSON.stringify({ game: def.id, level: lv, name: myName || store.get('oyunodasi-name') || 'Oyuncu', score, day }) });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(d.hata || 'HTTP ' + r.status);
@@ -267,6 +269,7 @@ async function renderLeaderboard(force){
         li.innerHTML = '<span class="lb-n"></span><span class="lb-name"></span><span class="lb-score"></span>';
         li.querySelector('.lb-n').textContent = ['🥇', '🥈', '🥉'][i] || (i + 1);
         li.querySelector('.lb-name').textContent = r.name;
+        if (r.uye){ const v = document.createElement('span'); v.className = 'lb-uye'; v.textContent = '✓'; v.title = 'Üye'; li.querySelector('.lb-name').append(v); }
         li.querySelector('.lb-score').textContent = def.format(r.score);
         list.append(li);
       });

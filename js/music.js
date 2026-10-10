@@ -223,6 +223,21 @@ function musicPeerLeft(id){
 }
 
 // ---------- radyo ----------
+// Duraklat / devam: herkes için. Canlı yayın olduğu için devam edince yayın kaldığı yerden değil, şu andan başlar.
+function setRadioPaused(paused){
+  if (!radio) return;
+  broadcast({ t: 'radio-pause', paused: !!paused });
+  applyRadioPause(paused, peer.id);
+}
+function applyRadioPause(paused, by, quiet){
+  if (!radio || radio.paused === !!paused) return;
+  radio.paused = !!paused;
+  if (joined && peer && by !== peer.id && !quiet){
+    const n = (peers.get(by) || {}).name || 'Biri';
+    addSys('📻 ' + n + (paused ? ' radyoyu durdurdu' : ' radyoyu devam ettirdi'));
+  }
+  playRadio(); renderRadioChip(); refreshMusicUI();
+}
 function setRadio(st){
   const station = st ? { name: clip(st.name, 80), url: st.url, favicon: st.favicon || '', tags: clip(st.tags, 80) } : null;
   broadcast({ t: 'radio', station });
@@ -232,7 +247,7 @@ function applyRadio(st, by, quiet){
   if (st){
     if (typeof st.url !== 'string' || !/^https:\/\//i.test(st.url) || st.url.length > 500) return;
     const byName = by === (peer && peer.id) ? myName : ((peers.get(by) || {}).name || '');
-    radio = { name: clip(st.name, 80) || 'Radyo', url: st.url, by, byName,
+    radio = { name: clip(st.name, 80) || 'Radyo', url: st.url, by, byName, paused: false,
       favicon: typeof st.favicon === 'string' && /^https:\/\//i.test(st.favicon) ? st.favicon : '', tags: clip(st.tags, 80) };
     if (current){ if (current.owner === peer.id) stopLocal(); current = null; }
   } else radio = null;
@@ -245,7 +260,7 @@ function applyRadio(st, by, quiet){
 }
 // Radyo odadaki herkes için çalar; sadece "benim için sustur" diyen ya da sesleri kapatan duymaz
 function playRadio(){
-  const on = !!radio && !radioMuted && joined;
+  const on = !!radio && !radio.paused && !radioMuted && joined;
   if (!on){
     if (radioEl && radioEl._url){ radioEl._url = ''; radioEl.pause(); radioEl.removeAttribute('src'); radioEl.load(); }
     return;
@@ -279,7 +294,12 @@ function renderRadioChip(){
   $('rcMute').textContent = radioMuted ? '🔇' : '🔊';
   $('rcMute').title = radioMuted ? 'Radyoyu benim için aç' : 'Radyoyu sadece benim için sustur';
   $('rcMute').setAttribute('aria-pressed', radioMuted);
+  chip.classList.toggle('paused', !!radio.paused);
+  $('rcPause').textContent = radio.paused ? '▶' : '⏸';
+  $('rcPause').title = radio.paused ? 'Radyoyu herkes için devam ettir' : 'Radyoyu herkes için durdur';
+  $('rcPause').setAttribute('aria-pressed', !!radio.paused);
 }
+$('rcPause').onclick = () => { if (radio) setRadioPaused(!radio.paused); };
 $('radioOpenBtn').onclick = openRadioDialog;
 $('rcChange').onclick = openRadioDialog;
 $('rcMute').onclick = () => setRadioMuted(!radioMuted);
@@ -368,13 +388,14 @@ function musicOnData(id, d){
       return true;
     }
     case 'radio': applyRadio(d.station, id); return true;
+    case 'radio-pause': applyRadioPause(!!d.paused, id); return true;
     case 'lib-changed': if (typeof loadLibrary === 'function') loadLibrary(); return true;
   }
   return false;
 }
 function musicStateForSync(){
   return {
-    queue, radio: radio && { name: radio.name, url: radio.url, favicon: radio.favicon, tags: radio.tags, by: radio.by },
+    queue, radio: radio && { name: radio.name, url: radio.url, favicon: radio.favicon, tags: radio.tags, by: radio.by, paused: !!radio.paused },
     current: current && { id: current.id, pos: estPos(), dur: current.dur, paused: current.paused }
   };
 }
@@ -385,7 +406,7 @@ function applyMusicState(s){
     const it = queue.find(x => x.id === s.current.id);
     current = { id: it.id, owner: it.owner, ownerName: it.ownerName, title: it.title, lib: it.lib, pos: Number(s.current.pos) || 0, dur: Number(s.current.dur) || 0, paused: !!s.current.paused, at: performance.now() };
   }
-  if (s.radio) applyRadio(s.radio, s.radio.by, true);
+  if (s.radio){ applyRadio(s.radio, s.radio.by, true); if (s.radio.paused) applyRadioPause(true, s.radio.by, true); }
   refreshMusicUI();
 }
 
@@ -399,7 +420,7 @@ function renderMusicDeck(d){
   d.innerHTML = '';
   const color = radio ? colorFor(radio.by) : current ? colorFor(current.owner) : '#ff7ab6';
   const np = document.createElement('div');
-  np.className = 'np' + ((radio || (current && !current.paused)) ? ' playing' : '');
+  np.className = 'np' + (((radio && !radio.paused) || (current && !current.paused)) ? ' playing' : '');
   np.style.setProperty('--c', color);
   const vinyl = document.createElement('div'); vinyl.className = 'vinyl';
   if (radio){ const r = document.createElement('span'); r.className = 'radio-ico'; r.textContent = '📻'; vinyl.append(r); }
@@ -408,7 +429,7 @@ function renderMusicDeck(d){
   const title = document.createElement('h2'); title.className = 'np-title';
   const sub = document.createElement('p'); sub.className = 'np-sub';
   if (radio){
-    tag.textContent = '📻 Radyo';
+    tag.textContent = radio.paused ? '⏸ Radyo duraklatıldı' : '📻 Radyo';
     title.textContent = radio.name;
     sub.textContent = [radio.tags, radio.byName ? radio.byName + ' açtı' : '', 'odadaki herkes dinliyor'].filter(Boolean).join(' · ');
   } else if (current){
@@ -439,7 +460,10 @@ function renderMusicDeck(d){
     btn(current.paused ? '▶ Devam' : '⏸ Duraklat', togglePause);
     btn('⏭ Geç', () => skipItem(current.id));
   }
-  if (radio) btn('⏹ Radyoyu kapat', () => setRadio(null));
+  if (radio){
+    btn(radio.paused ? '▶ Devam et' : '⏸ Durdur', () => setRadioPaused(!radio.paused), radio.paused ? 'primary' : '');
+    btn('⏹ Radyoyu kapat', () => setRadio(null));
+  }
   if (!current && !radio && queue.length) btn('▶ Sırayı başlat', () => startItem(queue[0].id));
   const vol = document.createElement('div'); vol.className = 'vol';
   if (radio){
@@ -510,7 +534,7 @@ function drawMusicViz(){
     if (an){
       const k = i < n / 2 ? n / 2 - 1 - i : i - n / 2;      // ortadan dışa doğru ayna
       v = mbuf[Math.floor(k * (an.frequencyBinCount * 0.6) / (n / 2))] / 255;
-    } else if (radio) v = 0.18 + 0.22 * Math.abs(Math.sin(t * 2.1 + i * 0.45) * Math.sin(t * 1.3 + i * 0.13));
+    } else if (radio && !radio.paused) v = 0.18 + 0.22 * Math.abs(Math.sin(t * 2.1 + i * 0.45) * Math.sin(t * 1.3 + i * 0.13));
     else v = 0.03;
     hs[i] = v > hs[i] ? v : hs[i] * 0.88 + v * 0.12;
   }

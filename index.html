@@ -24,7 +24,14 @@
 <link rel="stylesheet" href="css/g-kelime.css">
 <link rel="stylesheet" href="css/g-yapboz.css">
 <link rel="stylesheet" href="css/g-kosu.css">
+<link rel="stylesheet" href="css/g-ordek.css">
+<link rel="stylesheet" href="css/g-yilan.css">
+<link rel="stylesheet" href="css/g-mayin.css">
+<link rel="stylesheet" href="css/g-adam.css">
+<link rel="stylesheet" href="css/g-2048.css">
+<link rel="stylesheet" href="css/g-hafiza.css">
 <link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/bg.css">
 <script>try{var t=JSON.parse(localStorage.getItem("oyunodasi-tema")||"{}");if(t.mode==="cyber"||t.mode==="led")document.documentElement.dataset.tema=t.mode;}catch(e){}</script>
 </head>
 <body>
@@ -55,9 +62,19 @@
         <button class="btn" id="notifBtn">🔔 Bildirimleri aç</button>
       </div>
     </div>
-    <label for="nameInput">Adın
+    <div class="acct" id="acctBox">
+      <div class="acct-in" id="acctIn" hidden>
+        <span class="acct-av" id="acctAv"></span>
+        <div class="acct-info"><span class="note">Hoş geldin</span><b id="acctName"></b><small id="acctUser"></small></div>
+        <button class="btn small" id="profilBtn">👤 Profil</button>
+        <button class="btn small" id="logoutBtn">Çıkış</button>
+      </div>
+    </div>
+    <label for="nameInput" id="nameLabel">Adın
       <input type="text" id="nameInput" maxlength="20" placeholder="örn. Kaan" autocomplete="off">
     </label>
+    <div class="acct-out" id="acctOut" hidden><span>Her seferinde adını yazmak istemiyor musun?</span> <button type="button" class="linkbtn" id="loginBtn">Giriş yap</button> · <button type="button" class="linkbtn" id="signupBtn">Üye ol</button></div>
+    <p class="note acct-pending" id="acctPending" hidden></p>
 
     <div class="mictest" id="micPanel">
       <span class="tag">Mikrofon testi</span>
@@ -102,6 +119,7 @@
       <span class="count-pill" id="peopleTitle">👥 1 kişi</span>
       <span class="sig-pill" id="sigStatus" hidden title="Eşleştirme sunucusuna yeniden bağlanılıyor. Odadakilerle konuşma devam ediyor; bu sırada yeni gelenler katılamayabilir.">⟳ <span class="lbl">Sunucuya bağlanıyor</span></span>
       <button class="btn small" id="mixerBtn2">🎚 <span class="lbl">Sesleri ayarla</span></button>
+      <button class="btn small" id="profilBtn2" title="Profilim">👤 <span class="lbl">Profil</span></button>
       <button class="btn small" id="temaBtn2" title="Görünüm: Standart / Cyberpunk / LED">🎨 <span class="lbl">Görünüm</span></button>
       <button class="btn small notif-top" id="notifBtn2" hidden>🔕 <span class="lbl">Bildirim</span></button>
       <button class="btn small" id="radioOpenBtn" title="Odadaki herkes için radyo aç">📻 <span class="lbl">Radyo</span></button>
@@ -110,6 +128,7 @@
         <button class="rc-name" id="rcChange" title="İstasyon değiştir"><span id="rcName"></span></button>
         <input type="range" data-radiovol min="0" max="100" aria-label="Radyo sesi (sadece senin için)">
         <button class="rc-btn" id="rcMute" aria-pressed="false">🔊</button>
+        <button class="rc-btn" id="rcPause" aria-pressed="false" title="Radyoyu herkes için durdur">⏸</button>
         <button class="rc-btn" id="rcStop" title="Radyoyu herkes için kapat">⏹</button>
       </div>
     </div>
@@ -191,6 +210,53 @@
 </section>
 
 <!-- ============ PENCERELER ============ -->
+<dialog id="uyeDlg" aria-labelledby="uyeTitle">
+  <div class="dlg-head"><h3 id="uyeTitle">👤 Üyelik</h3><button class="btn small" data-close>Kapat</button></div>
+  <div class="dlg-body">
+    <div class="seg uye-tabs"><button type="button" data-tab="giris">Giriş yap</button><button type="button" data-tab="kayit">Üye ol</button></div>
+    <form id="girisForm" class="stack" autocomplete="on">
+      <label>Kullanıcı adı<input type="text" id="gKadi" maxlength="20" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+      <label>Şifre<input type="password" id="gSifre" maxlength="100" autocomplete="current-password"></label>
+      <button class="btn primary" type="submit">Giriş yap</button>
+    </form>
+    <form id="kayitForm" class="stack" autocomplete="off" hidden>
+      <label>Ad soyad<input type="text" id="kAd" maxlength="40" placeholder="örn. Kaan Yılmaz"></label>
+      <label>Kullanıcı adı<input type="text" id="kKadi" maxlength="20" placeholder="örn. kaan" autocapitalize="off" spellcheck="false"></label>
+      <label>Şifre<input type="password" id="kSifre" maxlength="100" autocomplete="new-password"></label>
+      <label>Şifre (tekrar)<input type="password" id="kSifre2" maxlength="100" autocomplete="new-password"></label>
+      <label class="check"><input type="checkbox" id="kBildir" checked> Onaylanınca bana bildirim gönder</label>
+      <button class="btn primary" type="submit">Üye ol</button>
+      <p class="note">Başvurun yönetici onayına gider. Onaylanınca kullanıcı adın ve şifrenle girersin; bir daha adını yazman gerekmez.</p>
+    </form>
+    <p class="uye-msg" id="uyeMsg" aria-live="polite"></p>
+  </div>
+</dialog>
+
+<dialog id="profilDlg" aria-labelledby="profilTitle">
+  <div class="dlg-head"><h3 id="profilTitle">👤 Profilim</h3><button class="btn small" data-close>Kapat</button></div>
+  <div class="dlg-body">
+    <div class="prof-top">
+      <span class="acct-av big" id="pAv"></span>
+      <div class="stack" style="gap:6px">
+        <span class="note" id="pInfo"></span>
+        <div class="row" style="gap:8px"><button class="btn small" id="pFotoBtn">📷 Fotoğraf seç</button><button class="btn small" id="pFotoSil" hidden>Kaldır</button></div>
+        <input type="file" id="pFoto" accept="image/*" hidden>
+      </div>
+    </div>
+    <label>Görünen ad (odada herkes bunu görür)
+      <div class="row" style="gap:8px"><input type="text" id="pName" maxlength="20" style="flex:1 1 160px"><button class="btn small" id="pNameSave" style="flex:0 0 auto">Kaydet</button></div>
+    </label>
+    <details class="prof-pw"><summary>🔑 Şifre değiştir</summary>
+      <div class="stack" style="margin-top:10px">
+        <input type="password" id="pEski" placeholder="Eski şifre" autocomplete="current-password">
+        <input type="password" id="pYeni" placeholder="Yeni şifre" autocomplete="new-password">
+        <button class="btn small" id="pSifreSave">Şifreyi değiştir</button>
+      </div>
+    </details>
+    <p class="uye-msg" id="pMsg" aria-live="polite"></p>
+  </div>
+</dialog>
+
 <dialog id="temaDlg" aria-labelledby="temaTitle" class="wide">
   <div class="dlg-head"><h3 id="temaTitle">🎨 Görünüm</h3><button class="btn small" data-close>Kapat</button></div>
   <div class="dlg-body" id="temaBody">
@@ -205,6 +271,12 @@
       <div class="tema-row" id="temaStyleRow"><span>Işık</span><div class="seg"><button type="button" data-style="kayan">✨ Kayan</button><button type="button" data-style="nabiz">💓 Nabız</button><button type="button" data-style="sabit">▬ Sabit</button></div></div>
       <div class="tema-row"><span>Hız</span><input type="range" id="temaSpeed" min="1" max="5" step="1" aria-label="Işık hızı"></div>
       <div class="tema-row"><span>Parlama</span><input type="range" id="temaGlow" min="0" max="3" step="1" aria-label="Parlama"></div>
+    </div>
+    <div class="tema-led tema-bg">
+      <div class="tema-row"><span>Arka plan</span><small class="note">Hareketli manzaralar; sadece senin ekranında</small></div>
+      <div class="bg-picks" id="bgPicks"></div>
+      <div class="tema-row"><span>Hareket</span><div class="seg"><button type="button" data-bganim="1">▶ Hareketli</button><button type="button" data-bganim="0">⏸ Sabit</button></div></div>
+      <div class="tema-row"><span>Karartma</span><input type="range" id="bgDim" min="0" max="80" step="5" aria-label="Arka planı karart"></div>
     </div>
     <div class="row"><button class="btn small" id="temaReset" style="flex:0 0 auto">Varsayılana dön</button><p class="note" style="flex:1 1 200px;align-self:center">Görünüm sadece senin ekranını değiştirir.</p></div>
   </div>
@@ -305,10 +377,12 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/util.js"></script>
+<script src="js/backgrounds.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/net.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/account.js"></script>
 <script src="js/screen.js"></script>
 <script src="js/chat.js"></script>
 <script src="js/music.js"></script>
@@ -330,6 +404,12 @@
 <script src="js/games/solo-kelime.js"></script>
 <script src="js/games/solo-yapboz.js"></script>
 <script src="js/games/solo-kosu.js"></script>
+<script src="js/games/solo-ordek.js"></script>
+<script src="js/games/solo-adam.js"></script>
+<script src="js/games/solo-yilan.js"></script>
+<script src="js/games/solo-2048.js"></script>
+<script src="js/games/solo-mayin.js"></script>
+<script src="js/games/solo-hafiza.js"></script>
 <script src="js/games/ikram.js"></script>
 <script src="js/push.js"></script>
 <script src="js/main.js"></script>

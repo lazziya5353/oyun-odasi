@@ -443,6 +443,7 @@ function seatRow(s){
     const av = document.createElement('div'); av.className = 'seat-av';
     if (x){
       av.textContent = x.bot ? '🤖' : initial(x.name);
+      if (!x.bot && typeof paintAvatar === 'function') paintAvatar(av, x.name, fotoOf(x.id));
       if (!x.bot) av.style.setProperty('--c', colorFor(x.id));
       av.dataset.treatFor = x.bot ? '' : x.id;
     } else av.textContent = '+';

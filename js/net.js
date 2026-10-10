@@ -374,7 +374,7 @@ function handleConn(conn){
   conn.on('open', () => {
     p.linked = true; p.failed = false; p.lastSeen = Date.now(); clearTimeout(p.linkTimer);
     if (!joined) enterRoom();
-    send(conn, { t: 'hello', name: myName, muted: micMuted, noMic, sharing: !!screenStream, channel: me.channel });
+    send(conn, { t: 'hello', name: myName, muted: micMuted, noMic, sharing: !!screenStream, channel: me.channel, foto: typeof myFoto !== 'undefined' ? myFoto : null });
     if (isHost){
       send(conn, { t: 'peers', ids: [...peers.values()].filter(o => o.linked && o.id !== conn.peer).map(o => o.id) });
       send(conn, Object.assign({ t: 'sync' }, makeSync()));
@@ -428,6 +428,7 @@ function onData(id, d){
       p.name = clip(d.name || 'Oyuncu', 20) || 'Oyuncu';
       p.muted = !!d.muted; p.noMic = !!d.noMic; p.sharing = !!d.sharing;
       p.channel = chanById(d.channel) ? d.channel : 'genel';
+      p.foto = typeof safeFoto === 'function' ? safeFoto(d.foto) : null;
       if (!p.helloed){
         p.helloed = true;
         gamesOnHello(p);
@@ -435,6 +436,14 @@ function onData(id, d){
         addSys(p.name + ' odaya katıldı');
       }
       afterPeerStateChange(p);
+      return;
+    }
+    case 'profil': {
+      const old = p.name;
+      p.name = clip(d.name || p.name, 20) || p.name;
+      p.foto = typeof safeFoto === 'function' ? safeFoto(d.foto) : null;
+      if (old !== p.name) addSys(old + ' adını ' + p.name + ' yaptı');
+      renderPeer(p); renderChannels();
       return;
     }
     case 'state': {

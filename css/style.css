@@ -71,6 +71,26 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 .rejoin{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px;border-radius:12px;
   border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));background:color-mix(in srgb,var(--accent) 8%,var(--bg));animation:pop-in .35s cubic-bezier(.3,1.4,.5,1)}
 .rejoin-info{display:grid;gap:2px;min-width:0}
+/* üyelik */
+.acct-in{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));background:color-mix(in srgb,var(--accent) 7%,var(--bg))}
+.acct-info{display:grid;flex:1;min-width:0;line-height:1.25}
+.acct-info b{font-family:var(--display);font-size:19px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct-info small{color:var(--muted);font-size:12px}
+.acct-av{--c:var(--accent);width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:20px;color:#0f1218;background:var(--c) center/cover no-repeat;box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--accent)}
+.acct-av.big{width:84px;height:84px;font-size:34px}
+.has-foto{background-size:cover!important;background-position:center!important;color:transparent!important}
+.acct-out{font-size:13px;color:var(--muted);margin-top:-8px}
+.acct-pending{margin-top:-8px}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.uye-msg{margin:0;font-size:14px;min-height:1.2em}
+.uye-msg.err{color:var(--danger)}
+.uye-msg.ok{color:var(--accent)}
+.uye-tabs{display:flex}
+.uye-tabs button{flex:1}
+label.check{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--fg)}
+input[type=password]{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:16px;width:100%;min-width:0}
+.prof-top{display:flex;align-items:center;gap:16px}
+.prof-pw summary{cursor:pointer;font-weight:600;font-size:14px}
 .notif-card{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg)}
 .notif-card[data-state="on"]{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
 .notif-card[data-state="on"] #notifTitle{color:var(--accent)}
@@ -95,7 +115,7 @@ input.code{font-family:var(--display);letter-spacing:.3em;text-transform:upperca
 /* Mini radyo çalar: odadaki herkes için çalan radyo, her kanalda görünür */
 .radio-chip{--c:var(--accent);display:flex;align-items:center;gap:8px;background:color-mix(in srgb,var(--c) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));
   border-radius:99px;padding:4px 6px 4px 12px;max-width:440px;min-width:0;animation:pop-in .35s cubic-bezier(.3,1.5,.5,1)}
-.radio-chip.muted{filter:saturate(.3);opacity:.8}
+.radio-chip.muted,.radio-chip.paused{filter:saturate(.3);opacity:.8}
 .rc-eq{display:flex;align-items:flex-end;gap:2px;height:14px;flex:none}
 .rc-eq i{width:3px;height:4px;border-radius:2px;background:var(--c)}
 .radio-chip.playing .rc-eq i{animation:eq .8s ease-in-out infinite}

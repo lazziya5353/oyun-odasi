@@ -1,0 +1,130 @@
+/* Adam Asmaca – tüm sınıflar adam- önekli; zemin/vurgu tema değişkenlerinden, darağacı ahşabı oyuna özgü */
+.adam-wrap{--adam-wood:#b88758;--adam-wood-2:#8c6440;--adam-key-h:42px;
+  display:flex;flex-direction:column;gap:10px;width:100%;height:100%;min-height:0;max-width:900px;margin:0 auto;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.adam-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.adam-chip{padding:4px 12px;border-radius:99px;background:var(--panel-2);font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap}
+.adam-score{font-family:var(--display);font-size:16px;color:var(--fg);min-width:96px;text-align:center}
+.adam-score.bump{animation:adam-bump .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes adam-bump{40%{transform:scale(1.18);color:var(--accent)}}
+.adam-lives{display:flex;gap:4px}
+.adam-heart{width:18px;height:16px;transition:opacity .3s,transform .3s;display:grid;place-items:center}
+.adam-heart::before{content:'♥';font-style:normal;font-size:18px;line-height:1;color:var(--danger)}
+.adam-heart.off{opacity:.18;transform:scale(.8)}
+
+.adam-main{flex:1;min-height:0;display:flex;gap:16px;align-items:stretch}
+.adam-stage{position:relative;flex:0 0 36%;min-width:0;min-height:0;border-radius:16px;
+  background:radial-gradient(120% 90% at 70% 10%,color-mix(in srgb,var(--accent) 10%,var(--panel)),var(--panel) 70%);border:1px solid var(--line);overflow:hidden}
+.adam-svg{position:absolute;inset:6px 4px 0;width:calc(100% - 8px);height:calc(100% - 6px);display:block;overflow:visible}
+.adam-sun{fill:var(--warn);opacity:.85}
+.adam-cloud{fill:color-mix(in srgb,var(--fg) 14%,transparent)}
+.adam-hill{fill:color-mix(in srgb,var(--accent) 22%,var(--panel-2))}
+.adam-wood{fill:none;stroke:var(--adam-wood);stroke-width:9;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:adam-draw .5s ease forwards}
+.adam-wood.thin{stroke-width:6;stroke:var(--adam-wood-2)}
+.adam-gal .adam-wood:nth-child(2){animation-delay:.15s}
+.adam-gal .adam-wood:nth-child(3){animation-delay:.35s}
+.adam-gal .adam-wood:nth-child(4){animation-delay:.5s}
+.adam-rope{fill:none;stroke:#d9c08a;stroke-width:3;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:adam-draw .4s ease .65s forwards}
+@keyframes adam-draw{to{stroke-dashoffset:0}}
+.adam-ln{fill:none;stroke:var(--fg);stroke-width:5;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .5s ease}
+.adam-part.on.adam-ln,.adam-part.on .adam-ln{stroke-dashoffset:0}
+.adam-head{fill:color-mix(in srgb,var(--panel) 60%,transparent)}
+.adam-face{opacity:0;transition:opacity .3s .35s}
+.adam-part.on .adam-face{opacity:1}
+.adam-eyes circle{fill:var(--fg)}
+.adam-xeyes{display:none}
+.adam-xeyes path{stroke:var(--fg);stroke-width:2.2;stroke-linecap:round}
+.adam-mouth{fill:none;stroke:var(--fg);stroke-width:2.2;stroke-linecap:round;transition:d .3s}
+.adam-man{transform-box:view-box;transform-origin:142px 22px}
+.adam-wrap.is-hung .adam-man{animation:adam-sway 2.2s ease-in-out .3s infinite}
+.adam-wrap.is-hung .adam-eyes{display:none}
+.adam-wrap.is-hung .adam-xeyes{display:inline}
+.adam-wrap.is-hung .adam-ln{stroke:var(--danger)}
+.adam-wrap.is-won .adam-man{animation:adam-hop .6s ease 2}
+@keyframes adam-sway{0%,100%{transform:rotate(0)}25%{transform:rotate(6deg)}75%{transform:rotate(-6deg)}}
+@keyframes adam-hop{50%{transform:translateY(-6px)}}
+.adam-stage.shake{animation:adam-shake .35s ease}
+@keyframes adam-shake{0%,100%{transform:none}25%{transform:translateX(-6px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+
+.adam-play{flex:1;min-width:0;display:grid;grid-template-rows:auto auto auto auto auto;gap:12px;align-content:center;position:relative}
+.adam-row{margin-bottom:4px}
+.adam-cat{justify-self:center;display:flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;border-radius:99px;background:color-mix(in srgb,var(--accent) 14%,var(--panel-2));border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);font-family:var(--display);font-weight:700;font-size:16px}
+.adam-cat.in{animation:adam-in .4s cubic-bezier(.3,1.5,.5,1)}
+@keyframes adam-in{from{opacity:0;transform:translateY(-8px) scale(.9)}}
+.adam-catico{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--panel);font-size:16px}
+.adam-cat small{font-family:var(--body);font-weight:600;font-size:12px;color:var(--muted)}
+
+.adam-word{container-type:inline-size;display:flex;flex-wrap:wrap;justify-content:center;align-items:end;gap:8px 0;min-height:52px;
+  --sz:min(44px,calc((100cqi - (var(--n) - 1) * 6px) / var(--n)))}
+.adam-wpart{display:flex;gap:6px}
+.adam-gap{width:calc(var(--sz) * .7)}
+.adam-tile{display:grid;place-items:center;width:var(--sz);height:calc(var(--sz) * 1.18);border-bottom:4px solid color-mix(in srgb,var(--muted) 70%,transparent);border-radius:6px 6px 3px 3px;background:color-mix(in srgb,var(--panel-2) 70%,transparent);font-family:var(--display);font-weight:700;font-size:calc(var(--sz) * .62);line-height:1;color:var(--fg)}
+.adam-tile.open{border-bottom-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--panel-2))}
+.adam-tile.miss{color:var(--danger);border-bottom-color:var(--danger);background:color-mix(in srgb,var(--danger) 12%,var(--panel-2))}
+.adam-tile.pop{animation:adam-pop .35s cubic-bezier(.3,1.7,.5,1) backwards}
+@keyframes adam-pop{from{transform:scale(.3);opacity:0}}
+.adam-tile.dance{animation:adam-dance .6s ease both;background:var(--accent);color:var(--accent-ink)}
+@keyframes adam-dance{0%,100%{transform:none}35%{transform:translateY(-40%) rotate(-6deg)}60%{transform:translateY(6%)}80%{transform:translateY(-8%)}}
+.adam-wrap.is-won .adam-tile{background:var(--accent);color:var(--accent-ink);border-bottom-color:color-mix(in srgb,var(--accent) 60%,#000)}
+
+.adam-speed{justify-self:center;width:min(300px,80%);height:4px;border-radius:4px;background:var(--panel-2);overflow:hidden}
+.adam-speed i{display:block;height:100%;background:var(--accent);transform-origin:left;transition:transform .2s linear,background .3s}
+.adam-speed.low i{background:var(--warn)}
+
+.adam-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px}
+.adam-wrong{display:flex;flex-wrap:wrap;align-items:center;gap:5px;min-width:0}
+.adam-wlbl{font-size:13px;color:var(--muted);margin-right:2px}
+.adam-wrong b{display:grid;place-items:center;width:24px;height:24px;border-radius:6px;background:color-mix(in srgb,var(--danger) 18%,var(--panel-2));color:var(--danger);font-family:var(--display);font-size:14px;animation:adam-pop .3s cubic-bezier(.3,1.7,.5,1)}
+.adam-hint{flex:none;padding:6px 12px;border-radius:99px;border:1px solid color-mix(in srgb,var(--warn) 50%,var(--line));background:color-mix(in srgb,var(--warn) 10%,var(--panel));color:var(--fg);font-size:13px;font-weight:600}
+.adam-hint:hover:not(:disabled){background:color-mix(in srgb,var(--warn) 22%,var(--panel))}
+.adam-hint:disabled{opacity:.4;cursor:default}
+
+.adam-kb{grid-row:5;grid-column:1;align-self:end;display:grid;gap:6px;transition:opacity .3s}
+.adam-kbrow{display:flex;justify-content:center;gap:5px}
+.adam-key{flex:1 1 0;min-width:0;max-width:46px;height:var(--adam-key-h);padding:0;border:0;border-radius:8px;background:color-mix(in srgb,var(--fg) 16%,var(--panel-2));color:var(--fg);font-family:var(--display);font-weight:700;font-size:17px;transition:background .2s,transform .06s,opacity .2s}
+.adam-key:hover:not(:disabled){filter:brightness(1.15)}
+.adam-key:active:not(:disabled){transform:scale(.92)}
+.adam-key:disabled{cursor:default;opacity:1}
+.adam-key[data-s=hit]{background:var(--accent);color:var(--accent-ink)}
+.adam-key[data-s=hint]{background:var(--warn);color:#2a1f00}
+.adam-key[data-s=miss]{background:color-mix(in srgb,var(--danger) 14%,var(--bg));color:color-mix(in srgb,var(--danger) 60%,var(--muted));text-decoration:line-through}
+.adam-key.nudge{animation:adam-shake .3s ease}
+.adam-wrap.is-won .adam-kb,.adam-wrap.is-hung .adam-kb{opacity:.25}
+
+.adam-pop{grid-row:5;grid-column:1;align-self:center;justify-self:center;z-index:5;pointer-events:none;opacity:0}
+.adam-pop.show{opacity:1;pointer-events:auto}
+.adam-popcard{display:grid;justify-items:center;gap:6px;padding:14px 24px;border-radius:16px;background:var(--panel);border:1px solid var(--accent);box-shadow:0 20px 40px -16px rgb(0 0 0 / .7);text-align:center}
+.adam-pop.show .adam-popcard{animation:pop-in .35s cubic-bezier(.3,1.5,.5,1)}
+.adam-popcard b{font-family:var(--display);font-size:24px;color:var(--accent)}
+.adam-popcard.lost{border-color:var(--danger)}
+.adam-popcard.lost b{color:var(--danger)}
+.adam-popcard>span{font-size:14px;color:var(--fg)}
+.adam-plus{font-size:34px!important}
+.adam-br{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.adam-br span{padding:3px 9px;border-radius:99px;background:var(--panel-2);font-size:12px;font-weight:600;color:var(--muted)}
+
+/* telefon: sahne üstte, klavye altta */
+@media (max-width:700px){
+  .adam-wrap{gap:8px;--adam-key-h:clamp(40px,7dvh,54px)}
+  .adam-main{flex-direction:column;gap:8px}
+  .adam-stage{flex:1 1 150px;max-height:230px}
+  .adam-play{flex:none;gap:8px}
+  .adam-chip{padding:3px 9px;font-size:13px}
+  .adam-score{font-size:15px;min-width:0}
+  .adam-heart{width:14px}.adam-heart::before{font-size:15px}
+  .adam-kbrow{gap:4px}
+  .adam-key{font-size:15px;border-radius:6px}
+  .adam-cat{font-size:15px}
+}
+@media (max-height:520px) and (min-width:701px){
+  .adam-wrap{--adam-key-h:38px;gap:8px}
+  .adam-play{gap:8px}
+}
+/* azaltılmış hareket (sistem ayarı ya da site ayarı → .rm) */
+.adam-wrap.rm .adam-wood,.adam-wrap.rm .adam-rope{animation:none;stroke-dashoffset:0}
+.adam-wrap.rm .adam-ln{transition:none}
+.adam-wrap.rm .adam-man,.adam-wrap.rm .adam-wrong b,.adam-wrap.rm .adam-pop.show .adam-popcard{animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  .adam-wood,.adam-rope{animation:none;stroke-dashoffset:0}
+  .adam-ln{transition:none}
+  .adam-wrap.is-hung .adam-man,.adam-wrap.is-won .adam-man,.adam-tile.pop,.adam-tile.dance,.adam-stage.shake,.adam-cat.in,.adam-score.bump,.adam-pop.show .adam-popcard,.adam-wrong b{animation:none!important}
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1218">
+<meta name="robots" content="noindex">
+<title>Oyun Odası · Yönetim</title>
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body{overflow:auto}
+  .adm{max-width:900px;margin:0 auto;padding:24px 16px 60px;display:grid;gap:18px}
+  .adm-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .adm-head h1{margin:0;font-family:var(--display);font-size:24px;display:flex;align-items:center;gap:10px;flex:1}
+  .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:14px}
+  .adm-login{max-width:380px;margin:12vh auto 0}
+  .adm-tabs{display:flex;flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{background:var(--panel-2);border:0;padding:9px 14px;font:inherit;font-size:14px;color:var(--fg);cursor:pointer}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+  .u-list{display:grid;gap:10px}
+  .u{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--bg);border:1px solid var(--line);animation:pop-in .25s ease}
+  .u.bekliyor{border-color:color-mix(in srgb,var(--warn) 55%,var(--line))}
+  .u-av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:20px;color:#0f1218;background:var(--accent) center/cover no-repeat}
+  .u-info{min-width:0;display:grid;gap:2px}
+  .u-info b{font-size:16px}
+  .u-info span{font-size:13px;color:var(--muted)}
+  .u-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .pill{font-size:11px;border-radius:99px;padding:2px 8px;background:var(--panel-2);color:var(--muted);margin-left:6px;vertical-align:2px}
+  .pill.ok{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+  .pill.wait{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+  .pill.no{background:color-mix(in srgb,var(--danger) 20%,transparent);color:var(--danger)}
+  .note.err{color:var(--danger)}
+  .tmp{font-family:var(--display);font-size:18px;letter-spacing:.15em;color:var(--warn)}
+  @media (max-width:600px){ .u{grid-template-columns:auto 1fr} .u-acts{grid-column:1/-1;justify-content:flex-start} }
+</style>
+</head>
+<body>
+<main class="adm" id="adm">
+  <section class="adm-card adm-login" id="loginCard">
+    <h1 class="brand" style="font-size:24px"><img src="logo.svg" alt="" width="44" height="44">Yönetim</h1>
+    <p class="note">Üyelik başvurularını onaylamak için yönetici şifresini gir.</p>
+    <form id="admForm" class="stack">
+      <input type="password" id="admPw" placeholder="Yönetici şifresi" autocomplete="current-password" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:16px">
+      <button class="btn primary" type="submit">Giriş</button>
+      <p class="note err" id="admErr"></p>
+    </form>
+  </section>
+
+  <section id="panel" hidden class="stack" style="gap:18px">
+    <div class="adm-head">
+      <h1><img src="logo.svg" alt="" width="36" height="36">Oyun Odası · Yönetim</h1>
+      <button class="btn small" id="pushBtn">🔔 Başvuru bildirimi al</button>
+      <a class="btn small" href="./" style="text-decoration:none;color:inherit">↩ Siteye dön</a>
+      <button class="btn small" id="outBtn">Çıkış</button>
+    </div>
+    <div class="adm-card">
+      <div class="seg adm-tabs" id="tabs"></div>
+      <input type="text" id="q" placeholder="🔎 İsim ya da kullanıcı adı ara" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:15px">
+      <div class="u-list" id="list"></div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" hidden></div>
+<script src="js/admin.js"></script>
+</body>
+</html>

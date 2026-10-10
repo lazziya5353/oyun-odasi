@@ -87,7 +87,7 @@ function renderChannels(){
       const mm = document.createElement('div'); mm.className = 'chan-members';
       members.forEach(m => {
         const d = document.createElement('span'); d.className = 'mini'; d.dataset.mini = m.id;
-        d.style.setProperty('--c', colorFor(m.id)); d.textContent = initial(m.name); d.title = m.name;
+        d.style.setProperty('--c', colorFor(m.id)); d.title = m.name; if (typeof paintAvatar === 'function') paintAvatar(d, m.name, fotoOf(m.id)); else d.textContent = initial(m.name);
         mm.append(d);
       });
       b.append(mm);
@@ -244,7 +244,7 @@ function renderSelf(){
     burst(c);
   }
   c.style.setProperty('--c', colorFor(peer ? peer.id : myName));
-  c.querySelector('.avatar').textContent = initial(myName);
+  if (typeof paintAvatar === 'function') paintAvatar(c.querySelector('.avatar'), myName, myFoto); else c.querySelector('.avatar').textContent = initial(myName);
   c.querySelector('.pname').textContent = myName;
   c.classList.toggle('muted', micMuted);
   const ic = c.querySelector('.icons'); ic.innerHTML = '';
@@ -283,7 +283,7 @@ function renderPeer(p){
     flip(() => { c.hidden = !sameChan(p); });
     if (!c.hidden){ c.classList.add('enter'); burst(c); }
   }
-  c.querySelector('.avatar').textContent = initial(p.name);
+  if (typeof paintAvatar === 'function') paintAvatar(c.querySelector('.avatar'), p.name, p.foto); else c.querySelector('.avatar').textContent = initial(p.name);
   c.querySelector('.pname').textContent = p.name;
   c.classList.toggle('muted', !!p.muted);
   c.querySelectorAll('[data-vol]').forEach(r => r.setAttribute('aria-label', p.name + ' ses seviyesi'));

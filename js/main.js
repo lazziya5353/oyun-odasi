@@ -8,6 +8,7 @@ $('codeInput').addEventListener('input', e => {
 });
 
 function readName(){
+  if (typeof account !== 'undefined' && account) return clip(account.uye.name, 20);   // üye: ad sorulmaz
   const n = $('nameInput').value.trim();
   if (!n){ lobbyError('Önce adını yaz.'); $('nameInput').focus(); return null; }
   store.set('oyunodasi-name', n);

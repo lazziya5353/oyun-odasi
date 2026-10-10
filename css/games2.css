@@ -175,3 +175,5 @@
   .cz-side{max-height:none}
   .cz-feed{max-height:160px}
 }
+
+.lb-uye{display:inline-grid;place-items:center;width:15px;height:15px;margin-left:5px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:10px;font-weight:800;vertical-align:1px}

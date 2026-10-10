@@ -40,6 +40,8 @@ function applyTheme(){
     st.setProperty('--accent', theme.color);
     st.setProperty('--accent-ink', inkFor(theme.color));
   }
+  // kayan ışık için tarayıcının @property desteği gerekir; yoksa yedek animasyon kullanılır
+  html.dataset.ledfb = window.CSS && CSS.registerProperty ? '0' : '1';
   const meta = document.querySelector('meta[name=theme-color]');
   if (meta) meta.content = mode === 'cyber' ? '#07060d' : mode === 'led' ? '#07080c' : '#0f1218';
 }
@@ -57,7 +59,7 @@ function renderThemeDlg(){
   $('temaSpeed').value = theme.speed; $('temaGlow').value = theme.glow;
   if (/^#[0-9a-f]{6}$/i.test(theme.color)) $('temaCustom').value = theme.color;
 }
-function openThemeDlg(){ renderThemeDlg(); $('temaDlg').showModal(); }
+let openThemeDlg = function(){ renderThemeDlg(); $('temaDlg').showModal(); };
 (function initThemeDlg(){
   const cols = $('temaColors');
   LED_COLORS.forEach(([c, name]) => {
@@ -72,6 +74,36 @@ function openThemeDlg(){ renderThemeDlg(); $('temaDlg').showModal(); }
   document.querySelectorAll('#temaBody [data-style]').forEach(b => { b.onclick = () => { theme.style = b.dataset.style; saveTheme(); }; });
   $('temaSpeed').oninput = e => { theme.speed = +e.target.value; saveTheme(); };
   $('temaGlow').oninput = e => { theme.glow = +e.target.value; saveTheme(); };
-  $('temaReset').onclick = () => { theme = Object.assign({}, THEME_DEFAULT); saveTheme(); };
+  $('temaReset').onclick = () => { theme = Object.assign({}, THEME_DEFAULT); saveTheme(); if (typeof OyunBG !== 'undefined'){ OyunBG.set(null); renderBgPicker(); } };
+  ['temaBtn', 'temaBtn2'].forEach(id => { const b = $(id); if (b) b.onclick = openThemeDlg; });
+})();
+
+// ---------- arka plan (js/backgrounds.js) ----------
+function bgState(){ const p = typeof OyunBG !== 'undefined' && OyunBG.saved ? OyunBG.saved() : null; return { id: (typeof OyunBG !== 'undefined' && OyunBG.current) || 'yok', animate: p && p.animate !== undefined ? !!p.animate : true, dim: p && p.dim !== undefined ? +p.dim : 0.25 }; }
+function renderBgPicker(){
+  const box = $('bgPicks'); if (!box || typeof OyunBG === 'undefined') return;
+  const st = bgState();
+  if (!box.children.length){
+    OyunBG.list.forEach(item => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'bg-pick'; b.dataset.bg = item.id; b.title = item.desc || item.name;
+      const cv = document.createElement('canvas'); cv.width = 320; cv.height = 200;
+      const t = document.createElement('span'); t.textContent = (item.icon ? item.icon + ' ' : '') + item.name;
+      b.append(cv, t);
+      b.onclick = () => { const s2 = bgState(); OyunBG.set(item.id, { animate: s2.animate, dim: s2.dim }); renderBgPicker(); };
+      box.append(b);
+    });
+    // önizlemeler pencere açıldıktan sonra sırayla çizilsin (pencere takılmasın)
+    [...box.querySelectorAll('.bg-pick')].forEach((b, i) => setTimeout(() => { try { OyunBG.thumb(b.dataset.bg, b.querySelector('canvas')); } catch(e){} }, 60 + i * 40));
+  }
+  box.querySelectorAll('.bg-pick').forEach(b => b.classList.toggle('on', b.dataset.bg === st.id));
+  document.querySelectorAll('[data-bganim]').forEach(b => b.classList.toggle('on', (b.dataset.bganim === '1') === st.animate));
+  $('bgDim').value = Math.round(st.dim * 100);
+}
+(function initBg(){
+  if (typeof OyunBG === 'undefined' || !$('bgPicks')) return;
+  document.querySelectorAll('[data-bganim]').forEach(b => { b.onclick = () => { const s = bgState(); OyunBG.set(s.id === 'yok' ? null : s.id, { animate: b.dataset.bganim === '1', dim: s.dim }); renderBgPicker(); }; });
+  $('bgDim').oninput = e => { const s = bgState(); if (s.id !== 'yok') OyunBG.set(s.id, { animate: s.animate, dim: e.target.value / 100 }); };
+  const open0 = openThemeDlg;
+  openThemeDlg = function(){ open0(); renderBgPicker(); };
   ['temaBtn', 'temaBtn2'].forEach(id => { const b = $(id); if (b) b.onclick = openThemeDlg; });
 })();

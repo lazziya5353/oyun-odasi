@@ -2,6 +2,7 @@
 //   GET  /api/skor/tablo?game=sudoku&level=orta   → { donem: 'gun'|'hafta', key, top: [...], tum: [...] }
 //   POST /api/skor/gonder { game, level, name, score, day }  → { rank: {donem, tum}, best, record, ... }
 // Her tabloda her isim için yalnız en iyi sonuç tutulur (ilk 100).
+import crypto from 'node:crypto';
 import { getStore } from '../lib/blobs.mjs';
 
 const store = name => (globalThis.__oyunOdasiTestStore ? globalThis.__oyunOdasiTestStore(name) : getStore({ name, consistency: 'strong' }));
@@ -13,7 +14,13 @@ const GAMES = {
   sudoku: { better: 'low', daily: true, levels: ['kolay', 'orta', 'zor'], min: 25, max: 36000 },
   kelime: { better: 'low', daily: true, levels: [''], min: 1003, max: 6999 },
   yapboz: { better: 'low', daily: false, levels: ['kolay', 'orta', 'zor'], min: 6, max: 36000 },
-  kosu: { better: 'high', daily: false, levels: [''], min: 1, max: 5000000 }
+  kosu: { better: 'high', daily: false, levels: [''], min: 1, max: 5000000 },
+  ordek: { better: 'high', daily: false, levels: [''], min: 0, max: 60000 },
+  yilan: { better: 'high', daily: false, levels: [''], min: 0, max: 6100 },
+  mayin: { better: 'low', daily: false, levels: ['kolay', 'orta', 'zor'], min: 1, max: 86400 },
+  adam: { better: 'high', daily: false, levels: [''], min: 0, max: 100000 },
+  ikibin: { better: 'high', daily: false, levels: [''], min: 0, max: 1500000 },
+  hafiza: { better: 'low', daily: false, levels: ['kolay', 'orta', 'zor'], min: 2, max: 5999 }
 };
 const TOP = 100;
 
@@ -38,18 +45,20 @@ async function submit(g, key, entry){
   const st = store('oyunodasi-skor');
   for (let i = 0; i < 6; i++){
     const { list, etag } = await readBoard(key);
-    const k = nameKey(entry.name);
-    const cur = list.find(e => nameKey(e.name) === k);
+    const keyOf = e => e.key || nameKey(e.name);
+    const k = keyOf(entry);
+    const cur = list.find(e => keyOf(e) === k);
     let improved = false;
     if (!cur){ list.push(entry); improved = true; }
     else if (better(g, entry.score, cur.score)){ Object.assign(cur, entry); improved = true; }
+    else if (cur.name !== entry.name){ cur.name = entry.name; improved = null; }     // üye adını değiştirdiyse tabloda da güncellensin
     sortBoard(g, list);
     const trimmed = list.slice(0, TOP);
-    const rank = trimmed.findIndex(e => nameKey(e.name) === k);
+    const rank = trimmed.findIndex(e => keyOf(e) === k);
     const best = (cur && !improved) ? cur.score : entry.score;
-    if (!improved) return { rank: rank >= 0 ? rank + 1 : null, best, improved };
+    if (improved === false) return { rank: rank >= 0 ? rank + 1 : null, best, improved };
     const w = await st.setJSON(key, { list: trimmed }, etag ? { onlyIfMatch: etag } : { onlyIfNew: true });
-    if (!w || w.modified !== false) return { rank: rank >= 0 ? rank + 1 : null, best, improved };
+    if (!w || w.modified !== false) return { rank: rank >= 0 ? rank + 1 : null, best, improved: !!improved };
     await new Promise(r => setTimeout(r, 60 + Math.random() * 160));
   }
   throw new Error('meşgul');
@@ -58,7 +67,7 @@ function keysFor(g, game, level, day){
   const lv = level || '-';
   return { donem: g.daily ? 'gun' : 'hafta', pkey: game + '/' + lv + '/' + (g.daily ? 'gun-' + day : 'hafta-' + isoWeek(day)), tkey: game + '/' + lv + '/tum' };
 }
-const pub = l => l.slice(0, 20).map(e => ({ name: e.name, score: e.score, ts: e.ts }));
+const pub = l => l.slice(0, 20).map(e => ({ name: e.name, score: e.score, ts: e.ts, uye: !!e.uye }));
 
 export default async (req, context) => {
   const url = new URL(req.url);
@@ -78,8 +87,24 @@ export default async (req, context) => {
       const g = GAMES[b.game];
       const level = String(b.level || '');
       if (!g || !g.levels.includes(level)) return json({ hata: 'oyun' }, 400);
-      const name = clip(b.name, 20);
+      let name = clip(b.name, 20), uye = false;
+      // üye girişliyse isim üyeliğinden gelir (✓); misafir bir üyenin adını kullanırsa "(misafir)" eklenir
+      const auth = (req.headers.get('authorization') || '').replace(/^Bearer /, '');
+      const ust = store('oyunodasi-uye');
+      if (auth && auth.length < 100){
+        const ses = await ust.get('s/' + crypto.createHash('sha256').update(auth).digest('hex'), { type: 'json' });
+        const u = ses && ses.exp > Date.now() ? await ust.get('u/' + ses.id, { type: 'json' }) : null;
+        if (u && u.durum === 'onayli'){ name = u.name; uye = u.id; }
+      }
       if (!name) return json({ hata: 'isim' }, 400);
+      if (!uye){
+        const { blobs } = await ust.list({ prefix: 'u/' });
+        const k = nameKey(name);
+        for (const bl of blobs){
+          const u = await ust.get(bl.key, { type: 'json' });
+          if (u && u.durum === 'onayli' && (nameKey(u.name) === k || nameKey(u.kadi) === k)){ name = clip(name, 9) + ' (misafir)'; break; }
+        }
+      }
       const score = Math.round(Number(b.score));
       if (!Number.isFinite(score) || score < g.min || score > g.max) return json({ hata: 'skor geçersiz' }, 400);
       // günlük oyunlarda gün, sunucunun bugünü (ya da gece yarısı geçişi için dün) olmalı
@@ -87,13 +112,14 @@ export default async (req, context) => {
       const day = g.daily ? (b.day === today || b.day === yday ? b.day : null) : today;
       if (!day) return json({ hata: 'gün eski' }, 400);
       const k = keysFor(g, b.game, level, day);
-      const entry = { name, score, ts: Date.now() };
+      const entry = { name, score, ts: Date.now(), uye: !!uye };
+      if (uye) entry.key = 'u:' + uye;
       const tumPrev = (await readBoard(k.tkey)).list;
       const prevTop = tumPrev.length ? tumPrev[0] : null;
       const rp = await submit(g, k.pkey, entry);
       const rt = await submit(g, k.tkey, entry);
       const record = rt.improved && rt.rank === 1 && (!prevTop || better(g, score, prevTop.score));
-      return json({ ok: true, donem: k.donem, rank: { donem: rp.rank, tum: rt.rank }, best: rt.best, improved: rt.improved, record });
+      return json({ ok: true, name, donem: k.donem, rank: { donem: rp.rank, tum: rt.rank }, best: rt.best, improved: rt.improved, record });
     }
     return json({ hata: 'bilinmeyen işlem' }, 404);
   } catch(e){
