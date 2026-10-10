@@ -14,6 +14,9 @@ Arkadaşlarla oyun oynarken kullanmak için tarayıcıda çalışan sesli sohbet
 - **Son odana dön:** girişte tek tıkla son odaya kodsuz dönülür. Odadaki herkes çıkınca oda kapanır ve bu kart kendiliğinden kaybolur. “Oda oluştur” her zaman yeni kodla yeni oda kurar
 - **Film Odası:** bilgisayardan film yayını, YouTube'u birlikte senkron izleme, Film modunda ekran paylaşımı
 - **🎲 Oyun Salonu:** Tavla (1/3/5/7 sayılık maç, mars, kırma, zar animasyonu) ve Okey (Klasik, Eşli, 101). Boş koltuklara bot oturur, oyundan çıkanın yerine bot geçer. Oyun sırasında radyo çalmaya devam eder
+- **Masa oyunları:** Tavla, Okey (Klasik / Eşli / 101), **Batak** (İhaleli, Eşli, Koz Maça; botlu), **İsim-Şehir** (2-8 kişi, itiraz oylaması), **Çiz ve Tahmin Et** (2-8 kişi, canlı çizim)
+- **Tek kişilik oyunlar (skor tablolu):** Günün Sudokusu, Kelime Bul (Türkçe Wordle), Resimli Yapboz, Engel Koşusu. Günlük ve haftalık + tüm zamanlar tablosu; rekor odaya duyurulur
+- **🎨 Görünüm:** Standart, Cyberpunk ve LED modu (kayan / nabız / sabit ışık, renk ya da otomatik RGB, hız, parlama). Herkes kendi görünümünü seçer
 - **🍵 İkram:** kişinin kutucuğundaki İkram düğmesiyle çay, simit, Türk kahvesi, ayran, çekirdek, Maraş dondurması, lokum ya da su ikram edilir; ikram uçarak gider, 1 dakika masada durur
 - **📲 Uygulama gibi yükleme:** telefonda ana ekrana, bilgisayarda masaüstüne eklenir; kendi simgesiyle tam ekran açılır
 - **🔔 Bildirimler:** biri oda açınca bildirimleri açmış herkese bildirim gider (site kapalıyken de). iPhone'da önce Ana Ekrana eklenmeli
@@ -78,6 +81,11 @@ Sınırlar: şarkı başına 30 MB, toplam 600 şarkı / 3 GB. Aynı şarkı iki
 Sıraya ekleyen kişi şarkıyı bir kez indirir (tarayıcısında saklanır) ve Müzik Odası'ndakilere canlı aktarır;
 dinleyenler ayrıca indirmez. Netlify'ın ücretsiz planı aylık kredi ile çalışır; şarkı indirmeleri bu krediden düşer.
 
+## Skor tabloları
+
+`netlify/functions/skor.mjs` tekli oyunların sonuçlarını Netlify Blobs'ta saklar (her isim için en iyi sonuç, ilk 100).
+Giriş sistemi olmadığı için isimler yazılan ada göre tutulur.
+
 ## Sınırlar
 
 - Herkes herkese bağlandığı için sesli sohbette 8–10 kişi, ekran paylaşımında 4–5 izleyici rahat çalışır.
@@ -103,12 +111,13 @@ js/music.js       müzik sırası, radyo
 js/library.js     müzik kütüphanesi ve playlistler
 js/film.js        film yayını, YouTube senkron izleme
 js/main.js        giriş ekranı
-js/games/         tavla ve okey kuralları, masalar, ikramlar
+js/games/         oyunlar: tavla, okey, batak, isim-şehir, çiz-tahmin, tekli oyunlar, skor çerçevesi, ikramlar
+js/theme.js       görünüm modları (css/theme.css)
 css/games.css     oyun görünümü
 js/push.js        bildirimler, uygulama olarak yükleme
 sw.js             bildirimleri gösteren servis çalışanı
 manifest.webmanifest, icons/   ana ekran simgesi ve uygulama bilgileri
-netlify/          bildirim gönderen sunucu fonksiyonu
+netlify/          sunucu fonksiyonları: bildirim, müzik kütüphanesi, skor tabloları
 netlify.toml      Netlify ayarı
 ```
 

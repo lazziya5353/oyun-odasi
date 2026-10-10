@@ -132,6 +132,7 @@ document.addEventListener('click', e => {
 function renderDeck(){
   const d = $('deck');
   const t = myChan().type;
+  if (t !== 'game' && typeof soloOpen !== 'undefined' && soloOpen) closeSolo(true);   // başka kanala geçince tekli oyun kapanır
   if (t === 'music') renderMusicDeck(d);
   else if (t === 'film') renderFilmDeck(d);
   else if (t === 'game') renderGameDeck(d);
@@ -193,7 +194,7 @@ function flip(change){
   });
 }
 // ekran paylaşımı başlayınca katılımcılar kenara kayar, bitince ortaya döner
-const gamingActive = () => typeof openTable !== 'undefined' && !!openTable && myChan().type === 'game';
+const gamingActive = () => ((typeof openTable !== 'undefined' && !!openTable) || (typeof soloOpen !== 'undefined' && !!soloOpen)) && myChan().type === 'game';
 function updateStage(){
   const gaming = gamingActive();
   $('room').classList.toggle('gaming', gaming);

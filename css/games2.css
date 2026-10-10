@@ -1,0 +1,177 @@
+/* ===== Tekli oyunlar çerçevesi, skor tablosu, İsim-Şehir, Çiz ve Tahmin Et ===== */
+
+/* ---------- Salon: tekli oyun kartları ---------- */
+.salon-tabs{display:flex;flex-wrap:wrap;align-self:start;justify-self:start}
+.salon-tabs button{padding:9px 14px;font-size:14px}
+.salon-sub{margin:0}
+.solo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.solo-card{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:4px 12px;align-items:center;text-align:left;
+  background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:18px;padding:14px;color:var(--fg);font:inherit;cursor:pointer;
+  transition:transform .15s,border-color .2s,box-shadow .2s}
+.solo-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 14px 30px -18px color-mix(in srgb,var(--accent) 70%,transparent)}
+.sc-ico{grid-row:span 2;font-size:30px;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:var(--panel-2)}
+.sc-txt{display:grid;gap:2px;min-width:0}
+.sc-txt b{font-family:var(--display);font-size:17px}
+.sc-txt small{font-size:12.5px;color:var(--muted);line-height:1.35}
+.sc-top{grid-column:2;font-size:12px;color:var(--accent);min-height:1.2em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- Tekli oyun kabuğu ---------- */
+.solo-shell{height:100%}
+.solo-shell .seg{flex:none}
+.solo-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px}
+.solo-game{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column}
+.solo-root{flex:1;min-height:0;display:flex;flex-direction:column}
+.lb{display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:16px;padding:14px;min-height:0;overflow:auto;align-self:start;max-height:100%}
+.lb-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lb-head b{font-family:var(--display);font-size:16px}
+.lb-tabs{display:flex}
+.lb-tabs button{flex:1}
+.lb-lv{margin:-4px 0 0;font-size:12px}
+.lb-list{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.lb-list li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;font-size:14px;background:var(--bg);animation:lbIn .35s ease backwards}
+.lb-list li:nth-child(2){animation-delay:.04s}.lb-list li:nth-child(3){animation-delay:.08s}.lb-list li:nth-child(4){animation-delay:.12s}.lb-list li:nth-child(5){animation-delay:.16s}
+.lb-list li.me{background:color-mix(in srgb,var(--accent) 16%,var(--bg));outline:1px solid color-mix(in srgb,var(--accent) 50%,transparent)}
+.lb-n{text-align:center;font-variant-numeric:tabular-nums;color:var(--muted)}
+.lb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.lb-score{font-variant-numeric:tabular-nums;font-family:var(--display);font-size:13px}
+.lb-empty{padding:12px 0;text-align:center}
+.lb-best,.lb-mine{font-size:12.5px}
+@keyframes lbIn{from{opacity:0;transform:translateX(10px)}}
+.only-narrow{display:none!important}
+.solo-lbbtn{display:none}
+
+/* sonuç penceresi (oyunun üstünde) */
+.solo-result{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgb(5 7 12 / .55);backdrop-filter:blur(3px);animation:fadeIn .3s ease}
+.sr-card{display:grid;gap:10px;justify-items:center;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 26px;min-width:min(320px,90%);max-width:92%;
+  box-shadow:0 30px 60px -20px rgb(0 0 0 / .7);animation:pop-in .35s cubic-bezier(.3,1.5,.5,1)}
+.sr-card.record{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn),0 0 40px -6px color-mix(in srgb,var(--warn) 60%,transparent)}
+.sr-tag{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sr-card.record .sr-tag{color:var(--warn);font-weight:700;font-size:14px}
+.sr-score{font-family:var(--display);font-size:38px;line-height:1.1}
+.sr-info{max-width:320px}
+.sr-acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+@keyframes fadeIn{from{opacity:0}}
+
+/* oyun alanı dar kalmasın: geniş ekran dışında tablo sağdan açılan panel olur */
+@media (max-width:1560px){
+  .solo-body{grid-template-columns:1fr}
+  .solo-shell .lb{display:none}
+  .solo-shell.lb-open .lb{display:flex;position:absolute;right:10px;top:54px;z-index:35;width:min(300px,calc(100% - 20px));max-height:calc(100% - 64px);box-shadow:0 20px 50px -10px rgb(0 0 0 / .7)}
+  .solo-shell{position:relative}
+  .solo-lbbtn{display:inline-flex}
+  .only-narrow{display:inline-flex!important}
+}
+
+/* ---------- İsim-Şehir ---------- */
+.is{display:grid;grid-template-columns:minmax(0,1fr) 220px;grid-template-rows:auto 1fr;gap:12px;min-height:0;flex:1}
+.is-top{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:16px;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line)}
+.is-letter{width:64px;height:64px;border-radius:16px;flex:none;display:grid;place-items:center;background:linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 50%,#7aa2ff));color:var(--accent-ink);
+  font-family:var(--display);font-size:38px;font-weight:700;box-shadow:0 10px 26px -10px color-mix(in srgb,var(--accent) 80%,transparent);animation:pop-in .4s cubic-bezier(.3,1.6,.5,1)}
+.is-info{flex:1;min-width:0;display:grid;gap:3px}
+.is-title{font-family:var(--display);font-size:18px}
+.is-sub{font-size:12.5px}
+.is-bar{height:6px;border-radius:99px;background:var(--panel-2);overflow:hidden}
+.is-bar i{display:block;height:100%;background:var(--accent);transition:width .25s linear}
+.is.stop .is-bar i{background:var(--danger)}
+.is-time{font-family:var(--display);font-size:30px;font-weight:700;min-width:52px;text-align:right;font-variant-numeric:tabular-nums}
+.is-time.low{color:var(--danger);animation:breathe .8s ease-in-out infinite}
+.is-main{display:grid;gap:12px;align-content:start;min-width:0;min-height:0;overflow:auto}
+.is-big{font-family:var(--display);font-size:24px;text-align:center;margin:40px 0}
+.is-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.is-field{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;align-items:center;gap:4px 8px;padding:10px 12px;border-radius:14px;
+  background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);text-transform:none;letter-spacing:0;color:var(--fg);transition:border-color .2s}
+.is-field .ic{font-size:20px}
+.is-field .nm{font-weight:600;font-size:14px}
+.is-field .ok{grid-row:1;grid-column:3;font-weight:700}
+.is-field input{grid-column:1/-1;font-size:17px;padding:9px 10px}
+.is-field.good{border-color:color-mix(in srgb,var(--accent) 60%,var(--line))}
+.is-field.good .ok{color:var(--accent)}
+.is-field.bad{border-color:color-mix(in srgb,var(--danger) 60%,var(--line))}
+.is-field.bad .ok{color:var(--danger)}
+.is-stop{justify-self:start;font-size:17px;padding:12px 22px}
+.is-stop:not(:disabled){animation:breathe 1.6s ease-in-out infinite}
+.is.stop .is-form{animation:shake .4s}
+.is-tablewrap{overflow:auto;border-radius:14px;border:1px solid var(--line)}
+.is-table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+.is-table th{position:sticky;top:0;background:var(--panel-2);text-align:left;font-size:12px;padding:8px;white-space:nowrap;z-index:1}
+.is-table td{padding:6px 8px;border-top:1px solid var(--line);vertical-align:middle}
+.is-table tr.me td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.is-table .pn{font-weight:700;white-space:nowrap}
+.is-table .cell{position:relative}
+.is-table .cell .t{display:block;font-weight:600}
+.is-table .cell .m{display:block;font-size:11.5px;color:var(--muted)}
+.is-table .cell.bad .t{color:var(--muted);text-decoration:line-through}
+.is-table .cell.can{cursor:pointer}
+.is-table .cell.can:hover{background:color-mix(in srgb,var(--danger) 10%,transparent)}
+.is-table .cell.mine{background:color-mix(in srgb,var(--danger) 14%,transparent)}
+.is-table .cell.p20 .m{color:var(--warn);font-weight:700}
+.is-table .cell.p10 .m{color:var(--accent);font-weight:700}
+.is-table .cell.p5 .m{color:#7aa2ff;font-weight:700}
+.is-table .tot{font-family:var(--display);font-weight:700;color:var(--accent)}
+.is-acts{display:flex;gap:8px;flex-wrap:wrap}
+.is-side{background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:16px;padding:12px;align-self:start}
+.is-side h4,.cz-side h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.is-scores,.cz-players{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.is-scores li,.cz-players li{display:grid;grid-template-columns:24px minmax(0,1fr) auto auto;gap:6px;align-items:center;padding:6px 8px;border-radius:10px;background:var(--bg);font-size:14px}
+.is-scores li.me,.cz-players li.me{outline:1px solid color-mix(in srgb,var(--accent) 50%,transparent)}
+.is-scores li.gone,.cz-players li.gone{opacity:.5}
+.is-scores .n,.cz-players .n{color:var(--muted);text-align:center}
+.is-scores .nm,.cz-players .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.is-scores .st,.cz-players .st{font-size:12px;color:var(--muted)}
+.is-scores b,.cz-players b{font-family:var(--display);font-variant-numeric:tabular-nums}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ---------- Çiz ve Tahmin Et ---------- */
+.cz{display:grid;grid-template-columns:minmax(0,1fr) 260px;grid-template-rows:auto minmax(0,1fr);gap:10px;flex:1;min-height:0}
+.cz-top{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:14px;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line)}
+.cz-round{font-size:13px;color:var(--muted);white-space:nowrap}
+.cz-word{flex:1;text-align:center;font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:.06em}
+.cz-word.hint{letter-spacing:.18em;white-space:pre}
+.cz-time{font-family:var(--display);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.cz-time.low{color:var(--danger);animation:breathe .8s ease-in-out infinite}
+.cz-mid{display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0;align-items:center}
+.cz-stage{position:relative;width:min(100%,calc((100vh - 330px) * 4 / 3));aspect-ratio:4/3;border-radius:14px;overflow:hidden;box-shadow:0 18px 40px -20px rgb(0 0 0 / .8);border:1px solid var(--line);flex:none;min-width:260px}
+.cz-canvas{width:100%;height:100%;display:block;background:#fff;touch-action:none}
+.cz-canvas.can{cursor:crosshair}
+.cz-over{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:10px;text-align:center;background:rgb(10 12 18 / .78);color:#fff;padding:16px;animation:fadeIn .25s ease}
+.cz-over h3{margin:0;font-family:var(--display);font-size:24px}
+.cz-choices{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.cz-choices .btn{font-size:17px;padding:12px 18px}
+.cz-gains{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:15px}
+.cz-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;padding:6px 8px;border-radius:12px;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line)}
+.cz-col{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);padding:0;cursor:pointer}
+.cz-col.on{outline:2px solid var(--accent);outline-offset:2px}
+.cz-size,.cz-tool{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);display:grid;place-items:center;cursor:pointer;color:var(--fg);font-size:16px;padding:0}
+.cz-size i{display:block;border-radius:50%;background:var(--fg)}
+.cz-size.on,.cz-tool.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,var(--panel-2))}
+.cz-sep{width:1px;height:24px;background:var(--line);margin:0 2px}
+.cz-side{display:flex;flex-direction:column;gap:8px;min-height:0;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:16px;padding:10px}
+.cz-players li.ok{background:color-mix(in srgb,var(--accent) 16%,var(--bg))}
+.cz-players li.dr{outline:1px dashed var(--warn)}
+.cz-feed{flex:1;min-height:80px;overflow:auto;display:flex;flex-direction:column;gap:3px;font-size:13.5px;padding:2px}
+.cz-f{margin:0;padding:3px 6px;border-radius:6px;overflow-wrap:anywhere}
+.cz-f.new{animation:msg-in .25s ease}
+.cz-f.dogru{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);font-weight:700}
+.cz-f.yakin{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.cz-f.sys{color:var(--muted);font-style:italic}
+.cz-guess{display:flex;gap:6px}
+.cz-guess input{flex:1;padding:9px 10px;font-size:15px}
+.cz-guess .btn{padding:8px 12px}
+.cz-skip{flex:none}
+
+@media (max-width:860px){
+  .is{grid-template-columns:1fr}
+  .is-side{order:3}
+  .is-letter{width:52px;height:52px;font-size:30px}
+  .is-time{font-size:24px}
+  .cz{grid-template-columns:minmax(0,1fr)}
+  .cz-top{flex-wrap:wrap;gap:6px 10px}
+  .cz-word{order:3;flex-basis:100%;font-size:17px;white-space:normal;letter-spacing:.04em}
+  .cz-word.hint{letter-spacing:.1em;white-space:normal}
+  .cz-round{flex:1}
+  .salon-tabs{width:100%}
+  .salon-tabs button{flex:1 1 140px}
+  .cz-stage{width:100%;min-width:0}
+  .cz-side{max-height:none}
+  .cz-feed{max-height:160px}
+}

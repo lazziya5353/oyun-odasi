@@ -492,6 +492,7 @@ function onData(id, d){
       return;
   }
   if (gamesOnData(id, d)) return;
+  if (typeof soloOnData === 'function' && soloOnData(id, d)) return;
   if (ikramOnData(id, d)) return;
   if (chatOnData(id, d)) return;
   if (musicOnData(id, d)) return;

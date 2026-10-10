@@ -1,0 +1,79 @@
+/* Günün Sudokusu – tüm sınıflar sudoku- önekli; renkler tema değişkenlerinden */
+.sudoku-wrap{display:grid;gap:12px;justify-items:center;width:100%;max-width:680px;margin:0 auto;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.sudoku-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;flex-wrap:wrap}
+.sudoku-meta{display:flex;align-items:baseline;gap:10px;min-width:0}
+.sudoku-level{font-family:var(--display);font-size:18px;color:var(--accent)}
+.sudoku-date{font-size:13px;color:var(--muted)}
+.sudoku-stats{display:flex;align-items:center;gap:8px;position:relative;font-variant-numeric:tabular-nums}
+.sudoku-timer,.sudoku-mist{padding:4px 10px;border-radius:99px;background:var(--panel-2);font-size:14px;font-weight:600;white-space:nowrap}
+.sudoku-timer{font-family:var(--display);font-size:16px;min-width:76px;text-align:center}
+.sudoku-mist{color:var(--muted)}
+.sudoku-mist.bad{color:var(--danger);background:color-mix(in srgb,var(--danger) 16%,var(--panel-2))}
+.sudoku-pen{position:absolute;right:8px;top:100%;margin-top:2px;font-family:var(--display);font-weight:700;color:var(--danger);pointer-events:none;animation:sudoku-rise 1.2s ease forwards}
+@keyframes sudoku-rise{from{opacity:0;transform:translateY(-8px)}20%{opacity:1;transform:none}80%{opacity:1}to{opacity:0;transform:translateY(4px)}}
+
+.sudoku-main{display:flex;gap:18px;align-items:center;justify-content:center;width:100%}
+.sudoku-board{position:relative;flex:none;width:var(--sudoku-size,min(440px,100%,max(250px,calc(100dvh - 222px))));container-type:inline-size}
+.sudoku-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:3px;padding:3px;aspect-ratio:1;background:color-mix(in srgb,var(--muted) 70%,var(--line));border-radius:12px;outline:none;box-shadow:0 18px 40px -22px rgb(0 0 0 / .7);touch-action:manipulation}
+.sudoku-grid:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.sudoku-box{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);overflow:hidden}
+.sudoku-box:nth-child(1){border-top-left-radius:9px}
+.sudoku-box:nth-child(3){border-top-right-radius:9px}
+.sudoku-box:nth-child(7){border-bottom-left-radius:9px}
+.sudoku-box:nth-child(9){border-bottom-right-radius:9px}
+.sudoku-cell{position:relative;min-width:0;min-height:0;display:grid;place-items:center;background:var(--panel);font-family:var(--display);font-size:6.2cqi;font-weight:500;color:var(--accent);cursor:pointer;line-height:1;transition:background .12s}
+.sudoku-cell.is-given{color:var(--fg);font-weight:700}
+.sudoku-cell.is-peer{background:color-mix(in srgb,var(--panel-2) 70%,var(--fg) 4%)}
+.sudoku-cell.is-same{background:color-mix(in srgb,var(--accent) 22%,var(--panel))}
+.sudoku-cell.has-note{background:color-mix(in srgb,var(--accent) 9%,var(--panel))}
+.sudoku-cell.is-sel{background:color-mix(in srgb,var(--accent) 34%,var(--panel));box-shadow:inset 0 0 0 2px var(--accent)}
+.sudoku-cell.is-bad{background:color-mix(in srgb,var(--danger) 40%,var(--panel))!important;color:#fff!important;animation:sudoku-bad .7s ease}
+@keyframes sudoku-bad{0%,100%{transform:none}20%{transform:scale(1.12)}}
+.sudoku-cell.pop{animation:sudoku-pop .22s cubic-bezier(.3,1.6,.5,1)}
+@keyframes sudoku-pop{from{transform:scale(.6)}to{transform:scale(1)}}
+.sudoku-notes{position:absolute;inset:6%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);place-items:center;font-family:var(--body);font-size:2.3cqi;font-weight:600;color:var(--muted)}
+.sudoku-cell.has-note .sudoku-notes{color:var(--fg)}
+.sudoku-shake{animation:sudoku-shake .4s ease}
+@keyframes sudoku-shake{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+.sudoku-wrap.is-won .sudoku-cell{cursor:default}
+.sudoku-wrap.is-won .sudoku-grid{box-shadow:0 0 0 2px var(--accent),0 18px 50px -18px color-mix(in srgb,var(--accent) 60%,transparent)}
+.sudoku-win{position:absolute;left:50%;top:50%;translate:-50% -50%;display:grid;gap:4px;text-align:center;padding:14px 22px;border-radius:14px;background:color-mix(in srgb,var(--bg) 88%,transparent);border:1px solid var(--accent);z-index:20;animation:pop-in .35s cubic-bezier(.3,1.5,.5,1);white-space:nowrap}
+.sudoku-win b{font-family:var(--display);font-size:22px;color:var(--accent)}
+.sudoku-win span{font-size:14px;color:var(--fg)}
+
+.sudoku-side{display:grid;gap:10px;width:222px;flex:none;align-content:center}
+.sudoku-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sudoku-num{position:relative;display:grid;place-items:center;aspect-ratio:1;border:1px solid var(--line);border-radius:12px;background:var(--panel-2);padding:0;transition:transform .08s,border-color .15s,background .15s}
+.sudoku-num b{font-family:var(--display);font-size:26px;font-weight:700;line-height:1}
+.sudoku-num small{position:absolute;right:6px;bottom:3px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sudoku-num:hover:not(:disabled){border-color:var(--accent)}
+.sudoku-num:active:not(:disabled){transform:scale(.94)}
+.sudoku-num.is-done{visibility:hidden}
+.sudoku-acts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sudoku-act{display:grid;justify-items:center;gap:2px;padding:7px 4px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:12px;font-weight:600;color:var(--muted)}
+.sudoku-act:hover:not(:disabled){border-color:var(--muted);color:var(--fg)}
+.sudoku-ico{font-size:17px;line-height:1.1;color:var(--fg)}
+.sudoku-wrap.is-won .sudoku-pad{display:none}
+.sudoku-act.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.sudoku-act.on .sudoku-ico{color:var(--accent-ink)}
+.sudoku-note{margin:0;padding:8px 10px;border-radius:10px;font-size:12px;color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent);line-height:1.35}
+.sudoku-help{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
+
+/* telefon / dar alan: tablo tam genişlik, tuş takımı altta */
+@media (max-width:700px){
+  .sudoku-wrap{gap:10px;width:100%}
+  .sudoku-main{flex-direction:column;gap:12px}
+  .sudoku-board{width:var(--sudoku-size,min(100%,440px))}
+  .sudoku-side{width:min(100%,440px)}
+  .sudoku-pad{grid-template-columns:repeat(9,1fr);gap:5px}
+  .sudoku-num{aspect-ratio:auto;height:52px;border-radius:10px}
+  .sudoku-num b{font-size:22px}
+  .sudoku-num small{right:auto;left:50%;transform:translateX(-50%);bottom:2px;font-size:10px}
+  .sudoku-num b{margin-top:-8px}
+  .sudoku-act{display:flex;justify-content:center;align-items:center;gap:8px;padding:10px 4px;font-size:13px}
+  .sudoku-help{display:none}
+  .sudoku-level{font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  .sudoku-cell.pop,.sudoku-shake,.sudoku-cell.is-bad,.sudoku-pen,.sudoku-win{animation:none!important}
+}

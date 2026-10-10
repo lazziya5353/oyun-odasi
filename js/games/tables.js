@@ -16,7 +16,14 @@ const GAME_INFO = {
   tavla: { name: 'Tavla', icon: '🎲', seats: 2 },
   okey: { name: 'Okey', icon: '🀄', seats: 4 }
 };
-const variantName = s => s.game === 'tavla' ? 'Klasik tavla · ' + (s.opts.target || 5) + ' puan'
+// Yeni oyunlar buraya kendini kaydeder (batak, isimsehir, ciz…): kurallar, görünüm, çizim, bot zamanlaması
+const TABLE_GAMES = {};
+function registerTableGame(id, def){
+  TABLE_GAMES[id] = def;
+  GAME_INFO[id] = { name: def.name, icon: def.icon, seats: def.seats };
+}
+const tdef = s => s && TABLE_GAMES[s.game || s];
+const variantName = s => tdef(s) ? tdef(s).variantName(s) : s.game === 'tavla' ? 'Klasik tavla · ' + (s.opts.target || 5) + ' puan'
   : s.opts.variant === '101' ? '101 Okey · ' + (s.opts.hands101 || 5) + ' el' : 'Klasik Okey' + (s.opts.team ? ' · Eşli' : '');
 const mySeat = sum => sum ? sum.seats.findIndex(x => x && !x.bot && x.id === (peer && peer.id)) : -1;
 
@@ -37,6 +44,7 @@ function createTable(game, opts){
 }
 function cleanOpts(game, o){
   o = o || {};
+  if (TABLE_GAMES[game]) return TABLE_GAMES[game].cleanOpts(o);
   if (game === 'tavla') return { target: [1, 3, 5, 7].includes(+o.target) ? +o.target : 5 };
   return { variant: o.variant === '101' ? '101' : 'klasik', team: !!o.team && o.variant !== '101', hands101: [3, 5, 7, 11].includes(+o.hands101) ? +o.hands101 : 5 };
 }
@@ -59,11 +67,12 @@ function ownerSit(o, who, name, seat){
   if (seat < 0 || seat >= s.seats.length) return;
   const cur = s.seats[seat];
   if (cur && !cur.bot) return;                                     // dolu koltuk
-  if (s.status === 'playing' && !cur) return;
+  if (s.status === 'playing' && !cur && !(tdef(s) && tdef(s).joinMidGame)) return;
   const already = s.seats.findIndex(x => x && !x.bot && x.id === who);
   if (s.status === 'playing' && already >= 0) return;             // oyun sırasında koltuk değiştirilmez
   if (already >= 0) s.seats[already] = null;
   s.seats[seat] = { id: who, name };
+  if (s.status === 'playing' && tdef(s) && tdef(s).onSeat) tdef(s).onSeat(o, seat, !!(cur && cur.bot));
   if (cur && cur.bot && s.status === 'playing') addSys('🎲 ' + name + ', ' + cur.name + ' botunun yerine oturdu');
   pushSum(o); sendViews(o); pump(o);
 }
@@ -71,7 +80,12 @@ function ownerStand(o, who){
   const s = o.sum;
   const k = s.seats.findIndex(x => x && !x.bot && x.id === who);
   if (k < 0) return;
-  if (s.status === 'playing'){
+  if (s.status === 'playing' && tdef(s) && tdef(s).bots === false){
+    const leaver = s.seats[k].name;
+    s.seats[k] = null;
+    addSys('🎲 ' + leaver + ' oyundan ayrıldı');
+    if (tdef(s).onLeave) tdef(s).onLeave(o, k);
+  } else if (s.status === 'playing'){
     const leaver = s.seats[k].name;
     s.seats[k] = { id: 'bot' + k, name: 'Bot ' + BOT_NAMES[k % BOT_NAMES.length], bot: true };
     addSys('🤖 ' + leaver + ' masadan kalktı, yerine ' + s.seats[k].name + ' oynuyor');
@@ -80,19 +94,24 @@ function ownerStand(o, who){
 }
 function ownerBot(o, seat, add){
   const s = o.sum;
-  if (s.status === 'playing') return;
+  if (s.status === 'playing' || (tdef(s) && tdef(s).bots === false)) return;
   if (add && !s.seats[seat]) s.seats[seat] = { id: 'bot' + seat, name: 'Bot ' + BOT_NAMES[(seat + s.id.length) % BOT_NAMES.length], bot: true };
   if (!add && s.seats[seat] && s.seats[seat].bot) s.seats[seat] = null;
   pushSum(o);
 }
 function ownerStart(o){
   const s = o.sum;
-  if (s.seats.some(x => !x)) { toast('Önce bütün koltuklar dolmalı (boş koltuğa bot ekleyebilirsin)'); return; }
+  const d = tdef(s);
+  if (d && d.minPlayers){
+    const n = s.seats.filter(Boolean).length;
+    if (n < d.minPlayers){ toast('Başlamak için en az ' + d.minPlayers + ' oyuncu gerekli (' + n + ' kişi oturdu)'); return; }
+  } else if (s.seats.some(x => !x)) { toast('Önce bütün koltuklar dolmalı (boş koltuğa bot ekleyebilirsin)'); return; }
   s.status = 'playing';
-  if (s.game === 'tavla') o.state = TavlaCore.newGame({ target: s.opts.target });
+  if (d) o.state = d.start(o);
+  else if (s.game === 'tavla') o.state = TavlaCore.newGame({ target: s.opts.target });
   else o.state = OkeyGame.newMatch(s.opts);
   o.events = [];
-  addSys('🎲 ' + GAME_INFO[s.game].name + ' başladı: ' + s.seats.map(x => x.name).join(', '));
+  addSys('🎲 ' + GAME_INFO[s.game].name + ' başladı: ' + s.seats.filter(Boolean).map(x => x.name).join(', '));
   pushSum(o); sendViews(o); pump(o);
 }
 function ownerClose(o){
@@ -110,6 +129,7 @@ function ownerAct(o, who, a){
   const s = o.sum;
   if (!o.state || !a || typeof a !== 'object') return;
   const seat = s.seats.findIndex(x => x && !x.bot && x.id === who);
+  if (tdef(s)){ tdef(s).act(o, seat, a, who); return; }
   if (s.game === 'tavla') tavlaOwnerAct(o, seat, a, who);
   else okeyOwnerAct(o, seat, a, who);
 }
@@ -149,6 +169,7 @@ function pump(o){
   clearTimers(o);
   const s = o.sum, g = o.state;
   if (!g || s.status !== 'playing') return;
+  if (tdef(s)){ tdef(s).pump(o); return; }
   if (s.game === 'tavla'){
     if (g.phase === 'opening'){ later(o, 900, () => { TavlaCore.doOpening(g); sendViews(o); pump(o); }); return; }
     if (g.phase === 'over'){ later(o, 6000, () => { o.state = TavlaCore.nextGame(g); sendViews(o); pump(o); }); return; }
@@ -188,6 +209,7 @@ function pump(o){
 // herkese kendi görünümünü gönder
 function viewFor(o, seat){
   const s = o.sum, g = o.state;
+  if (tdef(s)) return tdef(s).view(o, seat);
   if (s.game === 'tavla'){
     const v = TavlaCore.clone(g);
     delete v.turnStart;
@@ -210,6 +232,16 @@ function sendViews(o){
   });
   o.watchers.forEach(w => { if (!sent.has(w)) deliverView(w, { t: 'tb-view', id: s.id, seat: -1, vseq: o.vseq, v: viewFor(o, -1) }); });
   if (!sent.has(peer.id) && openTable === s.id) deliverView(peer.id, { t: 'tb-view', id: s.id, seat: -1, vseq: o.vseq, v: viewFor(o, -1) });
+}
+// masa sahibi: anlık olay (çizim çizgisi, tahmin…) masadaki herkese; isteğe bağlı biri hariç
+function sendEvent(o, ev, except){
+  const s = o.sum, msg = { t: 'tb-ev', id: s.id, ev };
+  const to = new Set();
+  s.seats.forEach(x => { if (x && !x.bot) to.add(x.id); });
+  o.watchers.forEach(w => to.add(w));
+  if (openTable === s.id) to.add(peer.id);
+  to.delete(except);
+  to.forEach(w => sendTo(w, msg));
 }
 function deliverView(who, msg){
   if (who === peer.id){ onView(msg); return; }
@@ -255,6 +287,11 @@ function gamesOnData(id, d){
       if (s && s.owner === id) onView(d);
       return true;
     }
+    case 'tb-ev': {
+      const s = tables.get(d.id);
+      if (s && s.owner === id && tdef(s) && tdef(s).onEvent && openTable === d.id) tdef(s).onEvent(d.ev, s);
+      return true;
+    }
     case 'tb-err': if (tables.get(d.id) && tables.get(d.id).owner === id){ toast('⚠ ' + clip(d.err, 120)); gameSound('err'); } return true;
   }
   return false;
@@ -270,6 +307,13 @@ function onView(d){
 function notifyTurn(d){
   const v = d.v, s = tables.get(d.id);
   if (!s || d.seat < 0) return;
+  if (tdef(s)){
+    const df = tdef(s);
+    if (!df.isMyTurn || !df.isMyTurn(v, d.seat)) return;
+    const k2 = d.id + ':' + (df.turnKey ? df.turnKey(v) : d.vseq);
+    if (notifyTurn.last !== k2 && (openTable !== d.id || document.hidden || me.channel !== 'oyun')){ notifyTurn.last = k2; toast(df.icon + ' ' + df.name + ': sıra sende!'); gameSound('turn'); }
+    return;
+  }
   const mine = s.game === 'tavla' ? (v.turn === d.seat && (v.phase === 'roll' || v.phase === 'move')) : (v.phase === 'play' && v.turn === d.seat);
   const key = d.id + ':' + (v.gameNo || v.handNo) + ':' + (s.game === 'tavla' ? (v.phase === 'roll' ? 'r' + JSON.stringify(v.board) : '') : v.pileCount + ':' + v.counts.join(','));
   if (mine && notifyTurn.last !== key && (openTable !== d.id || document.hidden || me.channel !== 'oyun')){
@@ -296,6 +340,7 @@ function gamesPeerLeft(id){
 // ---------- masa görünümünü aç/kapat ----------
 function openTableView(id){
   if (!tables.has(id)) return;
+  if (typeof soloOpen !== 'undefined' && soloOpen) closeSolo(true);
   if (openTable && openTable !== id) closeTableView(true);
   openTable = id;
   if (me.channel !== 'oyun') switchChannel('oyun', true);
@@ -317,13 +362,24 @@ function refreshGameDeck(){ if (joined && myChan().type === 'game' && !openTable
 
 // ---------- Oyun Salonu ekranı ----------
 function renderGameDeck(d){
+  if (typeof soloOpen !== 'undefined' && soloOpen && SOLO.has(soloOpen.id)) { renderSoloShell(d); return; }
   if (openTable && tables.has(openTable)) { renderTableShell(d); return; }
   if (openTable && !tables.has(openTable)) closeTableView(true);
   $('room').classList.remove('gaming');
   d.innerHTML = '';
   const head = document.createElement('div'); head.className = 'salon-head';
-  head.innerHTML = '<h2 class="deck-title">🎲 Oyun Salonu</h2><p class="note">Masa aç, arkadaşların boş koltuklara otursun. 4 kişi yoksa boş koltuklara bot oturtabilirsin. Oyun sırasında konuşmaya ve radyoya devam edebilirsiniz.</p>';
+  head.innerHTML = '<h2 class="deck-title">🎲 Oyun Salonu</h2><p class="note">Masa aç, arkadaşların boş koltuklara otursun; eksik koltuğa bot oturtabilirsin. Tek kişilik oyunlarda skor tablosunda yarışırsınız. Oyun sırasında konuşma ve radyo devam eder.</p>';
   d.append(head);
+  // sekmeler: masa oyunları / tek kişilik oyunlar
+  let tab = store.get('oyunodasi-salon-tab') === 'tek' && typeof renderSoloCards === 'function' ? 'tek' : 'masa';
+  const tabs = document.createElement('div'); tabs.className = 'seg salon-tabs';
+  [['masa', '🃏 Masa oyunları' + (tables.size ? ' (' + tables.size + ' açık masa)' : '')], ['tek', '🙋 Tek kişilik · skor tablolu']].forEach(([k, n]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = n; b.classList.toggle('on', k === tab);
+    b.onclick = () => { store.set('oyunodasi-salon-tab', k); renderDeck(); };
+    tabs.append(b);
+  });
+  d.append(tabs);
+  if (tab === 'tek'){ renderSoloCards(d); return; }
   const make = document.createElement('div'); make.className = 'make-tables';
   const card = (icon, title, desc, optsHtml, onCreate) => {
     const c = document.createElement('div'); c.className = 'make-card';
@@ -339,15 +395,20 @@ function renderGameDeck(d){
     '<label>Çeşit<select data-o="variant"><option value="klasik">Klasik Okey (20 puandan düşme)</option><option value="eşli">Klasik Okey · Eşli (karşılıklı takım)</option><option value="101">101 Okey</option></select></label>' +
     '<label data-h101 hidden>Kaç el?<select data-o="hands101"><option value="3">3 el</option><option value="5" selected>5 el</option><option value="7">7 el</option><option value="11">11 el</option></select></label>',
     c => { const v = c.querySelector('[data-o=variant]').value; createTable('okey', { variant: v === '101' ? '101' : 'klasik', team: v === 'eşli', hands101: c.querySelector('[data-o=hands101]').value }); });
+  Object.keys(TABLE_GAMES).forEach(id => {
+    const g = TABLE_GAMES[id];
+    if (g.makeCard) card(g.icon, g.name, g.makeCard.desc, g.makeCard.opts, c => createTable(id, g.makeCard.read(c)));
+  });
   d.append(make);
   const vsel = make.querySelector('[data-o=variant]');
   vsel.onchange = () => { make.querySelector('[data-h101]').hidden = vsel.value !== '101'; };
 
   const list = [...tables.values()].sort((a, b) => b.created - a.created);
   const box = document.createElement('div'); box.className = 'table-list';
-  if (!list.length){ const e = document.createElement('p'); e.className = 'note'; e.textContent = 'Henüz açık masa yok. Yukarıdan bir masa aç.'; box.append(e); }
+  if (!list.length){ const e = document.createElement('p'); e.className = 'note'; e.textContent = 'Henüz açık masa yok. Aşağıdan bir masa aç.'; box.append(e); }
   list.forEach(s => box.append(tableCard(s)));
-  d.append(box);
+  // açık masalar önce: arkadaşının açtığı masayı aramak zorunda kalma
+  d.insertBefore(box, make);
 }
 function tableCard(s){
   const c = document.createElement('div'); c.className = 'tcard ' + s.game;
@@ -378,7 +439,7 @@ function seatRow(s){
   const me_ = mySeat(s);
   s.seats.forEach((x, k) => {
     const st = document.createElement('div'); st.className = 'seat' + (x ? ' full' : '') + (x && x.bot ? ' bot' : '') + (k === me_ ? ' me' : '');
-    const label = s.game === 'tavla' ? (k === 0 ? '⚪ Beyaz' : '⚫ Siyah') : (s.opts.team ? (k % 2 ? '🔵 Takım B' : '🟠 Takım A') : 'Koltuk ' + (k + 1));
+    const label = tdef(s) && tdef(s).seatLabel ? tdef(s).seatLabel(s, k) : s.game === 'tavla' ? (k === 0 ? '⚪ Beyaz' : '⚫ Siyah') : (s.opts.team ? (k % 2 ? '🔵 Takım B' : '🟠 Takım A') : 'Koltuk ' + (k + 1));
     const av = document.createElement('div'); av.className = 'seat-av';
     if (x){
       av.textContent = x.bot ? '🤖' : initial(x.name);
@@ -388,13 +449,13 @@ function seatRow(s){
     const nm = document.createElement('span'); nm.className = 'seat-name'; nm.textContent = x ? x.name : 'Boş';
     const lb = document.createElement('span'); lb.className = 'seat-lbl'; lb.textContent = label;
     st.append(av, nm, lb);
-    const canSit = (!x && s.status !== 'playing') || (x && x.bot && s.status === 'playing' && me_ < 0);
+    const canSit = (!x && (s.status !== 'playing' || (tdef(s) && tdef(s).joinMidGame && me_ < 0))) || (x && x.bot && s.status === 'playing' && me_ < 0);
     if (canSit && me_ !== k){
       const b = document.createElement('button'); b.className = 'btn small primary'; b.textContent = x ? 'Botun yerine otur' : 'Otur';
       b.onclick = e => { e.stopPropagation(); toOwner(s.id, { t: 'tb-sit', seat: k }); };
       st.append(b);
     }
-    if (s.owner === peer.id && s.status !== 'playing' && (!x || x.bot)){
+    if (s.owner === peer.id && s.status !== 'playing' && (!x || x.bot) && !(tdef(s) && tdef(s).bots === false)){
       const b = document.createElement('button'); b.className = 'btn small'; b.textContent = x ? 'Botu kaldır' : '🤖 Bot ekle';
       b.onclick = e => { e.stopPropagation(); const o = owned.get(s.id); if (o) ownerBot(o, k, !x); };
       st.append(b);
@@ -456,12 +517,13 @@ function renderOpenTable(){
     body.innerHTML = '';
     const w = document.createElement('div'); w.className = 'waiting-room';
     const h = document.createElement('p'); h.className = 'note';
-    h.textContent = s.status === 'playing' ? 'Oyun yükleniyor…' : s.owner === peer.id ? 'Koltuklar dolunca “Oyunu başlat”a bas. Boş koltuklara bot ekleyebilirsin.' : 'Masa sahibi oyunu başlatınca burada görünecek. Boş koltuğa oturabilirsin.';
+    h.textContent = s.status === 'playing' ? 'Oyun yükleniyor…' : tdef(s) && tdef(s).waitText ? tdef(s).waitText(s, s.owner === peer.id) : s.owner === peer.id ? 'Koltuklar dolunca “Oyunu başlat”a bas. Boş koltuklara bot ekleyebilirsin.' : 'Masa sahibi oyunu başlatınca burada görünecek. Boş koltuğa oturabilirsin.';
     w.append(seatRow(s), h);
     body.append(w);
     return;
   }
-  if (s.game === 'tavla') renderTavla(body, s, lv);
+  if (tdef(s)) tdef(s).render(body, s, lv);
+  else if (s.game === 'tavla') renderTavla(body, s, lv);
   else renderOkey(body, s, lv);
 }
 function tableAct(a){ if (openTable) toOwner(openTable, { t: 'tb-act', a }); }

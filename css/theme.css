@@ -1,0 +1,134 @@
+/* Görünüm modları: Standart (style.css), Cyberpunk ve LED.
+   <html data-tema="led|cyber" data-led="kayan|nabiz|sabit" data-ledauto="1"> — js/theme.js ayarlar.
+   LED çerçeveleri: her parçanın ::before'u maskelenmiş bir halka; içinden ışık "kayar" (conic-gradient döner). */
+@property --led-a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes led-spin{to{--led-a:360deg}}
+@keyframes led-pulse{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes led-hue{to{filter:hue-rotate(360deg)}}
+
+:root{--led-1:#00e5ff;--led-2:#8b5cff;--led-speed:2.6s;--led-glow:10px;--led-w:1.5px}
+
+/* LED halkası alacak parçalar */
+:root:is([data-tema=led],[data-tema=cyber]) :is(.btn,.lobby-card,.person,.np,.lib,.make-card,.tcard,.chan.here,.count-pill,.notif-card,.rejoin,.mictest,.queue,.lib-tab.on,.radio-chip,.solo-card,.lb){position:relative}
+:root:is([data-tema=led],[data-tema=cyber]) :is(.btn,.lobby-card,.person,.np,.lib,.make-card,.tcard,dialog,.chan.here,.count-pill,.notif-card,.rejoin,.mictest,.queue,.lib-tab.on,.radio-chip,.solo-card,.lb)::before{
+  content:"";position:absolute;inset:-1px;border-radius:inherit;padding:var(--led-w);pointer-events:none;z-index:1;
+  background:var(--led-paint);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+  animation:led-spin var(--led-speed) linear infinite
+}
+/* büyük paneller daha yavaş ve biraz kalın */
+:root:is([data-tema=led],[data-tema=cyber]) :is(.lobby-card,.np,.lib,dialog,.make-card,.tcard,.solo-card,.lb)::before{--led-w:2px;animation-duration:calc(var(--led-speed) * 2.2)}
+
+/* ---------- LED modu ---------- */
+:root[data-tema=led]{
+  --bg:#07080c;--panel:#0d0f16;--panel-2:#141722;--line:#22273a;
+  --led-dim:color-mix(in srgb,var(--led-1) 22%,transparent);
+  --led-paint:conic-gradient(from var(--led-a),transparent 0 52%,var(--led-2) 66%,var(--led-1) 78%,#fff 82%,var(--led-1) 86%,transparent 96%),linear-gradient(var(--led-dim),var(--led-dim));
+}
+:root[data-tema=led] body{background:radial-gradient(70% 50% at 0% 0%,color-mix(in srgb,var(--led-1) 10%,transparent),transparent 70%),radial-gradient(60% 50% at 100% 100%,color-mix(in srgb,var(--led-2) 10%,transparent),transparent 70%),var(--bg)}
+:root[data-tema=led] :is(.btn,.lobby-card,.person,.np,.lib,.make-card,.tcard,.chan.here,.notif-card,.rejoin,.solo-card,.lb){border-color:transparent;box-shadow:0 0 var(--led-glow) -2px color-mix(in srgb,var(--led-1) 55%,transparent)}
+:root[data-tema=led] .btn:hover:not(:disabled){box-shadow:0 0 calc(var(--led-glow) * 1.8) 0 color-mix(in srgb,var(--led-1) 70%,transparent)}
+:root[data-tema=led] .btn.primary{box-shadow:0 0 calc(var(--led-glow) * 1.6) 0 color-mix(in srgb,var(--accent) 65%,transparent)}
+:root[data-tema=led] .brand span,:root[data-tema=led] .deck-title{text-shadow:0 0 12px color-mix(in srgb,var(--led-1) 70%,transparent)}
+/* otomatik (RGB): gökkuşağı */
+:root[data-tema=led][data-ledauto="1"]{
+  --led-1:#00e5ff;--led-2:#ff3df2;
+  --led-paint:conic-gradient(from var(--led-a),#ff004c,#ff8a00,#ffe600,#39ff14,#00e5ff,#2f7bff,#b03dff,#ff004c);
+}
+:root[data-tema=led][data-ledauto="1"] :is(.btn,.lobby-card,.person,.np,.lib,.make-card,.tcard,.chan.here,.notif-card,.rejoin,.solo-card,.lb){box-shadow:0 0 var(--led-glow) -2px rgb(150 120 255 / .45)}
+/* nabız ve sabit stiller */
+:root[data-tema=led][data-led=nabiz]{--led-paint:linear-gradient(var(--led-1),var(--led-2))}
+:root[data-tema=led][data-led=sabit]{--led-paint:linear-gradient(var(--led-1),var(--led-1))}
+:root[data-tema=led][data-led=nabiz][data-ledauto="1"],:root[data-tema=led][data-led=sabit][data-ledauto="1"]{--led-paint:linear-gradient(90deg,#ff004c,#ffe600,#39ff14,#00e5ff,#b03dff)}
+:root[data-tema=led][data-led=nabiz] :is(.btn,.lobby-card,.person,.np,.lib,.make-card,.tcard,dialog,.chan.here,.count-pill,.notif-card,.rejoin,.mictest,.queue,.lib-tab.on,.radio-chip,.solo-card,.lb)::before{animation-name:led-pulse!important}
+:root[data-tema=led][data-led=sabit] :is(.btn,.lobby-card,.person,.np,.lib,.make-card,.tcard,dialog,.chan.here,.count-pill,.notif-card,.rejoin,.mictest,.queue,.lib-tab.on,.radio-chip,.solo-card,.lb)::before{animation:none!important}
+:root[data-tema=led][data-led=nabiz][data-ledauto="1"] :is(.btn,.lobby-card,.person,.np,.lib,.make-card,.tcard,dialog,.chan.here,.count-pill,.notif-card,.rejoin,.mictest,.queue,.lib-tab.on,.radio-chip,.solo-card,.lb)::before{animation:led-pulse var(--led-speed) ease-in-out infinite,led-hue calc(var(--led-speed) * 3) linear infinite!important}
+
+/* ---------- Cyberpunk modu ---------- */
+:root[data-tema=cyber]{
+  --bg:#07060d;--panel:#0f0c1d;--panel-2:#171230;--line:#33295e;
+  --fg:#eafcff;--muted:#9a93c9;--accent:#fcee0a;--accent-ink:#0a0a0a;--danger:#ff2a6d;--warn:#ffb800;
+  --cy:#00f0ff;--mg:#ff2a6d;
+  --led-1:#00f0ff;--led-2:#ff2a6d;
+  --led-paint:conic-gradient(from var(--led-a),transparent 0 55%,var(--mg) 68%,var(--cy) 80%,#fff 83%,var(--cy) 86%,transparent 95%),linear-gradient(rgb(0 240 255 / .18),rgb(0 240 255 / .18));
+  --display:"Orbitron","Chakra Petch","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+:root[data-tema=cyber] body{
+  background:
+    linear-gradient(rgb(0 240 255 / .045) 1px,transparent 1px) 0 0/34px 34px,
+    linear-gradient(90deg,rgb(0 240 255 / .045) 1px,transparent 1px) 0 0/34px 34px,
+    radial-gradient(60% 45% at 0% 0%,rgb(255 42 109 / .16),transparent 70%),
+    radial-gradient(55% 45% at 100% 100%,rgb(0 240 255 / .14),transparent 70%),
+    var(--bg);
+}
+/* tarama çizgileri */
+:root[data-tema=cyber] body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,rgb(255 255 255 / .035) 0 1px,transparent 1px 3px);mix-blend-mode:overlay}
+:root[data-tema=cyber] .main::before{background:radial-gradient(40% 40% at 20% 20%,rgb(255 42 109 / .12),transparent 70%),radial-gradient(40% 40% at 80% 80%,rgb(0 240 255 / .1),transparent 70%)!important}
+/* köşesi kesik düğmeler ve paneller */
+:root[data-tema=cyber] .btn{border-radius:2px;border-color:transparent;letter-spacing:.04em;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+:root[data-tema=cyber] .btn.small{clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,7px 100%,0 calc(100% - 7px))}
+:root[data-tema=cyber] .btn.primary{background:var(--accent);color:var(--accent-ink);text-transform:uppercase}
+:root[data-tema=cyber] .btn.primary::before{display:none}
+:root[data-tema=cyber] .btn.primary:hover:not(:disabled){animation:cy-glitch .35s steps(2) 1}
+:root[data-tema=cyber] .btn.leave,:root[data-tema=cyber] .kick-btn{color:var(--mg)}
+:root[data-tema=cyber] :is(.lobby-card,.np,.lib,.make-card,.tcard,.person,.solo-card,.lb,.notif-card,.rejoin,.mictest){border-radius:4px;border-color:transparent;
+  clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px));background:linear-gradient(160deg,rgb(23 18 48 / .92),rgb(10 8 22 / .92))}
+:root[data-tema=cyber] :is(input[type=text],input[type=search],select,textarea){border-radius:2px;border-color:#3a2f6e;background:#0a0816}
+:root[data-tema=cyber] :is(input[type=text],input[type=search],select,textarea):focus{border-color:var(--cy);box-shadow:0 0 0 1px var(--cy),0 0 14px rgb(0 240 255 / .35);outline:none}
+:root[data-tema=cyber] :is(.brand,.deck-title,.gs-title,.np-title,.dlg-head h3,.lib-head h4){text-transform:uppercase;letter-spacing:.06em}
+:root[data-tema=cyber] .brand,:root[data-tema=cyber] .top-brand{text-shadow:2px 0 var(--mg),-2px 0 var(--cy);animation:cy-flicker 6s infinite}
+:root[data-tema=cyber] .brand span{color:var(--accent)}
+:root[data-tema=cyber] label{color:var(--cy)}
+:root[data-tema=cyber] .tag{color:var(--mg)}
+:root[data-tema=cyber] .chan.here{background:linear-gradient(90deg,rgb(0 240 255 / .14),transparent);border-color:transparent}
+:root[data-tema=cyber] .top,:root[data-tema=cyber] .bar{background:rgb(9 7 20 / .92);border-color:#2a2150}
+:root[data-tema=cyber] .top{box-shadow:0 1px 0 rgb(0 240 255 / .35),0 8px 30px -12px rgb(255 42 109 / .5)}
+:root[data-tema=cyber] .bar{box-shadow:0 -1px 0 rgb(255 42 109 / .35)}
+:root[data-tema=cyber] .person.speaking{box-shadow:0 0 22px -4px var(--c)}
+:root[data-tema=cyber] .logo-big{filter:drop-shadow(0 0 12px rgb(0 240 255 / .6)) drop-shadow(0 0 22px rgb(255 42 109 / .35))}
+@keyframes cy-glitch{0%{transform:translate(0)}25%{transform:translate(-2px,1px);text-shadow:2px 0 var(--cy)}50%{transform:translate(2px,-1px);text-shadow:-2px 0 var(--mg)}100%{transform:translate(0)}}
+@keyframes cy-flicker{0%,93%,100%{opacity:1;transform:none}94%{opacity:.6;transform:translateX(2px)}95%{opacity:1;transform:translateX(-2px)}97%{opacity:.8}}
+
+/* ---------- Görünüm penceresi ---------- */
+.tema-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tema-mode{display:grid;gap:8px;justify-items:center;text-align:center;padding:12px 8px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;font:inherit;transition:border-color .2s,transform .15s}
+.tema-mode:hover{transform:translateY(-2px)}
+.tema-mode.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tema-mode b{font-size:14px}
+.tema-mode small{font-size:11px;color:var(--muted);line-height:1.3}
+.tema-prev{width:100%;height:54px;border-radius:8px;position:relative;overflow:hidden;display:grid;place-items:center}
+.tema-prev i{display:block;width:62%;height:18px;border-radius:5px}
+.tema-prev.p-std{background:#0f1218}
+.tema-prev.p-std i{background:#5ee0b5}
+.tema-prev.p-cyber{background:linear-gradient(rgb(0 240 255 / .08) 1px,transparent 1px) 0 0/10px 10px,linear-gradient(135deg,#1a0920,#07060d 60%,#031a20)}
+.tema-prev.p-cyber i{background:#fcee0a;border-radius:0;clip-path:polygon(0 0,88% 0,100% 30%,100% 100%,12% 100%,0 70%);box-shadow:0 0 12px #fcee0a}
+.tema-prev.p-led{background:#07080c}
+.tema-prev.p-led i{background:#07080c;position:relative;border-radius:6px}
+.tema-prev.p-led i::after{content:"";position:absolute;inset:-2px;border-radius:7px;padding:2px;background:conic-gradient(from var(--led-a),#ff004c,#ffe600,#39ff14,#00e5ff,#b03dff,#ff004c);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);animation:led-spin 2s linear infinite}
+.tema-led{display:grid;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.tema-colors{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tema-sw{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0;transition:transform .15s}
+.tema-sw:hover{transform:scale(1.12)}
+.tema-sw.on{border-color:#fff;box-shadow:0 0 0 2px var(--bg),0 0 14px currentColor}
+.tema-sw.auto{background:conic-gradient(#ff004c,#ff8a00,#ffe600,#39ff14,#00e5ff,#2f7bff,#b03dff,#ff004c)}
+.tema-custom{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0}
+.tema-custom input{width:38px;height:34px;padding:0;border:0;background:none;cursor:pointer}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:var(--panel-2);border:0;padding:8px 12px;font:inherit;font-size:13px;color:var(--fg);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.tema-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tema-row>span{min-width:62px;font-size:13px;color:var(--muted)}
+.tema-row input[type=range]{flex:1 1 160px}
+.lobby-tools{position:absolute;top:14px;right:14px;display:flex;gap:6px;z-index:3}
+.lobby-card{position:relative}
+
+@media (max-width:560px){ .tema-modes{grid-template-columns:1fr} .tema-mode{grid-template-columns:90px 1fr;justify-items:start;text-align:left;align-items:center} .tema-mode .tema-prev{grid-row:span 2;height:44px} }
+@media (prefers-reduced-motion:reduce){
+  :root :is(.btn,.lobby-card,.person,.np,.lib,.make-card,.tcard,dialog,.chan.here,.count-pill,.notif-card,.rejoin,.mictest,.queue,.lib-tab.on,.radio-chip,.solo-card,.lb)::before,:root[data-tema=cyber] .brand,:root[data-tema=cyber] .top-brand{animation:none!important}
+}

@@ -15,15 +15,24 @@
 <meta name="apple-mobile-web-app-title" content="Oyun Odası">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Orbitron:wght@600;800&family=Figtree:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/games.css">
+<link rel="stylesheet" href="css/games2.css">
+<link rel="stylesheet" href="css/g-batak.css">
+<link rel="stylesheet" href="css/g-sudoku.css">
+<link rel="stylesheet" href="css/g-kelime.css">
+<link rel="stylesheet" href="css/g-yapboz.css">
+<link rel="stylesheet" href="css/g-kosu.css">
+<link rel="stylesheet" href="css/theme.css">
+<script>try{var t=JSON.parse(localStorage.getItem("oyunodasi-tema")||"{}");if(t.mode==="cyber"||t.mode==="led")document.documentElement.dataset.tema=t.mode;}catch(e){}</script>
 </head>
 <body>
 
 <!-- ============ GİRİŞ ============ -->
 <section class="lobby" id="lobby">
   <div class="lobby-card">
+    <div class="lobby-tools"><button class="btn small" id="temaBtn" title="Görünüm: Standart / Cyberpunk / LED">🎨 <span class="hide-mobile">Görünüm</span></button></div>
     <div>
       <h1 class="brand"><img class="logo-big" src="logo.svg" alt="" width="64" height="64">Oyun<span>Odası</span></h1>
       <p class="sub">Sesli sohbet, ekran paylaşımı, müzik ve film odası. Kurulum yok, bağlantıyla gir.</p>
@@ -93,6 +102,7 @@
       <span class="count-pill" id="peopleTitle">👥 1 kişi</span>
       <span class="sig-pill" id="sigStatus" hidden title="Eşleştirme sunucusuna yeniden bağlanılıyor. Odadakilerle konuşma devam ediyor; bu sırada yeni gelenler katılamayabilir.">⟳ <span class="lbl">Sunucuya bağlanıyor</span></span>
       <button class="btn small" id="mixerBtn2">🎚 <span class="lbl">Sesleri ayarla</span></button>
+      <button class="btn small" id="temaBtn2" title="Görünüm: Standart / Cyberpunk / LED">🎨 <span class="lbl">Görünüm</span></button>
       <button class="btn small notif-top" id="notifBtn2" hidden>🔕 <span class="lbl">Bildirim</span></button>
       <button class="btn small" id="radioOpenBtn" title="Odadaki herkes için radyo aç">📻 <span class="lbl">Radyo</span></button>
       <div class="radio-chip" id="radioChip" hidden>
@@ -181,6 +191,25 @@
 </section>
 
 <!-- ============ PENCERELER ============ -->
+<dialog id="temaDlg" aria-labelledby="temaTitle" class="wide">
+  <div class="dlg-head"><h3 id="temaTitle">🎨 Görünüm</h3><button class="btn small" data-close>Kapat</button></div>
+  <div class="dlg-body" id="temaBody">
+    <div class="tema-modes">
+      <button type="button" class="tema-mode" data-mode="standart"><span class="tema-prev p-std"><i></i></span><b>Standart</b><small>Sade ve göz yormayan</small></button>
+      <button type="button" class="tema-mode" data-mode="cyber"><span class="tema-prev p-cyber"><i></i></span><b>Cyberpunk</b><small>Neon sarı-mavi-pembe, kesik köşeler, kayan ışıklar</small></button>
+      <button type="button" class="tema-mode" data-mode="led"><span class="tema-prev p-led"><i></i></span><b>LED</b><small>Çerçevelerde kayan LED; rengini ve stilini sen seç</small></button>
+    </div>
+    <div class="tema-led" id="temaLed">
+      <div class="tema-row" id="temaColorsRow"><span>Renk</span><div class="tema-colors" id="temaColors"></div>
+        <label class="tema-custom">Özel <input type="color" id="temaCustom" value="#00e5ff"></label></div>
+      <div class="tema-row" id="temaStyleRow"><span>Işık</span><div class="seg"><button type="button" data-style="kayan">✨ Kayan</button><button type="button" data-style="nabiz">💓 Nabız</button><button type="button" data-style="sabit">▬ Sabit</button></div></div>
+      <div class="tema-row"><span>Hız</span><input type="range" id="temaSpeed" min="1" max="5" step="1" aria-label="Işık hızı"></div>
+      <div class="tema-row"><span>Parlama</span><input type="range" id="temaGlow" min="0" max="3" step="1" aria-label="Parlama"></div>
+    </div>
+    <div class="row"><button class="btn small" id="temaReset" style="flex:0 0 auto">Varsayılana dön</button><p class="note" style="flex:1 1 200px;align-self:center">Görünüm sadece senin ekranını değiştirir.</p></div>
+  </div>
+</dialog>
+
 <dialog id="mixerDlg" aria-labelledby="mixerTitle">
   <div class="dlg-head"><h3 id="mixerTitle">Ses mikseri</h3><button class="btn small" data-close>Kapat</button></div>
   <div class="dlg-body">
@@ -276,6 +305,7 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/util.js"></script>
+<script src="js/theme.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/net.js"></script>
 <script src="js/ui.js"></script>
@@ -290,6 +320,16 @@
 <script src="js/games/tables.js"></script>
 <script src="js/games/tavla-ui.js"></script>
 <script src="js/games/okey-ui.js"></script>
+<script src="js/games/batak-core.js"></script>
+<script src="js/games/batak-ui.js"></script>
+<script src="js/games/batak-table.js"></script>
+<script src="js/games/isimsehir.js"></script>
+<script src="js/games/ciz.js"></script>
+<script src="js/games/solo.js"></script>
+<script src="js/games/solo-sudoku.js"></script>
+<script src="js/games/solo-kelime.js"></script>
+<script src="js/games/solo-yapboz.js"></script>
+<script src="js/games/solo-kosu.js"></script>
 <script src="js/games/ikram.js"></script>
 <script src="js/push.js"></script>
 <script src="js/main.js"></script>

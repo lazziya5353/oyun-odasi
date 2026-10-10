@@ -1,0 +1,30 @@
+/* Engel Koşusu – tüm sınıflar kosu- önekli */
+.kosu{position:relative;width:100%;max-width:900px;margin:0 auto;border-radius:16px;overflow:hidden;border:1px solid var(--line);
+  background:var(--panel);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 12%,transparent),0 18px 40px -24px var(--accent)}
+.kosu-cv{display:block;width:100%;cursor:pointer}
+.kosu-ov{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;background:rgb(8 10 16 / .28);animation:kosu-in .25s ease}
+.kosu-ov[hidden]{display:none}
+.kosu-card{display:grid;gap:6px;justify-items:center;text-align:center;max-width:min(420px,88%);padding:16px 20px;border-radius:16px;
+  background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);box-shadow:0 16px 40px rgb(0 0 0 / .45);pointer-events:auto}
+.kosu-card b{font-family:var(--display);font-size:22px;letter-spacing:.02em}
+.kosu-card small{color:var(--muted);font-size:13px;line-height:1.4}
+.kosu-start b{font-size:26px;color:var(--accent)}
+.kosu-go{font-family:var(--display);font-weight:700;margin-top:4px;animation:kosu-pulse 1.4s ease-in-out infinite}
+.kosu-big{font-family:var(--display);font-size:28px;font-weight:700;color:var(--accent)}
+.kosu-over{padding:12px 18px}
+.kosu kbd,.kosu-help kbd{font-family:var(--display);font-size:.85em;padding:1px 6px;border-radius:5px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg)}
+.kosu-duck,.kosu-pausebtn{position:absolute;border:1px solid color-mix(in srgb,var(--fg) 25%,transparent);background:rgb(0 0 0 / .28);color:#fff;border-radius:50%;
+  display:grid;place-items:center;touch-action:none;-webkit-tap-highlight-color:transparent}
+.kosu-duck{right:10px;bottom:10px;width:58px;height:58px;font-size:24px;display:none}
+.kosu-pausebtn{right:10px;bottom:10px;width:36px;height:36px;font-size:14px;opacity:.7}
+.kosu-pausebtn:hover{opacity:1}
+.kosu-help{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center;font-size:12px;color:var(--muted);margin:8px auto 0;max-width:900px}
+@media (pointer:coarse){
+  .kosu-duck{display:grid}
+  .kosu-pausebtn{right:auto;bottom:auto;left:50%;top:8px;transform:translateX(-50%);width:32px;height:32px}
+  .kosu-help{display:none}
+}
+@keyframes kosu-in{from{opacity:0}}
+@keyframes kosu-pulse{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.kosu-go,.kosu-ov{animation:none}}
