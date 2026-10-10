@@ -67,6 +67,15 @@ function keysFor(g, game, level, day){
   const lv = level || '-';
   return { donem: g.daily ? 'gun' : 'hafta', pkey: game + '/' + lv + '/' + (g.daily ? 'gun-' + day : 'hafta-' + isoWeek(day)), tkey: game + '/' + lv + '/tum' };
 }
+async function isAdmin(req){
+  const t = req.headers.get('x-admin') || '';
+  if (!t || t.length > 100) return false;
+  const s = await store('oyunodasi-uye').get('a/' + crypto.createHash('sha256').update(t).digest('hex'), { type: 'json' });
+  return !!(s && s.exp > Date.now());
+}
+async function adminLog(text){
+  try { const st = store('oyunodasi-uye'); const l = (await st.get('log', { type: 'json' })) || []; l.unshift({ at: Date.now(), t: clip(text, 160) }); await st.setJSON('log', l.slice(0, 150)); } catch(e){}
+}
 const pub = l => l.slice(0, 20).map(e => ({ name: e.name, score: e.score, ts: e.ts, uye: !!e.uye }));
 
 export default async (req, context) => {
@@ -82,6 +91,39 @@ export default async (req, context) => {
       const [p, t] = await Promise.all([readBoard(k.pkey), readBoard(k.tkey)]);
       return json({ donem: k.donem, day, top: pub(p.list), tum: pub(t.list) });
     }
+    // ---------- yönetici: tabloyu gör, hatalı/hileli skoru sil, tabloyu sıfırla ----------
+    if (req.method === 'GET' && islem === 'admin-tablo'){
+      if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
+      const game = url.searchParams.get('game') || '', level = url.searchParams.get('level') || '';
+      const g = GAMES[game];
+      if (!g || !g.levels.includes(level)) return json({ hata: 'oyun' }, 400);
+      const k = keysFor(g, game, level, istanbulDay());
+      const [p, t] = await Promise.all([readBoard(k.pkey), readBoard(k.tkey)]);
+      const full = l => l.map(e => ({ name: e.name, score: e.score, ts: e.ts, uye: !!e.uye, k: e.key || nameKey(e.name) }));
+      return json({ donem: k.donem, top: full(p.list), tum: full(t.list) });
+    }
+    if (req.method === 'POST' && (islem === 'admin-sil' || islem === 'admin-sifirla')){
+      if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
+      const b = await req.json().catch(() => ({}));
+      const g = GAMES[b.game], level = String(b.level || '');
+      if (!g || !g.levels.includes(level)) return json({ hata: 'oyun' }, 400);
+      const k = keysFor(g, b.game, level, istanbulDay());
+      const keys = b.tablo === 'donem' ? [k.pkey] : b.tablo === 'tum' ? [k.tkey] : [k.pkey, k.tkey];
+      const st = store('oyunodasi-skor');
+      let removed = 0;
+      for (const key of keys){
+        if (islem === 'admin-sifirla'){ await st.delete(key); continue; }
+        for (let i = 0; i < 6; i++){
+          const { list, etag } = await readBoard(key);
+          const rest = list.filter(e => (e.key || nameKey(e.name)) !== String(b.k || ''));
+          if (rest.length === list.length) break;
+          const w = await st.setJSON(key, { list: rest }, etag ? { onlyIfMatch: etag } : { onlyIfNew: true });
+          if (!w || w.modified !== false){ removed += list.length - rest.length; break; }
+        }
+      }
+      await adminLog(islem === 'admin-sifirla' ? 'Skor tablosu sıfırlandı: ' + b.game + (level ? ' ' + level : '') + ' (' + (b.tablo || 'hepsi') + ')' : 'Skor silindi: ' + b.game + (level ? ' ' + level : '') + ' · ' + clip(b.name, 30));
+      return json({ ok: true, removed });
+    }
     if (req.method === 'POST' && islem === 'gonder'){
       const b = await req.json().catch(() => ({}));
       const g = GAMES[b.game];
@@ -94,7 +136,7 @@ export default async (req, context) => {
       if (auth && auth.length < 100){
         const ses = await ust.get('s/' + crypto.createHash('sha256').update(auth).digest('hex'), { type: 'json' });
         const u = ses && ses.exp > Date.now() ? await ust.get('u/' + ses.id, { type: 'json' }) : null;
-        if (u && u.durum === 'onayli'){ name = u.name; uye = u.id; }
+        if (u && u.durum === 'onayli' && (ses.sv || 0) === (u.sv || 0)){ name = u.name; uye = u.id; }
       }
       if (!name) return json({ hata: 'isim' }, 400);
       if (!uye){

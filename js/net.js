@@ -355,6 +355,8 @@ function connectTo(id){
 function handleConn(conn){
   // giriş ekranından "oda hâlâ açık mı?" yoklaması: kişi sayılmaz, hemen kapatılır
   if (conn.metadata && conn.metadata.probe){ conn.on('open', () => setTimeout(() => { try { conn.close(); } catch(e){} }, 300)); return; }
+  // yönetim panelinden şaka bağlantısı: kişi sayılmaz (bkz. saka.js)
+  if (conn.metadata && conn.metadata.saka){ if (typeof sakaAdminConn === 'function') sakaAdminConn(conn); else try { conn.close(); } catch(e){} return; }
   if (blocked.has(conn.peer)){ try { conn.close(); } catch(e){} return; }
   const p = getPeer(conn.peer);
   p.conn = conn;
@@ -503,6 +505,7 @@ function onData(id, d){
   if (gamesOnData(id, d)) return;
   if (typeof soloOnData === 'function' && soloOnData(id, d)) return;
   if (ikramOnData(id, d)) return;
+  if (typeof sakaOnData === 'function' && sakaOnData(id, d)) return;
   if (chatOnData(id, d)) return;
   if (musicOnData(id, d)) return;
   if (filmOnData(id, d)) return;
@@ -661,6 +664,7 @@ async function claimLobby(tries = 0){
   });
   lp.on('disconnected', () => scheduleReconnect(lp));
   lp.on('connection', conn => {
+    if (conn.metadata && conn.metadata.saka && typeof sakaAdminConn === 'function'){ sakaAdminConn(conn); return; }
     conn.on('open', () => {
       if (blocked.has(conn.peer)){ conn.close(); return; }
       send(conn, { t: 'redirect', ids: [peer.id, ...[...peers.values()].filter(o => o.linked).map(o => o.id)], sync: makeSync() });

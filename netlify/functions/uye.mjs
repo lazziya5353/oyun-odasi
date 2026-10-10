@@ -25,7 +25,7 @@ const DEFAULT_ADMIN = 'c884240bc2367d1eaae80e94dbc4486b663184137bed5899d0a53e610
 
 function pub(u){
   return { id: u.id, kadi: u.kadi, adSoyad: u.adSoyad, name: u.name, durum: u.durum, created: u.created, approvedAt: u.approvedAt || null,
-    foto: u.foto ? '/api/uye/foto?id=' + u.id + '&v=' + u.foto : null };
+    foto: u.foto ? '/api/uye/foto?id=' + u.id + '&v=' + u.foto : null, lastSeen: u.lastSeen || null };
 }
 async function getUser(id){ return id ? store().get('u/' + id, { type: 'json' }) : null; }
 async function putUser(u){ await store().setJSON('u/' + u.id, u); }
@@ -36,7 +36,37 @@ async function authUser(req){
   const s = await store().get('s/' + sha(t), { type: 'json' });
   if (!s || s.exp < Date.now()) return null;
   const u = await getUser(s.id);
-  return u && u.durum === 'onayli' ? u : null;
+  // sv: yönetici "oturumlarını kapat" deyince artar, eski oturumlar geçersiz olur
+  return u && u.durum === 'onayli' && (s.sv || 0) === (u.sv || 0) ? u : null;
+}
+// yönetici işlem geçmişi (son 150 kayıt)
+async function logAdmin(text){
+  try {
+    const st = store();
+    const l = (await st.get('log', { type: 'json' })) || [];
+    l.unshift({ at: Date.now(), t: clip(text, 160) });
+    await st.setJSON('log', l.slice(0, 150));
+  } catch(e){}
+}
+// yönetici şifresi: ortam değişkeni > panelden değiştirilen > varsayılan
+async function adminHash(){
+  if (process.env.ADMIN_SIFRE) return { kaynak: 'env', hash: hashPw(process.env.ADMIN_SIFRE.trim(), ADMIN_SALT) };
+  const o = await store().get('adminpw', { type: 'json' });
+  if (o && o.hash) return { kaynak: 'panel', hash: o.hash, salt: o.salt };
+  return { kaynak: 'varsayilan', hash: DEFAULT_ADMIN };
+}
+// şaka efektleri: yönetici paneline imzalı "bilet" verilir, odadaki oda sahibi bunu açık anahtarla doğrular
+async function sakaKey(){
+  const st = vstore();
+  let k = await st.get('sakakey', { type: 'json' });
+  if (k) return k;
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' });
+  await st.setJSON('sakakey', { pub: publicKey.export({ format: 'jwk' }), priv: privateKey.export({ format: 'jwk' }) }, { onlyIfNew: true });
+  return st.get('sakakey', { type: 'json' });
+}
+async function checkAdminPw(pw){
+  const h = await adminHash();
+  return same(hashPw(String(pw || '').trim(), h.salt || ADMIN_SALT), h.hash);
 }
 async function authAdmin(req){
   const t = req.headers.get('x-admin') || '';
@@ -88,6 +118,7 @@ export default async (req, context) => {
     }
     if (req.method === 'GET' && islem === 'ben'){
       const u = await authUser(req);
+      if (u && Date.now() - (u.lastSeen || 0) > 10 * 60e3){ u.lastSeen = Date.now(); await putUser(u); }
       return u ? json({ uye: pub(u) }) : json({ hata: 'oturum yok' }, 401);
     }
     if (req.method === 'GET' && islem === 'admin-liste'){
@@ -95,6 +126,15 @@ export default async (req, context) => {
       const us = await allUsers();
       const ap = (await store().get('adminpush', { type: 'json' })) || [];
       return json({ uyeler: us.map(u => Object.assign(pub(u), { bildirim: (u.push || []).length > 0 })), adminBildirim: ap.length });
+    }
+    if (req.method === 'GET' && islem === 'saka-anahtar'){
+      const k = await sakaKey();
+      return new Response(JSON.stringify({ jwk: { kty: k.pub.kty, crv: k.pub.crv, x: k.pub.x, y: k.pub.y } }), { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=3600' } });
+    }
+    if (req.method === 'GET' && islem === 'admin-gunluk'){
+      if (!(await authAdmin(req))) return json({ hata: 'yetki' }, 401);
+      const rl = (await store().get('rl/admin', { type: 'json' })) || { f: [] };
+      return json({ log: (await store().get('log', { type: 'json' })) || [], hataliDeneme: rl.f.filter(t => Date.now() - t < 864e5).length, sifreKaynak: (await adminHash()).kaynak });
     }
     if (req.method !== 'POST') return json({ hata: 'yöntem' }, 405);
 
@@ -145,8 +185,10 @@ export default async (req, context) => {
       if (!u || !same(hashPw(b.sifre || '', u.salt), u.hash)) return json({ hata: 'Kullanıcı adı ya da şifre yanlış.' }, 401);
       if (u.durum === 'bekliyor') return json({ hata: 'Üyeliğin henüz onaylanmadı. Onaylanınca haber vereceğiz.', durum: 'bekliyor' }, 403);
       if (u.durum === 'red') return json({ hata: 'Üyelik başvurun onaylanmadı.', durum: 'red' }, 403);
+      if (u.durum === 'askida') return json({ hata: 'Hesabın yönetici tarafından geçici olarak durduruldu.', durum: 'askida' }, 403);
       const t = token();
-      await store().setJSON('s/' + sha(t), { id: u.id, exp: Date.now() + SESSION_DAYS * 864e5 });
+      await store().setJSON('s/' + sha(t), { id: u.id, sv: u.sv || 0, exp: Date.now() + SESSION_DAYS * 864e5 });
+      u.lastSeen = Date.now(); await putUser(u);
       if (validSub(b.push) && !(u.push || []).some(s => s.endpoint === b.push.endpoint)){ u.push = (u.push || []).concat(cleanSub(b.push)).slice(-5); await putUser(u); }
       return json({ ok: true, token: t, uye: pub(u) });
     }
@@ -174,12 +216,12 @@ export default async (req, context) => {
     // ---------- yönetici ----------
     if (islem === 'admin-giris'){
       if (!(await adminLimit())) return json({ hata: 'Çok fazla yanlış deneme. 15 dakika sonra tekrar dene.' }, 429);
-      const want = process.env.ADMIN_SIFRE ? hashPw(process.env.ADMIN_SIFRE.trim(), ADMIN_SALT) : DEFAULT_ADMIN;
-      const ok = same(hashPw(String(b.sifre || '').trim(), ADMIN_SALT), want);   // baştaki/sondaki boşluk önemsiz
+      const ok = await checkAdminPw(b.sifre);   // baştaki/sondaki boşluk önemsiz
       await adminLimit(ok);
       if (!ok) return json({ hata: 'Şifre yanlış.' }, 401);
       const t = token();
       await store().setJSON('a/' + sha(t), { exp: Date.now() + ADMIN_HOURS * 3600e3 });
+      await logAdmin('Yönetici girişi yapıldı');
       return json({ ok: true, token: t });
     }
     if (!islem.startsWith('admin-')) return json({ hata: 'bilinmeyen işlem' }, 404);
@@ -191,14 +233,36 @@ export default async (req, context) => {
       await store().setJSON('adminpush', ap.slice(-10));
       return json({ ok: true });
     }
+    if (islem === 'admin-saka-bilet'){
+      const k = await sakaKey();
+      const exp = Date.now() + ADMIN_HOURS * 3600e3;
+      const key = crypto.createPrivateKey({ key: k.priv, format: 'jwk' });
+      const sig = crypto.sign('sha256', Buffer.from('oyunodasi-saka-v1|' + exp), { key, dsaEncoding: 'ieee-p1363' }).toString('base64url');
+      return json({ ok: true, exp, sig });
+    }
+    if (islem === 'admin-sifre-degis'){
+      if (process.env.ADMIN_SIFRE) return json({ hata: 'Şifre Netlify ayarlarından (ADMIN_SIFRE) belirlenmiş; oradan değiştir.' }, 400);
+      if (!(await checkAdminPw(b.eski))) return json({ hata: 'Mevcut şifre yanlış.' }, 400);
+      const yeni = String(b.yeni || '').trim();
+      if (yeni.length < 8 || yeni.length > 100) return json({ hata: 'Yeni şifre en az 8 karakter olmalı.' }, 400);
+      const salt = crypto.randomBytes(16).toString('hex');
+      await store().setJSON('adminpw', { salt, hash: hashPw(yeni, salt), at: Date.now() });
+      // bu cihaz hariç diğer yönetici oturumlarını kapat
+      const mine = 'a/' + sha(req.headers.get('x-admin') || '');
+      const { blobs } = await store().list({ prefix: 'a/' });
+      for (const x of blobs) if (x.key !== mine) await store().delete(x.key);
+      await logAdmin('Yönetici şifresi değiştirildi (diğer yönetici oturumları kapatıldı)');
+      return json({ ok: true });
+    }
     const u = await getUser(String(b.id || ''));
     if (!u) return json({ hata: 'üye bulunamadı' }, 404);
     if (islem === 'admin-onay'){
       const was = u.durum;
       u.durum = b.onay ? 'onayli' : 'red';
-      if (b.onay) u.approvedAt = Date.now();
+      if (b.onay && was !== 'askida') u.approvedAt = Date.now();
       await putUser(u);
-      if (b.onay && was !== 'onayli'){
+      await logAdmin((b.onay ? (was === 'askida' ? 'Hesap yeniden açıldı: ' : 'Onaylandı: ') : 'Reddedildi: ') + u.adSoyad + ' (@' + u.kadi + ')');
+      if (b.onay && (was === 'bekliyor' || was === 'red')){
         const gone = await pushTo(u.push, { title: '✅ Üyeliğin onaylandı!', body: 'Merhaba ' + u.name + '! Artık giriş yapıp sadece oda koduyla girebilirsin.', url: '/?uye=onay', tag: 'uyelik-' + Date.now() }, origin);
         if (gone.length){ u.push = u.push.filter(s => !gone.includes(s.endpoint)); await putUser(u); }
       }
@@ -208,17 +272,34 @@ export default async (req, context) => {
       await store().delete('u/' + u.id); await store().delete('f/' + u.id);
       const k = await store().get('k/' + lowerKey(u.kadi), { type: 'json' });
       if (k && k.id === u.id) await store().delete('k/' + lowerKey(u.kadi));
+      await logAdmin('Silindi: ' + u.adSoyad + ' (@' + u.kadi + ')');
       return json({ ok: true });
     }
     if (islem === 'admin-sifre'){
       // şifresini unutan üyeye yeni geçici şifre
       const yeni = String(Math.floor(100000 + Math.random() * 900000));
-      u.salt = crypto.randomBytes(16).toString('hex'); u.hash = hashPw(yeni, u.salt); await putUser(u);
+      u.salt = crypto.randomBytes(16).toString('hex'); u.hash = hashPw(yeni, u.salt); u.sv = (u.sv || 0) + 1; await putUser(u);
+      await logAdmin('Şifre sıfırlandı: ' + u.adSoyad + ' (@' + u.kadi + ')');
       return json({ ok: true, yeni });
     }
     if (islem === 'admin-ad'){
       const n = clip(b.name, 20); if (n.length < 2) return json({ hata: 'ad kısa' }, 400);
-      u.name = n; await putUser(u); return json({ ok: true, uye: pub(u) });
+      const old = u.name; u.name = n; await putUser(u);
+      await logAdmin('Ad değişti: ' + old + ' → ' + n + ' (@' + u.kadi + ')');
+      return json({ ok: true, uye: pub(u) });
+    }
+    if (islem === 'admin-askiya'){
+      // hesabı geçici durdur (giriş yapamaz, açık oturumları kapanır) ya da geri aç
+      if (b.askida){ if (u.durum !== 'onayli') return json({ hata: 'sadece üyeler durdurulabilir' }, 400); u.durum = 'askida'; u.sv = (u.sv || 0) + 1; }
+      else { if (u.durum !== 'askida') return json({ hata: 'hesap durdurulmamış' }, 400); u.durum = 'onayli'; }
+      await putUser(u);
+      await logAdmin((b.askida ? 'Hesap durduruldu: ' : 'Hesap yeniden açıldı: ') + u.adSoyad + ' (@' + u.kadi + ')');
+      return json({ ok: true, uye: pub(u) });
+    }
+    if (islem === 'admin-oturum-kapat'){
+      u.sv = (u.sv || 0) + 1; await putUser(u);
+      await logAdmin('Tüm cihazlardan çıkış yaptırıldı: ' + u.adSoyad + ' (@' + u.kadi + ')');
+      return json({ ok: true });
     }
     return json({ hata: 'bilinmeyen işlem' }, 404);
   } catch(e){

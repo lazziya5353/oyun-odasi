@@ -5,7 +5,9 @@
 //   POST /api/muzik/bitir   { id, title, by, size, type, dur, chunks }   → parçalar tamamsa kütüphaneye ekle
 //   POST /api/muzik/playlist { name, by }    → yeni playlist
 //   POST /api/muzik/playlist-sarki { pid, sid, add }  → playlist'e şarkı ekle / çıkar
-// Şarkılar silinmez (istenen bu). Kötüye kullanıma karşı sınırlar: şarkı başına 30 MB, toplam 600 şarkı / 3 GB.
+// Şarkıları kullanıcılar silemez (istenen bu); sadece yönetici panelinden silinebilir:
+//   POST /api/muzik/admin-sarki-sil { id } · admin-sarki-ad { id, title } · admin-playlist-sil { pid }   (x-admin başlığı ile)
+// Kötüye kullanıma karşı sınırlar: şarkı başına 30 MB, toplam 600 şarkı / 3 GB.
 import { getStore } from '../lib/blobs.mjs';
 
 const store = name => (globalThis.__oyunOdasiTestStore ? globalThis.__oyunOdasiTestStore(name) : getStore({ name, consistency: 'strong' }));
@@ -32,6 +34,18 @@ async function updateIndex(fn){
     await new Promise(r => setTimeout(r, 80 + Math.random() * 200));
   }
   return { error: 'meşgul, tekrar dene', status: 503 };
+}
+
+async function isAdmin(req){
+  const t = req.headers.get('x-admin') || '';
+  if (!t || t.length > 100) return false;
+  const d = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)));
+  const h = [...d].map(x => x.toString(16).padStart(2, '0')).join('');
+  const s = await store('oyunodasi-uye').get('a/' + h, { type: 'json' });
+  return !!(s && s.exp > Date.now());
+}
+async function adminLog(text){
+  try { const st = store('oyunodasi-uye'); const l = (await st.get('log', { type: 'json' })) || []; l.unshift({ at: Date.now(), t: clip(text, 160) }); await st.setJSON('log', l.slice(0, 150)); } catch(e){}
 }
 
 export default async (req, context) => {
@@ -64,6 +78,46 @@ export default async (req, context) => {
     if (req.method !== 'POST') return json({ hata: 'yöntem' }, 405);
     const b = await req.json().catch(() => ({}));
 
+    if (islem.startsWith('admin-')){
+      if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
+      if (islem === 'admin-sarki-sil'){
+        const id = String(b.id || '');
+        if (!ID.test(id)) return json({ hata: 'id' }, 400);
+        let title = '';
+        const r = await updateIndex(d => {
+          const s = d.songs.find(x => x.id === id);
+          if (!s) return { error: 'bulunamadı', status: 404 };
+          title = s.title + ' (' + s.by + ')';
+          d.songs = d.songs.filter(x => x.id !== id);
+          d.playlists.forEach(p => { p.songs = p.songs.filter(x => x !== id); });
+          return { ok: true };
+        });
+        if (r.error) return json({ hata: r.error }, r.status || 400);
+        const st = store('oyunodasi-sarki');
+        const { blobs } = await st.list({ prefix: id + '/' });
+        for (const x of blobs) await st.delete(x.key);
+        await adminLog('Şarkı silindi: ' + title);
+        return json({ ok: true });
+      }
+      if (islem === 'admin-sarki-ad'){
+        const id = String(b.id || ''), title = clip(b.title, 100);
+        if (!title) return json({ hata: 'ad gerekli' }, 400);
+        let old = '';
+        const r = await updateIndex(d => { const s = d.songs.find(x => x.id === id); if (!s) return { error: 'bulunamadı', status: 404 }; old = s.title; s.title = title; return { ok: true }; });
+        if (r.error) return json({ hata: r.error }, r.status || 400);
+        await adminLog('Şarkı adı değişti: ' + old + ' → ' + title);
+        return json({ ok: true });
+      }
+      if (islem === 'admin-playlist-sil'){
+        const pid = String(b.pid || '');
+        let name = '';
+        const r = await updateIndex(d => { const p = d.playlists.find(x => x.id === pid); if (!p) return { error: 'bulunamadı', status: 404 }; name = p.name + ' (' + p.by + ')'; d.playlists = d.playlists.filter(x => x.id !== pid); return { ok: true }; });
+        if (r.error) return json({ hata: r.error }, r.status || 400);
+        await adminLog('Playlist silindi: ' + name);
+        return json({ ok: true });
+      }
+      return json({ hata: 'bilinmeyen işlem' }, 404);
+    }
     if (islem === 'bitir'){
       const id = String(b.id || ''), chunks = Number(b.chunks), size = Number(b.size);
       if (!ID.test(id) || !Number.isInteger(chunks) || chunks < 1 || chunks > 20 || !(size > 0) || size > SONG_MAX) return json({ hata: 'bilgi eksik' }, 400);

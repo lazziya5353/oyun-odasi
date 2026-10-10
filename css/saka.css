@@ -1,0 +1,25 @@
+/* Yöneticiden gelen şaka efektleri: ekranın en üstünde, tıklamayı engellemeden */
+#sakaLayer{position:fixed;inset:0;z-index:9000;pointer-events:none;overflow:hidden}
+.saka-el{position:absolute;left:0;top:0;pointer-events:none}
+.saka-fly{line-height:1;will-change:transform;filter:drop-shadow(0 8px 14px rgb(0 0 0 / .45))}
+.saka-splat{line-height:0;filter:drop-shadow(0 6px 10px rgb(0 0 0 / .35))}
+.saka-splat svg{overflow:visible}
+.saka-yazi{left:50%;top:22%;font-family:var(--display, system-ui);font-weight:700;font-size:clamp(28px,6vw,64px);color:#fff;white-space:nowrap;text-shadow:0 3px 0 #000,0 0 24px rgb(0 0 0 / .7);letter-spacing:.02em}
+.saka-yazi.kalin{top:50%;font-size:clamp(38px,9vw,110px);color:#ffe14d;-webkit-text-stroke:2px #000}
+.saka-yazi.buz{color:#e6f7ff;text-shadow:0 0 18px #7fd4ff,0 3px 0 #0b3a5c}
+.saka-flash{inset:0;width:100%;height:100%;background:#fff}
+.saka-karanlik{inset:0;width:100%;height:100%;background:radial-gradient(circle at 50% 45%,#0b0f0d 0%,#000 70%)}
+.saka-hayalet{left:50%;top:50%;line-height:0;filter:drop-shadow(0 0 40px rgb(180 255 220 / .35))}
+.saka-hayalet svg{width:min(78vw,78vh);height:auto}
+.saka-cam{inset:0;line-height:0}
+.saka-orumcek{top:0;display:flex;flex-direction:column;align-items:center;transform-origin:top center}
+.saka-orumcek b{font-weight:400;line-height:1;margin-top:-2px;filter:drop-shadow(0 4px 6px rgb(0 0 0 / .5))}
+.saka-ip{position:absolute;bottom:100%;left:50%;width:1px;height:100vh;background:rgb(255 255 255 / .55)}
+.saka-buz{inset:0;width:100%;height:100%;background:radial-gradient(ellipse at center,transparent 38%,rgb(190 230 255 / .35) 62%,rgb(225 245 255 / .85) 100%);-webkit-backdrop-filter:blur(1.5px) saturate(.6);backdrop-filter:blur(1.5px) saturate(.6);box-shadow:inset 0 0 120px rgb(255 255 255 / .8)}
+.saka-buz span{position:absolute;color:#fff;text-shadow:0 0 10px #9fdcff}
+.saka-bulut{top:0;border-radius:50%;background:radial-gradient(circle at 40% 40%,rgb(170 210 90 / .9),rgb(110 150 50 / .55) 55%,transparent 72%);filter:blur(6px)}
+.saka-konfeti{border-radius:2px}
+.saka-mesaj{left:50%;top:40%;max-width:min(560px,88vw);padding:22px 28px;border-radius:22px;background:var(--panel, #161b24);border:2px solid var(--accent, #5ee3b0);box-shadow:0 24px 60px rgb(0 0 0 / .55);color:var(--fg, #fff);font-size:clamp(20px,4vw,30px);font-weight:600;text-align:center;overflow-wrap:anywhere;display:grid;gap:6px}
+.saka-mesaj small{font-size:13px;color:var(--accent, #5ee3b0);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.saka-ayar{display:flex;align-items:center;gap:8px;cursor:pointer}
+.saka-ayar input{width:18px;height:18px;accent-color:var(--accent)}

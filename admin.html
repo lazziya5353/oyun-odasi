@@ -16,13 +16,16 @@
   .adm-head h1{margin:0;font-family:var(--display);font-size:24px;display:flex;align-items:center;gap:10px;flex:1}
   .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:14px}
   .adm-login{max-width:380px;margin:12vh auto 0}
-  .adm-tabs{display:flex;flex-wrap:wrap}
+  .seg.adm-tabs{display:flex;flex-wrap:wrap;gap:6px;border:0;border-radius:0;overflow:visible}
+  .adm-tabs button{border:1px solid var(--line)!important;border-radius:99px;padding:7px 13px}
+  select.inp{max-width:260px}
   .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
   .seg button{background:var(--panel-2);border:0;padding:9px 14px;font:inherit;font-size:14px;color:var(--fg);cursor:pointer}
   .seg button+button{border-left:1px solid var(--line)}
   .seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
   .u-list{display:grid;gap:10px}
-  .u{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--bg);border:1px solid var(--line);animation:pop-in .25s ease}
+  .u{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+  .u.yeni{animation:pop-in .25s ease}
   .u.bekliyor{border-color:color-mix(in srgb,var(--warn) 55%,var(--line))}
   .u-av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:20px;color:#0f1218;background:var(--accent) center/cover no-repeat}
   .u-info{min-width:0;display:grid;gap:2px}
@@ -35,6 +38,30 @@
   .pill.no{background:color-mix(in srgb,var(--danger) 20%,transparent);color:var(--danger)}
   .note.err{color:var(--danger)}
   .tmp{font-family:var(--display);font-size:18px;letter-spacing:.15em;color:var(--warn)}
+  .u-acts.start{justify-content:flex-start;align-items:center}
+  .inp{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:15px;color:var(--fg);min-width:0}
+  textarea.inp{resize:vertical}
+  select.inp{padding:8px 10px}
+  .ad-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .ad-stat{display:grid;gap:2px;text-align:left;padding:14px;border-radius:14px;background:var(--bg);border:1px solid var(--line);color:var(--fg);font:inherit;cursor:pointer}
+  .ad-stat:hover:not(:disabled){border-color:var(--accent)}
+  .ad-stat b{font-family:var(--display);font-size:28px;line-height:1.1}
+  .ad-stat span{font-size:13px;color:var(--muted)}
+  .ad-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid color-mix(in srgb,var(--warn) 50%,var(--line))}
+  .ad-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;align-items:start}
+  .ad-box{display:grid;gap:8px;padding:14px;border-radius:14px;background:var(--bg);border:1px solid var(--line);min-width:0}
+  .ad-box h3,.u-list>h3{margin:4px 0 0;font-size:15px}
+  .ad-mini{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+  .ad-mini>span:first-child{flex:1;min-width:120px;overflow-wrap:anywhere}
+  .ad-mini .inp{flex:1}
+  .ad-muted{color:var(--muted);font-size:13px}
+  .ad-mini .btn.small{padding:4px 9px}
+  .ad-banner.ok{background:color-mix(in srgb,var(--accent) 12%,transparent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+  .saka-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+  .saka-btn{display:grid;justify-items:center;gap:4px;padding:12px 6px;border-radius:14px;background:var(--panel-2);border:1px solid var(--line);color:var(--fg);font:inherit;font-size:13px;cursor:pointer;transition:transform .12s,border-color .12s}
+  .saka-btn b{font-size:34px;line-height:1;font-weight:400}
+  .saka-btn:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .saka-btn:active{transform:scale(.94)}
   @media (max-width:600px){ .u{grid-template-columns:auto 1fr} .u-acts{grid-column:1/-1;justify-content:flex-start} }
 </style>
 </head>
@@ -42,7 +69,7 @@
 <main class="adm" id="adm">
   <section class="adm-card adm-login" id="loginCard">
     <h1 class="brand" style="font-size:24px"><img src="logo.svg" alt="" width="44" height="44">Yönetim</h1>
-    <p class="note">Üyelik başvurularını onaylamak için yönetici şifresini gir.</p>
+    <p class="note">Yönetim paneline girmek için yönetici şifresini gir.</p>
     <form id="admForm" class="stack">
       <input type="password" id="admPw" placeholder="Yönetici şifresi" autocomplete="current-password" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:16px">
       <button class="btn primary" type="submit">Giriş</button>
@@ -59,12 +86,15 @@
     </div>
     <div class="adm-card">
       <div class="seg adm-tabs" id="tabs"></div>
-      <input type="text" id="q" placeholder="🔎 İsim ya da kullanıcı adı ara" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:15px">
+      <input type="text" id="q" class="inp" placeholder="🔎 İsim ya da kullanıcı adı ara" hidden>
       <div class="u-list" id="list"></div>
     </div>
   </section>
 </main>
 <div class="toast" id="toast" hidden></div>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="js/config.js"></script>
 <script src="js/admin.js"></script>
+<script src="js/admin-saka.js"></script>
 </body>
 </html>

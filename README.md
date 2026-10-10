@@ -20,6 +20,7 @@ Arkadaşlarla oyun oynarken kullanmak için tarayıcıda çalışan sesli sohbet
 - **🎨 Görünüm:** Standart, Cyberpunk ve LED modu (kayan / nabız / sabit ışık, renk ya da otomatik RGB, hız, parlama). Hareketli arka planlar: Galaksi, Samanyolu, Kayan yıldızlar, Kuzey ışıkları, Gece okyanusu, İstanbul gecesi, Kapadokya, Ateşböcekleri, Cyberpunk şehir, Neon sokak, Neon dalgalar; Fantastik paket: Ejderha Vadisi, Büyülü Orman, Gece Şatosu, Büyücü Kulesi, Kristal Mağara. **📷 Kendi görselin:** herkes kendi resmini arka plan yapabilir (yalnızca o cihazda saklanır; Yakınlaşma / Parıltı / Sabit efekt). Hava durumu: Kar (ekranda birikir), Yağmur (camdan süzülen damlalar), Fırtına, Sonbahar. Herkes kendi görünümünü seçer
 - **🍵 İkram:** kişinin kutucuğundaki İkram düğmesiyle çay, simit, Türk kahvesi, ayran, çekirdek, Maraş dondurması, lokum ya da su ikram edilir; ikram uçarak gider, 1 dakika masada durur
 - **📲 Uygulama gibi yükleme:** telefonda ana ekrana, bilgisayarda masaüstüne eklenir; kendi simgesiyle tam ekran açılır
+- **🎭 Şaka:** açık bir odaya bağlan, kişiyi (ya da herkesi) seç: domates, yumurta, pasta, hamsi tokadı, korku, örümcek, ekran kırıldı, baş dönmesi, dondur, pırrt, korna, tavuklar, konfeti ya da ekrana mesaj. Efekt anında o kişinin ekranında çıkar (js/games/saka.js). Bağlantı sunucunun imzaladığı biletle doğrulanır; isteyen Görünüm penceresinden şakaları kapatabilir.
 - **🔔 Bildirimler:** biri oda açınca bildirimleri açmış herkese bildirim gider (site kapalıyken de). iPhone'da önce Ana Ekrana eklenmeli
 - **Diğer:** emoji tepkileri, odadan atma, oda sahibi çıkınca odanın devam etmesi, telefondan katılım (mikrofonsuz da olur)
 
@@ -84,9 +85,18 @@ dinleyenler ayrıca indirmez. Netlify'ın ücretsiz planı aylık kredi ile çal
 
 ## Yönetim paneli
 
-`/admin` adresinden açılır (ör. `https://oyun-odasi.netlify.app/admin`). Üyelik başvurularını onaylama/reddetme,
-üyenin adını değiştirme, unutulan şifreyi sıfırlama ve üye silme buradan yapılır. "Başvuru bildirimi al" ile yeni başvurular telefona/bilgisayara bildirim olarak gelir.
-Yönetici şifresini değiştirmek için Netlify'da **Site configuration → Environment variables** bölümüne `ADMIN_SIFRE` adında yeni şifreni ekle.
+`/admin` adresinden açılır (ör. `https://oyun-odasi.netlify.app/admin`). Sekmeler:
+
+- **📊 Genel:** üye / bekleyen başvuru / son 24 saatte giren / bildirimi açık cihaz / son 7 günde açılan oda / şarkı sayısı, son girenler ve son açılan odalar.
+- **⏳ Onay bekleyen:** onayla, reddet, hepsini birden onayla. Yeni başvuru sayfa yenilemeden düşer (ses + bildirim).
+- **✅ Üyeler:** ad değiştir, şifre sıfırla, tüm cihazlardan çıkış yaptır, hesabı durdur / yeniden aç, sil. Her üyenin son giriş zamanı görünür.
+- **🔔 Bildirimler:** herkese duyuru gönder, deneme bildirimi, cihazların durumu, eski cihazı kaldır, gönderim geçmişi.
+- **🏆 Skorlar:** her oyunun tablosu; hileli/hatalı skoru sil ya da tabloyu sıfırla.
+- **🎵 Müzik:** şarkıların adını düzelt, şarkı ya da playlist sil (kullanıcılar silemez).
+- **⚙️ Ayarlar:** yönetici şifresini değiştir (diğer yönetici oturumları kapanır), işlem geçmişi, yanlış şifre denemeleri.
+
+Liste arka planda 6 saniyede bir kontrol edilir; ekran sadece bir şey değiştiğinde güncellenir.
+Netlify'da `ADMIN_SIFRE` ortam değişkeni tanımlıysa şifre oradan gelir ve panelden değiştirilemez.
 
 ## Skor tabloları
 

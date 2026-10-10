@@ -1,0 +1,438 @@
+// Şakalar: yönetici panelden odadakilere domates, yumurta, korku efekti… atar; kişinin ekranında birden çıkar.
+//
+// Nasıl ulaşır: yönetim paneli odaya görünmez bir bağlantıyla (oda sahibine) bağlanır. Bağlantı, sunucunun
+// imzaladığı bir "bilet" taşır; oda sahibi bileti açık anahtarla doğrular, sonra şakayı odadaki herkese iletir.
+// Böylece sunucuya sürekli sorgu gerekmez ve efekt anında görünür. Kimse kişi listesinde yönetici görmez.
+// Herkes Görünüm penceresinden şaka efektlerini kapatabilir.
+(() => {
+const SAKA = {
+  domates: { ad: 'Domates', ikon: '🍅', fiil: 'domates attı' },
+  yumurta: { ad: 'Yumurta', ikon: '🥚', fiil: 'yumurta attı' },
+  pasta: { ad: 'Pasta', ikon: '🥧', fiil: 'suratına pasta yapıştırdı' },
+  hamsi: { ad: 'Hamsi tokadı', ikon: '🐟', fiil: 'hamsi tokadı attı' },
+  korku: { ad: 'Korku', ikon: '👻', fiil: 'korkuttu' },
+  orumcek: { ad: 'Örümcek', ikon: '🕷️', fiil: 'örümcek saldı' },
+  cam: { ad: 'Ekran kırıldı', ikon: '💥', fiil: 'ekranını kırdı' },
+  sarhos: { ad: 'Baş dönmesi', ikon: '🌀', fiil: 'başını döndürdü' },
+  donma: { ad: 'Dondur', ikon: '🥶', fiil: 'dondurdu' },
+  osuruk: { ad: 'Pırrt', ikon: '💨', fiil: 'pırrt yaptı' },
+  korna: { ad: 'Korna', ikon: '📯', fiil: 'korna çaldı' },
+  tavuk: { ad: 'Tavuklar', ikon: '🐔', fiil: 'tavuk saldı' },
+  konfeti: { ad: 'Konfeti', ikon: '🎉', fiil: 'konfeti patlattı' },
+  mesaj: { ad: 'Mesaj', ikon: '📣', fiil: 'mesaj gönderdi' }
+};
+const SAKA_KEY = 'oyunodasi-saka';
+const sakaAcik = () => store.get(SAKA_KEY) !== 'kapali';
+
+// ---------- oda sahibi: yönetici bağlantısını doğrula ve şakaları ilet ----------
+let sakaPub = null;
+async function sakaVerify(b){
+  try {
+    if (!b || typeof b.sig !== 'string' || !(b.exp > Date.now()) || b.exp > Date.now() + 13 * 3600e3) return false;
+    if (!sakaPub){
+      const { jwk } = await (await fetch('/api/uye/saka-anahtar')).json();
+      sakaPub = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+    }
+    const sig = Uint8Array.from(atob(b.sig.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+    return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, sakaPub, sig, new TextEncoder().encode('oyunodasi-saka-v1|' + b.exp));
+  } catch(e){ return false; }
+}
+function sakaAdminConn(conn){
+  let ok = false;
+  conn.on('open', async () => {
+    ok = isHost && await sakaVerify(conn.metadata && conn.metadata.saka);
+    if (!ok){ send(conn, { t: 'saka-red', host: isHost }); setTimeout(() => { try { conn.close(); } catch(e){} }, 400); return; }
+    sakaRoster(conn);
+  });
+  conn.on('data', d => {
+    if (!ok || !d || typeof d !== 'object') return;
+    if (d.t === 'saka-liste') sakaRoster(conn);
+    else if (d.t === 'saka') sakaRelay(d, conn);
+  });
+  conn.on('error', () => {});
+}
+function sakaRoster(conn){
+  const list = [{ id: peer.id, name: myName }];
+  peers.forEach(p => { if (p.linked && p.helloed) list.push({ id: p.id, name: p.name }); });
+  send(conn, { t: 'saka-liste', oda: roomCode, list });
+}
+function sakaRelay(d, conn){
+  if (!SAKA[d.e]) return;
+  const now = Date.now();
+  if (now - (conn._sakaT || 0) < 700) return;
+  conn._sakaT = now;
+  const msg = { t: 'saka', e: d.e, to: typeof d.to === 'string' ? d.to : '*', m: clip(d.m || '', 90) };
+  broadcast(msg);
+  sakaShow(msg);
+  send(conn, { t: 'saka-ok', e: d.e, to: msg.to });
+}
+function sakaOnData(id, d){
+  if (d.t !== 'saka') return false;
+  if (id === currentHostId && SAKA[d.e]) sakaShow(d);
+  return true;
+}
+let sakaLast = 0;
+function sakaShow(d){
+  const s = SAKA[d.e];
+  const toMe = d.to === '*' || d.to === (peer && peer.id);
+  const who = d.to === '*' ? 'herkese' : toMe ? 'sana' : (((peers.get(d.to) || {}).name || 'birine') + '\'e');
+  addSys(s.ikon + ' Yönetici ' + who + ' ' + s.fiil + (d.e === 'mesaj' && d.m ? ': “' + d.m + '”' : '') + '!');
+  if (!toMe) return;
+  const now = Date.now();
+  if (now - sakaLast < 600) return;
+  sakaLast = now;
+  if (!sakaAcik()){ toast(s.ikon + ' Yönetici sana ' + s.fiil + (d.m ? ': “' + d.m + '”' : '') + ' (şaka efektlerin kapalı)'); return; }
+  playSaka(d.e, d.m);
+}
+
+// ---------- ses ----------
+function sfx(fn){
+  if (typeof deafened !== 'undefined' && deafened) return;
+  try {
+    ensureCtx();
+    if (!audioCtx) return;
+    const out = audioCtx.createGain();
+    out.gain.value = 0.55 * Math.max(typeof masterVol === 'number' ? masterVol : 1, 0.3);
+    out.connect(audioCtx.destination);
+    fn(audioCtx, audioCtx.currentTime + 0.01, out);
+  } catch(e){}
+}
+function noiseSrc(ctx, dur){
+  const n = Math.ceil(ctx.sampleRate * dur), buf = ctx.createBuffer(1, n, ctx.sampleRate), ch = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) ch[i] = Math.random() * 2 - 1;
+  const s = ctx.createBufferSource(); s.buffer = buf; return s;
+}
+function env(ctx, t, a, peak, d){
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+  return g;
+}
+function burst(ctx, t, out, { dur = 0.3, type = 'lowpass', f = 900, q = 0.8, peak = 0.8, a = 0.005, sweepTo = 0 }){
+  const s = noiseSrc(ctx, dur + a + 0.05), fl = ctx.createBiquadFilter(), g = env(ctx, t, a, peak, dur);
+  fl.type = type; fl.frequency.setValueAtTime(f, t); fl.Q.value = q;
+  if (sweepTo) fl.frequency.exponentialRampToValueAtTime(sweepTo, t + a + dur);
+  s.connect(fl); fl.connect(g); g.connect(out); s.start(t); s.stop(t + a + dur + 0.05);
+}
+function osc(ctx, t, out, { type = 'sine', f = 440, to = 0, dur = 0.2, peak = 0.3, a = 0.01, vib = 0, vibF = 6 }){
+  const o = ctx.createOscillator(), g = env(ctx, t, a, peak, dur);
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  if (to) o.frequency.exponentialRampToValueAtTime(to, t + a + dur);
+  if (vib){ const l = ctx.createOscillator(), lg = ctx.createGain(); l.frequency.value = vibF; lg.gain.value = vib; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + a + dur + 0.05); }
+  o.connect(g); g.connect(out); o.start(t); o.stop(t + a + dur + 0.05);
+}
+const SES = {
+  whoosh: (c, t, o) => burst(c, t, o, { dur: 0.35, type: 'bandpass', f: 400, sweepTo: 2400, q: 1.2, peak: 0.35, a: 0.12 }),
+  splat: (c, t, o, big) => { burst(c, t, o, { dur: big ? 0.45 : 0.28, f: big ? 700 : 1100, peak: 1 }); osc(c, t, o, { f: 140, to: 50, dur: 0.18, peak: 0.6 }); },
+  crack: (c, t, o) => { burst(c, t, o, { dur: 0.05, type: 'highpass', f: 2500, peak: 0.7 }); burst(c, t + 0.06, o, { dur: 0.04, type: 'highpass', f: 3500, peak: 0.5 }); },
+  slap: (c, t, o) => { burst(c, t, o, { dur: 0.12, type: 'bandpass', f: 1800, q: 0.6, peak: 1, a: 0.002 }); osc(c, t, o, { f: 180, to: 60, dur: 0.12, peak: 0.6, a: 0.002 }); },
+  scream: (c, t, o) => {
+    [0, 7, -9].forEach((d, i) => osc(c, t, o, { type: 'sawtooth', f: 520 + d * 3, to: 1250 + d * 9, dur: 1.1, peak: 0.13, a: 0.04, vib: 40 + i * 15, vibF: 9 + i }));
+    burst(c, t, o, { dur: 1.1, type: 'bandpass', f: 1500, q: 2, peak: 0.5, a: 0.04, sweepTo: 3000 });
+  },
+  boom: (c, t, o) => { osc(c, t, o, { f: 90, to: 30, dur: 0.6, peak: 0.8 }); burst(c, t, o, { dur: 0.5, f: 300, peak: 0.6 }); },
+  glass: (c, t, o) => {
+    burst(c, t, o, { dur: 0.35, type: 'highpass', f: 2200, peak: 0.9, a: 0.002 });
+    for (let i = 0; i < 12; i++) osc(c, t + 0.04 + Math.random() * 0.6, o, { f: 2200 + Math.random() * 3800, dur: 0.18 + Math.random() * 0.2, peak: 0.08 + Math.random() * 0.06, a: 0.002 });
+  },
+  wobble: (c, t, o) => { osc(c, t, o, { type: 'triangle', f: 330, dur: 2.6, peak: 0.18, a: 0.2, vib: 80, vibF: 1.6 }); osc(c, t, o, { type: 'sine', f: 220, dur: 2.6, peak: 0.12, a: 0.2, vib: 50, vibF: 1.1 }); },
+  freeze: (c, t, o) => { for (let i = 0; i < 26; i++) burst(c, t + i * 0.045 + Math.random() * 0.03, o, { dur: 0.025, type: 'highpass', f: 3000 + Math.random() * 3000, peak: 0.25 + Math.random() * 0.3, a: 0.001 }); osc(c, t, o, { f: 1800, to: 2600, dur: 1, peak: 0.05, a: 0.3 }); },
+  fart: (c, t, o) => {
+    const v = c.createOscillator(), fl = c.createBiquadFilter(), g = env(c, t, 0.03, 0.9, 0.95);
+    v.type = 'sawtooth';
+    const curve = new Float32Array(40); for (let i = 0; i < 40; i++) curve[i] = 70 + Math.random() * 45 - i * 0.6;
+    v.frequency.setValueCurveAtTime(curve, t, 0.98);
+    fl.type = 'lowpass'; fl.frequency.value = 420; fl.Q.value = 6;
+    v.connect(fl); fl.connect(g); g.connect(o); v.start(t); v.stop(t + 1.05);
+    burst(c, t, o, { dur: 0.9, f: 260, peak: 0.25, a: 0.03 });
+  },
+  horn: (c, t, o) => { [0, 0.45, 0.9].forEach((dt, k) => [440, 554, 659].forEach(f => osc(c, t + dt, o, { type: 'sawtooth', f: f * (k === 2 ? 1.06 : 1), dur: k === 2 ? 0.7 : 0.3, peak: 0.09, a: 0.02, vib: 4, vibF: 7 }))); },
+  cluck: (c, t, o) => { for (let i = 0; i < 6; i++) osc(c, t + i * 0.22 + Math.random() * 0.08, o, { type: 'square', f: 650 + Math.random() * 200, to: 1100 + Math.random() * 300, dur: 0.07, peak: 0.06, a: 0.004 }); },
+  skitter: (c, t, o) => { for (let i = 0; i < 30; i++) burst(c, t + i * 0.06 + Math.random() * 0.04, o, { dur: 0.012, type: 'highpass', f: 4000, peak: 0.12, a: 0.001 }); },
+  cheer: (c, t, o) => { [523, 659, 784, 1047].forEach((f, i) => osc(c, t + i * 0.09, o, { type: 'triangle', f, dur: 0.4, peak: 0.16 })); burst(c, t + 0.1, o, { dur: 0.15, type: 'highpass', f: 1500, peak: 0.4 }); },
+  ding: (c, t, o) => { osc(c, t, o, { f: 880, dur: 0.5, peak: 0.2 }); osc(c, t + 0.12, o, { f: 1320, dur: 0.7, peak: 0.18 }); }
+};
+const play = (name, delay, x) => sfx((c, t, o) => SES[name](c, t + (delay || 0), o, x));
+
+// ---------- görüntü ----------
+function sakaLayer(){
+  let l = document.getElementById('sakaLayer');
+  if (!l){ l = document.createElement('div'); l.id = 'sakaLayer'; l.setAttribute('aria-hidden', 'true'); document.body.append(l); }
+  return l;
+}
+const W = () => innerWidth, H = () => innerHeight;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function add(html, cls, style){
+  const e = document.createElement('div'); e.className = 'saka-el ' + (cls || '');
+  if (html) e.innerHTML = html;
+  if (style) Object.assign(e.style, style);
+  sakaLayer().append(e); return e;
+}
+function fadeOut(e, ms, extra){ const a = e.animate([{ opacity: 1 }, Object.assign({ opacity: 0 }, extra || {})], { duration: ms, easing: 'ease-in', fill: 'forwards' }); a.onfinish = () => e.remove(); }
+function shake(px, ms){
+  const r = document.querySelector('#room:not([hidden])') || document.querySelector('#lobby:not([hidden])') || document.body;
+  const k = []; for (let i = 0; i < 10; i++) k.push({ transform: 'translate(' + rnd(-px, px) + 'px,' + rnd(-px, px) + 'px)' });
+  k.push({ transform: 'none' });
+  r.animate(k, { duration: ms || 450, easing: 'linear' });
+}
+function caption(text, ms, cls){
+  const e = add('', 'saka-yazi ' + (cls || '')); e.textContent = text;
+  e.animate([{ transform: 'translate(-50%,-50%) scale(.4)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.1)', opacity: 1, offset: 0.25 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }], { duration: 450, easing: 'cubic-bezier(.3,1.5,.5,1)', fill: 'forwards' });
+  setTimeout(() => fadeOut(e, 500), ms || 2200);
+  return e;
+}
+// ekranın dışından hedefe doğru uçan nesne (kameraya doğru büyür)
+async function fly(emoji, x, y, size){
+  play('whoosh');
+  const e = add('', 'saka-fly'); e.textContent = emoji;
+  e.style.fontSize = (size || 90) + 'px';
+  const sx = rnd(0.1, 0.9) * W(), sy = H() + 80;
+  await e.animate([
+    { transform: 'translate(' + sx + 'px,' + sy + 'px) translate(-50%,-50%) scale(.25) rotate(0deg)' },
+    { transform: 'translate(' + ((sx + x) / 2) + 'px,' + (Math.min(sy, y) - H() * 0.25) + 'px) translate(-50%,-50%) scale(.8) rotate(' + rnd(200, 400) + 'deg)', offset: 0.55 },
+    { transform: 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%) scale(1.9) rotate(' + rnd(500, 720) + 'deg)' }
+  ], { duration: 560, easing: 'cubic-bezier(.4,.1,.9,.6)', fill: 'forwards' }).finished.catch(() => {});
+  e.remove();
+}
+// sıvı lekesi (svg): düzensiz kenarlı leke, etrafa sıçrayan damlalar, aşağı akan izler
+function splat(x, y, r, fill, dark, opts = {}){
+  const pts = [], n = 18;
+  for (let i = 0; i < n; i++){
+    const a = i / n * Math.PI * 2, rr = r * (i % 2 ? rnd(0.62, 0.85) : rnd(0.9, 1.25)) * (Math.random() < 0.2 ? 1.35 : 1);
+    pts.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+  }
+  let d = 'M' + ((pts[0][0] + pts[n - 1][0]) / 2) + ' ' + ((pts[0][1] + pts[n - 1][1]) / 2);
+  pts.forEach((p, i) => { const q = pts[(i + 1) % n]; d += ' Q' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ' ' + ((p[0] + q[0]) / 2).toFixed(1) + ' ' + ((p[1] + q[1]) / 2).toFixed(1); });
+  let drops = '';
+  for (let i = 0; i < 12; i++){ const a = rnd(0, Math.PI * 2), dist = r * rnd(1.25, 2.1); drops += '<circle cx="' + (Math.cos(a) * dist).toFixed(1) + '" cy="' + (Math.sin(a) * dist).toFixed(1) + '" r="' + rnd(r * 0.03, r * 0.11).toFixed(1) + '"/>'; }
+  let drips = '';
+  const nd = opts.drips == null ? 4 : opts.drips;
+  for (let i = 0; i < nd; i++){
+    const dx = rnd(-r * 0.6, r * 0.6), w = rnd(r * 0.07, r * 0.14), len = rnd(r * 0.8, r * 2.2), dur = rnd(2.2, 4).toFixed(1);
+    drips += '<g transform="translate(' + dx.toFixed(1) + ' ' + (r * 0.3).toFixed(1) + ')"><rect x="' + (-w / 2).toFixed(1) + '" y="0" width="' + w.toFixed(1) + '" height="1" rx="' + (w / 2).toFixed(1) + '"><animate attributeName="height" from="1" to="' + len.toFixed(0) + '" dur="' + dur + 's" fill="freeze" calcMode="spline" keySplines=".2 .6 .4 1" keyTimes="0;1"/></rect>' +
+      '<circle cx="0" cy="0" r="' + (w * 0.75).toFixed(1) + '"><animate attributeName="cy" from="0" to="' + len.toFixed(0) + '" dur="' + dur + 's" fill="freeze" calcMode="spline" keySplines=".2 .6 .4 1" keyTimes="0;1"/></circle></g>';
+  }
+  const S = r * 4.6;
+  const svg = '<svg viewBox="' + (-S / 2) + ' ' + (-S / 2) + ' ' + S + ' ' + S + '" width="' + S + '" height="' + S + '">' +
+    '<defs><radialGradient id="sg' + (++splat.n) + '" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="' + (opts.light || fill) + '"/><stop offset=".55" stop-color="' + fill + '"/><stop offset="1" stop-color="' + dark + '"/></radialGradient></defs>' +
+    '<g fill="url(#sg' + splat.n + ')"><path d="' + d + ' Z"/>' + drops + drips + '</g>' + (opts.extra || '') + '</svg>';
+  const e = add(svg, 'saka-splat');
+  e.style.left = x + 'px'; e.style.top = y + 'px';
+  e.animate([{ transform: 'translate(-50%,-50%) scale(.2)' }, { transform: 'translate(-50%,-50%) scale(1.08)', offset: 0.7 }, { transform: 'translate(-50%,-50%) scale(1)' }], { duration: 220, easing: 'ease-out', fill: 'forwards' });
+  return e;
+}
+splat.n = 0;
+const center = () => [rnd(0.3, 0.7) * W(), rnd(0.3, 0.6) * H()];
+const unit = () => Math.min(W(), H());
+
+const EFEKT = {
+  async domates(){
+    const [x, y] = center();
+    await fly('🍅', x, y, 96);
+    play('splat'); shake(8, 300);
+    const e = splat(x, y, unit() * 0.17, '#d9261c', '#7e0d07', { light: '#ff5a3c', extra: seeds(unit() * 0.17) });
+    setTimeout(() => fadeOut(e, 900), 4200);
+  },
+  async yumurta(){
+    const [x, y] = center();
+    await fly('🥚', x, y, 84);
+    play('crack'); play('splat', 0.05);
+    const r = unit() * 0.18;
+    const e = splat(x, y, r, '#f3efe2', '#c9c2a8', { light: '#ffffff', drips: 3, extra: '<circle cx="' + (r * 0.1) + '" cy="' + (-r * 0.05) + '" r="' + (r * 0.36) + '" fill="#f6ad09"/><circle cx="' + (-r * 0.02) + '" cy="' + (-r * 0.17) + '" r="' + (r * 0.11) + '" fill="#ffe38a" opacity=".8"/>' });
+    setTimeout(() => fadeOut(e, 900), 4500);
+  },
+  async pasta(){
+    const x = W() / 2, y = H() * 0.45;
+    await fly('🥧', x, y, 120);
+    play('splat', 0, true); shake(10, 350);
+    const r = unit() * 0.24;
+    const blobs = [splat(x, y, r, '#fbf6ee', '#d8cbb6', { light: '#ffffff', drips: 6, extra: '<circle cx="' + (r * 0.15) + '" cy="' + (-r * 0.35) + '" r="' + (r * 0.13) + '" fill="#c8102e"/>' })];
+    for (let i = 0; i < 7; i++) blobs.push(splat(rnd(0.05, 0.95) * W(), rnd(0.1, 0.9) * H(), unit() * rnd(0.06, 0.12), '#fbf6ee', '#d8cbb6', { light: '#fff', drips: 2 }));
+    caption('Pastayı yedin! 🥧', 2400);
+    await wait(3000);
+    blobs.forEach(b => fadeOut(b, 1400, { transform: 'translate(-50%,-50%) translateY(' + H() * 0.5 + 'px)' }));
+  },
+  async hamsi(){
+    const e = add('', 'saka-fly'); e.textContent = '🐟'; e.style.fontSize = Math.round(unit() * 0.42) + 'px';
+    const x = W() / 2, y = H() / 2;
+    play('whoosh');
+    await e.animate([
+      { transform: 'translate(' + (-W() * 0.3) + 'px,' + y + 'px) translate(-50%,-50%) rotate(-80deg) scaleX(-1)' },
+      { transform: 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%) rotate(15deg) scaleX(-1)' }
+    ], { duration: 280, easing: 'cubic-bezier(.5,0,.9,.5)', fill: 'forwards' }).finished.catch(() => {});
+    play('slap'); shake(18, 450);
+    const flash = add('', 'saka-flash'); fadeOut(flash, 300);
+    caption('HAMSİ TOKADI! 🐟', 1800, 'kalin');
+    await e.animate([{ transform: 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%) rotate(15deg) scaleX(-1)' }, { transform: 'translate(' + (W() + 300) + 'px,' + (y - 200) + 'px) translate(-50%,-50%) rotate(140deg) scaleX(-1)' }], { duration: 900, delay: 350, easing: 'ease-in', fill: 'forwards' }).finished.catch(() => {});
+    e.remove();
+  },
+  async korku(){
+    const dark = add('', 'saka-karanlik');
+    dark.animate([{ opacity: 0 }, { opacity: 0.85, offset: 0.3 }, { opacity: 0.4, offset: 0.45 }, { opacity: 0.92, offset: 0.6 }, { opacity: 0.55, offset: 0.75 }, { opacity: 0.96 }], { duration: 1100, fill: 'forwards' });
+    await wait(1100);
+    play('scream'); shake(14, 700);
+    const f = add(GHOST_SVG, 'saka-hayalet');
+    await f.animate([{ transform: 'translate(-50%,-50%) scale(.15)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.15)', opacity: 1, offset: 0.35 }, { transform: 'translate(-50%,-50%) scale(1.3)', opacity: 1 }], { duration: 900, easing: 'cubic-bezier(.2,.9,.3,1)', fill: 'forwards' }).finished.catch(() => {});
+    fadeOut(f, 500); fadeOut(dark, 700);
+  },
+  async orumcek(){
+    play('skitter'); play('skitter', 1.8);
+    for (let i = 0; i < 7; i++){
+      const x = rnd(0.06, 0.94) * W(), down = rnd(0.25, 0.7) * H(), dur = rnd(4200, 5600);
+      const s = add('<i class="saka-ip"></i><b>🕷️</b>', 'saka-orumcek'); s.style.left = x + 'px'; s.style.fontSize = rnd(34, 64) + 'px';
+      s.animate([{ transform: 'translateY(-80px)' }, { transform: 'translateY(' + down + 'px)', offset: 0.35 }, { transform: 'translateY(' + (down - 20) + 'px) rotate(8deg)', offset: 0.5 }, { transform: 'translateY(' + down + 'px) rotate(-8deg)', offset: 0.65 }, { transform: 'translateY(-120px)' }],
+        { duration: dur, delay: i * 220, easing: 'ease-in-out', fill: 'both' }).onfinish = () => s.remove();
+    }
+    for (let i = 0; i < 3; i++){
+      const s = add('', 'saka-fly'); s.textContent = '🕷️'; s.style.fontSize = '44px';
+      const y = rnd(0.2, 0.9) * H(), dir = Math.random() < 0.5;
+      const k = []; for (let j = 0; j <= 10; j++){ const px = dir ? -80 + j * (W() + 160) / 10 : W() + 80 - j * (W() + 160) / 10; k.push({ transform: 'translate(' + px + 'px,' + (y + rnd(-30, 30)) + 'px) rotate(' + (dir ? 90 : -90) + 'deg)' }); }
+      s.animate(k, { duration: rnd(2500, 3800), delay: 900 + i * 700, easing: 'linear', fill: 'both' }).onfinish = () => s.remove();
+    }
+    caption('Üstünde bir şey var… 🕷️', 2000);
+  },
+  async cam(){
+    const x = rnd(0.3, 0.7) * W(), y = rnd(0.3, 0.6) * H();
+    play('glass'); shake(10, 300);
+    const flash = add('', 'saka-flash'); fadeOut(flash, 250);
+    const e = add(crackSVG(x, y), 'saka-cam');
+    setTimeout(() => fadeOut(e, 1000), 4200);
+  },
+  async sarhos(){
+    play('wobble');
+    const r = document.querySelector('#room:not([hidden])') || document.querySelector('#lobby:not([hidden])') || document.body;
+    const e = add('', 'saka-fly'); e.textContent = '🌀'; e.style.fontSize = '120px';
+    e.animate([{ transform: 'translate(' + W() / 2 + 'px,' + H() / 2 + 'px) translate(-50%,-50%) rotate(0) scale(.3)', opacity: 0.9 }, { transform: 'translate(' + W() / 2 + 'px,' + H() / 2 + 'px) translate(-50%,-50%) rotate(1080deg) scale(2.4)', opacity: 0 }], { duration: 1600, easing: 'ease-out', fill: 'forwards' }).onfinish = () => e.remove();
+    await r.animate([
+      { transform: 'none', filter: 'none' },
+      { transform: 'rotate(4deg) skewX(4deg) scale(1.02)', filter: 'blur(1.5px) hue-rotate(60deg)' },
+      { transform: 'rotate(-5deg) skewX(-5deg) scale(.98)', filter: 'blur(2.5px) hue-rotate(150deg)' },
+      { transform: 'rotate(3deg) skewY(3deg)', filter: 'blur(1px) hue-rotate(250deg)' },
+      { transform: 'rotate(-2deg)', filter: 'blur(.5px) hue-rotate(320deg)' },
+      { transform: 'none', filter: 'none' }
+    ], { duration: 3800, easing: 'ease-in-out' }).finished.catch(() => {});
+  },
+  async donma(){
+    play('freeze');
+    const e = add('', 'saka-buz');
+    let flakes = '';
+    for (let i = 0; i < 26; i++){
+      const edge = i % 4, p = rnd(0, 100);
+      const pos = edge === 0 ? 'left:' + p + '%;top:' + rnd(0, 12) + '%' : edge === 1 ? 'left:' + p + '%;top:' + rnd(86, 96) + '%' : edge === 2 ? 'top:' + p + '%;left:' + rnd(0, 8) + '%' : 'top:' + p + '%;left:' + rnd(90, 96) + '%';
+      flakes += '<span style="' + pos + ';font-size:' + rnd(18, 46).toFixed(0) + 'px;transform:rotate(' + rnd(0, 60).toFixed(0) + 'deg)">❄</span>';
+    }
+    e.innerHTML = flakes;
+    e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1300, easing: 'ease-out', fill: 'forwards' });
+    caption('Dondun! 🥶', 2600, 'buz');
+    await wait(3600);
+    fadeOut(e, 1400, { filter: 'blur(6px)' });
+  },
+  async osuruk(){
+    play('fart');
+    for (let i = 0; i < 9; i++){
+      const c = add('', 'saka-bulut');
+      const x = W() / 2 + rnd(-W() * 0.25, W() * 0.25), s = rnd(120, 260);
+      Object.assign(c.style, { left: x + 'px', width: s + 'px', height: s + 'px' });
+      c.animate([{ transform: 'translate(-50%,0) translateY(' + (H() + 40) + 'px) scale(.3)', opacity: 0 }, { transform: 'translate(-50%,0) translateY(' + (H() * rnd(0.35, 0.65)) + 'px) scale(1)', opacity: 0.85, offset: 0.4 }, { transform: 'translate(-50%,0) translateY(' + (H() * rnd(0.05, 0.3)) + 'px) scale(1.6)', opacity: 0 }],
+        { duration: rnd(2600, 3600), delay: i * 90, easing: 'ease-out', fill: 'both' }).onfinish = () => c.remove();
+    }
+    await wait(500);
+    caption('💨 Pırrt! Kim yaptı bunu?!', 2400);
+  },
+  async korna(){
+    play('horn');
+    [0, 450, 900].forEach(ms => setTimeout(() => shake(14, 350), ms));
+    caption('📯 UYAN!', 1900, 'kalin');
+  },
+  async tavuk(){
+    play('cluck'); play('cluck', 1.4); play('cluck', 2.6);
+    for (let i = 0; i < 6; i++){
+      const c = add('', 'saka-fly'); c.textContent = i === 5 ? '🐣' : '🐔'; c.style.fontSize = (i === 5 ? 40 : rnd(56, 84)) + 'px';
+      const y = H() - rnd(50, 140), k = [];
+      for (let j = 0; j <= 16; j++) k.push({ transform: 'translate(' + (W() + 100 - j * (W() + 200) / 16) + 'px,' + (y - (j % 2 ? 18 : 0)) + 'px)' });
+      c.animate(k, { duration: rnd(2600, 3400), delay: i * 380, easing: 'linear', fill: 'both' }).onfinish = () => c.remove();
+    }
+    caption('Gıt gıt gıdaak! 🐔', 2200);
+  },
+  async konfeti(){
+    play('cheer');
+    const colors = ['#ff4d6d', '#ffd166', '#06d6a0', '#4cc9f0', '#b388ff', '#ff9f1c'];
+    for (let i = 0; i < 130; i++){
+      const c = add('', 'saka-konfeti');
+      Object.assign(c.style, { left: (W() / 2) + 'px', top: (H() * 0.55) + 'px', background: colors[i % colors.length], width: rnd(6, 11) + 'px', height: rnd(10, 18) + 'px' });
+      const a = rnd(-Math.PI * 0.95, -Math.PI * 0.05), v = rnd(0.35, 0.8) * unit();
+      const dx = Math.cos(a) * v, dy = Math.sin(a) * v;
+      c.animate([{ transform: 'translate(0,0) rotate(0)' }, { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + rnd(180, 540) + 'deg)', offset: 0.35 }, { transform: 'translate(' + (dx * 1.3) + 'px,' + (H() * 0.6) + 'px) rotate(' + rnd(600, 1200) + 'deg)', opacity: 0.2 }],
+        { duration: rnd(2200, 3200), easing: 'cubic-bezier(.2,.7,.4,1)', fill: 'forwards' }).onfinish = () => c.remove();
+    }
+    caption('Tebrikler! 🎉', 2400);
+  },
+  async mesaj(m){
+    play('ding');
+    const e = add('', 'saka-mesaj');
+    const l = document.createElement('small'); l.textContent = '📣 Yöneticiden';
+    const t = document.createElement('div'); t.textContent = m || 'Merhaba! 👋';
+    e.append(l, t);
+    e.animate([{ transform: 'translate(-50%,-50%) scale(.5)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }], { duration: 380, easing: 'cubic-bezier(.3,1.5,.5,1)', fill: 'forwards' });
+    setTimeout(() => fadeOut(e, 600), 5200);
+  }
+};
+function seeds(r){
+  let s = '<g fill="#f7d36a" opacity=".85">';
+  for (let i = 0; i < 9; i++){ const a = rnd(0, Math.PI * 2), d = rnd(0, r * 0.55); s += '<ellipse cx="' + (Math.cos(a) * d).toFixed(1) + '" cy="' + (Math.sin(a) * d).toFixed(1) + '" rx="' + (r * 0.035).toFixed(1) + '" ry="' + (r * 0.06).toFixed(1) + '" transform="rotate(' + rnd(0, 180).toFixed(0) + ' ' + (Math.cos(a) * d).toFixed(1) + ' ' + (Math.sin(a) * d).toFixed(1) + ')"/>'; }
+  return s + '</g>';
+}
+// kırık cam: çarpma noktasından dağılan çatlaklar ve aralarında halkalar
+function crackSVG(x, y){
+  const w = W(), h = H(), n = 15, R = Math.hypot(w, h);
+  const rays = [];
+  let lines = '';
+  for (let i = 0; i < n; i++){
+    const a = i / n * Math.PI * 2 + rnd(-0.15, 0.15);
+    const pts = [[x, y]]; let px = x, py = y, aa = a;
+    for (let d = 0; d < R;){ const step = rnd(30, 90); d += step; aa += rnd(-0.25, 0.25); px += Math.cos(aa) * step; py += Math.sin(aa) * step; pts.push([px, py]); }
+    rays.push(pts);
+    lines += '<polyline points="' + pts.map(p => p[0].toFixed(0) + ',' + p[1].toFixed(0)).join(' ') + '"/>';
+  }
+  [2, 4, 7].forEach(k => {
+    let ring = '';
+    rays.forEach((r, i) => { const p = r[Math.min(k, r.length - 1)], q = rays[(i + 1) % n][Math.min(k + (Math.random() < 0.5 ? 1 : 0), rays[(i + 1) % n].length - 1)]; if (Math.random() < 0.8) ring += '<line x1="' + p[0].toFixed(0) + '" y1="' + p[1].toFixed(0) + '" x2="' + q[0].toFixed(0) + '" y2="' + q[1].toFixed(0) + '"/>'; });
+    lines += ring;
+  });
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '"><g fill="none" stroke-linecap="round">' +
+    '<g stroke="rgba(0,0,0,.55)" stroke-width="3.5" transform="translate(1.5 1.5)">' + lines + '</g><g stroke="rgba(255,255,255,.9)" stroke-width="1.6">' + lines + '</g></g>' +
+    '<circle cx="' + x + '" cy="' + y + '" r="22" fill="rgba(255,255,255,.35)" stroke="rgba(255,255,255,.9)"/></svg>';
+}
+// hayalet yüzü (özgün çizim): solgun yüz, kapkara boş gözler, uzun açık ağız
+const GHOST_SVG = '<svg viewBox="0 0 200 260" width="420" height="546"><defs>' +
+  '<radialGradient id="ghF" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#e9efe9"/><stop offset=".6" stop-color="#aab6ad"/><stop offset="1" stop-color="#4c5a52" stop-opacity="0"/></radialGradient>' +
+  '<radialGradient id="ghE" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000"/><stop offset=".7" stop-color="#050505"/><stop offset="1" stop-color="#2a332e"/></radialGradient>' +
+  '<filter id="ghB"><feGaussianBlur stdDeviation="2.2"/></filter></defs>' +
+  '<ellipse cx="100" cy="120" rx="86" ry="118" fill="url(#ghF)" filter="url(#ghB)"/>' +
+  '<ellipse cx="66" cy="98" rx="22" ry="30" fill="url(#ghE)" transform="rotate(-12 66 98)"/><ellipse cx="134" cy="98" rx="22" ry="30" fill="url(#ghE)" transform="rotate(12 134 98)"/>' +
+  '<circle cx="70" cy="102" r="2.5" fill="#d6ffe8"/><circle cx="130" cy="102" r="2.5" fill="#d6ffe8"/>' +
+  '<path d="M80 160 C 82 150, 118 150, 120 160 C 124 196, 112 228, 100 230 C 88 228, 76 196, 80 160 Z" fill="url(#ghE)"/>' +
+  '<path d="M60 70 Q66 60 80 66 M140 70 Q134 60 120 66" stroke="#3a443e" stroke-width="3" fill="none"/></svg>';
+
+let sakaBusy = false;
+async function playSaka(e, m){
+  if (!EFEKT[e]) return;
+  if (sakaBusy && e !== 'mesaj') await wait(400);
+  sakaBusy = true;
+  try { await EFEKT[e](m); } catch(err){ console.warn(err); }
+  sakaBusy = false;
+}
+
+// ---------- ayar ----------
+(function sakaAyar(){
+  const c = document.getElementById('sakaAcik');
+  if (!c) return;
+  c.checked = sakaAcik();
+  c.onchange = () => { store.set(SAKA_KEY, c.checked ? 'acik' : 'kapali'); if (c.checked) playSaka('konfeti'); };
+})();
+
+// odanın kodu (net.js) bu üçünü çağırır
+window.sakaAdminConn = sakaAdminConn;
+window.sakaOnData = sakaOnData;
+window.playSaka = playSaka;
+})();

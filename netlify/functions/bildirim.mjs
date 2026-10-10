@@ -88,7 +88,7 @@ export default async (req, context) => {
       if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
       const list = await allSubs();
       const gecmis = (await store('oyunodasi-ayar').get('gecmis', { type: 'json' })) || [];
-      return json({ cihazlar: list.map(s => ({ name: s.name || '—', platform: platformOf(s.sub.endpoint), ts: s.ts, last: s.last || null })), gecmis });
+      return json({ cihazlar: list.map(s => ({ key: s.key, name: s.name || '—', platform: platformOf(s.sub.endpoint), ts: s.ts, last: s.last || null })), gecmis });
     }
     if (req.method === 'POST' && islem === 'admin-test'){
       if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
@@ -96,6 +96,28 @@ export default async (req, context) => {
       const list = await allSubs();
       const res = await Promise.all(list.map(s => sendAndRecord(s, { title: '🧪 Yöneticiden deneme bildirimi', body: 'Bu cihaza bildirimler ulaşıyor 👍', url: '/', tag: 'test-' + Date.now() }, v, origin, { ttl: 600 })));
       return json({ ok: true, total: list.length, sent: res.filter(r => r.st >= 200 && r.st < 300).length, gone: res.filter(r => r.gone).length });
+    }
+    if (req.method === 'POST' && islem === 'admin-duyuru'){
+      // yöneticiden herkese duyuru bildirimi
+      if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
+      const b = await req.json().catch(() => ({}));
+      const title = clip(b.title, 60), body = clip(b.body, 200);
+      if (!title && !body) return json({ hata: 'Duyuru metnini yaz.' }, 400);
+      const v = await vapidKeys(), origin = new URL(req.url).origin;
+      const list = await allSubs();
+      const payload = { title: '📢 ' + (title || 'Oyun Odası'), body: body || title, url: '/', tag: 'duyuru-' + Date.now() };
+      const res = await Promise.all(list.map(s => sendAndRecord(s, payload, v, origin, { ttl: 86400 })));
+      const sent = res.filter(r => r.st >= 200 && r.st < 300).length, gone = res.filter(r => r.gone).length;
+      await logSend({ at: Date.now(), duyuru: true, code: '', by: 'Yönetici', text: (title ? title + ' — ' : '') + body, total: list.length, sent, gone, fails: [] });
+      try { const us = store('oyunodasi-uye'); const l = (await us.get('log', { type: 'json' })) || []; l.unshift({ at: Date.now(), t: clip('Duyuru gönderildi: ' + (title || body), 160) }); await us.setJSON('log', l.slice(0, 150)); } catch(e){}
+      return json({ ok: true, total: list.length, sent, gone });
+    }
+    if (req.method === 'POST' && islem === 'admin-cihaz-sil'){
+      if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
+      const b = await req.json().catch(() => ({}));
+      if (!/^[a-f0-9]{40}$/.test(String(b.key || ''))) return json({ hata: 'cihaz' }, 400);
+      await store('oyunodasi-abone').delete(b.key);
+      return json({ ok: true });
     }
     if (req.method !== 'POST') return json({ hata: 'yöntem' }, 405);
     const b = await req.json().catch(() => ({}));
