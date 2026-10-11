@@ -111,7 +111,7 @@ Giriş sistemi olmadığı için isimler yazılan ada göre tutulur.
 - **@etiket**: sohbette `@isim` veya `@herkes`; etiketlenen kişiye ses + bildirim + (telefonda) titreşim gider.
 - **Bağlantı göstergesi**: kartların köşesindeki sinyal çubukları (üstüne gelince ping ve ses kaybı).
 - **Saat ve tarih**: üst çubukta.
-- **📻 Radyo arama**: dizin sunucuları aynı anda denenir; ulaşılamazsa `netlify/functions/radyo.mjs` üzerinden aranır, o da olmazsa son liste gösterilir.
+- **📻 Radyo arama**: dizin sunucuları aynı anda denenir; ulaşılamazsa `netlify/functions/radyo.mjs` üzerinden aranır, o da olmazsa son liste, o da yoksa yerleşik 28 Türk radyosu (`YERLESIK_RADYO`, js/music.js) gösterilir. HLS (.m3u8) yayınlar hls.js ile çalar. Yazılı aramalarda dizin kapalıysa TuneIn de aranır (`/api/radyo/tunein`, `/api/radyo/cal`); 44 yabancı radyo da yerleşik (`DUNYA_RADYO`).
 - **📋 Hareketler** (yönetim paneli): kim nereden girdi (💻 bilgisayar / 📱 telefon), etiketler, şakalar, oyunlar, radyo, ses efekti… Son 500 hareket saklanır (`netlify/functions/hareket.mjs`).
 
 ## Sınırlar

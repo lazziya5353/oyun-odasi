@@ -589,3 +589,4 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   .top-mid .pt-k{display:none}
   #chatBtn .badge-count{top:-4px;right:2px}
 }
+.station.yukleniyor{opacity:.75;cursor:progress}

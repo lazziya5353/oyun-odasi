@@ -1,6 +1,9 @@
 // Radyo arama yedeği: tarayıcı Radio Browser sunucularına doğrudan ulaşamazsa (sunucu çökük, ağ engeli, CORS)
 // bu fonksiyon aynı aramayı Netlify üzerinden yapar. Sonuç 10 dk önbellekte tutulur.
 //   GET /api/radyo/ara?name=kral&cc=TR
+// İkinci kaynak TuneIn (dünya radyoları; tarayıcıdan doğrudan erişilemiyor, CORS):
+//   GET /api/radyo/tunein?q=jazz   → [{ name, tid, favicon, tags }]
+//   GET /api/radyo/cal?id=s12345   → { adaylar: [yayın adresleri, https önce] }
 const SABIT = ['https://de1.api.radio-browser.info', 'https://de2.api.radio-browser.info', 'https://fi1.api.radio-browser.info', 'https://at1.api.radio-browser.info', 'https://nl1.api.radio-browser.info'];
 let bulunan = null, bulunmaZamani = 0;
 
@@ -19,8 +22,69 @@ async function sunucular(){
   return SABIT;
 }
 
+const httpsYap = x => typeof x === 'string' ? x.replace(/^http:\/\//i, 'https://') : '';
+const jsonYanit = (o, st, onbellek) => new Response(JSON.stringify(o), { status: st || 200, headers: Object.assign({ 'content-type': 'application/json; charset=utf-8' },
+  onbellek ? { 'cache-control': 'public, max-age=600', 'netlify-cdn-cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400' } : {}) });
+async function metinAl(url, ms, sinir = 40000){
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ctl.signal, headers: { 'user-agent': 'OyunOdasi/1.0', 'accept-language': 'tr,en;q=0.8' } });
+    if (!r.ok) throw new Error('durum ' + r.status);
+    const tip = r.headers.get('content-type') || '';
+    if (/audio\/(mpeg|aac|ogg)|application\/ogg/i.test(tip)) { try { ctl.abort(); } catch(e){} return { ses: true }; }   // doğrudan yayınmış
+    const reader = r.body.getReader(), dec = new TextDecoder(); let txt = '', n = 0;
+    while (n < sinir){ const { done, value } = await reader.read(); if (done) break; n += value.length; txt += dec.decode(value, { stream: true }); }
+    try { reader.cancel(); } catch(e){}
+    return { txt };
+  } finally { clearTimeout(t); }
+}
+function duzlestir(list, out){
+  (Array.isArray(list) ? list : []).forEach(x => { if (!x) return; if (x.type === 'audio' && x.guide_id && /^s\d+$/.test(x.guide_id)) out.push(x); if (x.children) duzlestir(x.children, out); });
+  return out;
+}
+async function tuneinAra(q){
+  const r = await metinAl('https://opml.radiotime.com/Search.ashx?' + new URLSearchParams({ query: q, render: 'json', formats: 'mp3,aac,ogg,hls' }), 8000, 3e6);
+  const j = JSON.parse(r.txt || '{}');
+  const seen = new Set();
+  return duzlestir(j.body, []).filter(x => !seen.has(x.guide_id) && seen.add(x.guide_id)).slice(0, 80).map(x => ({
+    name: String(x.text || '').slice(0, 100), tid: x.guide_id, favicon: httpsYap(x.image), tags: String(x.subtext || '').slice(0, 80), country: ''
+  }));
+}
+// TuneIn istasyonunun yayın adresleri: .pls/.m3u listeleri açılır, https adresler öne alınır, http olanlar https'e çevrilip sona eklenir
+async function tuneinCoz(id){
+  const r = await metinAl('https://opml.radiotime.com/Tune.ashx?' + new URLSearchParams({ id, render: 'json', formats: 'mp3,aac,ogg,hls' }), 8000);
+  const j = JSON.parse(r.txt || '{}');
+  const ham = (Array.isArray(j.body) ? j.body : []).map(b => b && b.url).filter(x => typeof x === 'string' && /^https?:\/\//i.test(x)).slice(0, 6);
+  const sonuc = [];
+  await Promise.all(ham.map(async (url, i) => {
+    if (/\.(pls|m3u)(\?|$)/i.test(url) || /Tune\.ashx/i.test(url)){
+      try {
+        const g = await metinAl(url, 5000);
+        if (g.ses){ sonuc.push([i, url]); return; }
+        const icinde = (g.txt.match(/https?:\/\/[^\s"'<>]+/g) || []).filter(x => !/\.(pls|m3u)(\?|$)/i.test(x)).slice(0, 4);
+        icinde.forEach((x, k) => sonuc.push([i + k / 10, x]));
+      } catch(e){ sonuc.push([i + 0.9, url.replace(/\.(pls|m3u)(\?|$)/i, '$2')]); }
+    } else sonuc.push([i, url]);
+  }));
+  sonuc.sort((a, b) => a[0] - b[0]);
+  const list = sonuc.map(x => x[1].trim());
+  const https = list.filter(x => /^https:/i.test(x)), http = list.filter(x => /^http:/i.test(x)).map(httpsYap);
+  return [...new Set(https.concat(http))].slice(0, 8);
+}
+
 export default async (req) => {
   const u = new URL(req.url);
+  const islem = u.pathname.split('/').pop();
+  if (islem === 'tunein'){
+    const q = (u.searchParams.get('q') || '').trim().slice(0, 60);
+    if (!q) return jsonYanit([], 200, true);
+    try { return jsonYanit(await tuneinAra(q), 200, true); } catch(e){ return jsonYanit({ hata: 'TuneIn aramasına ulaşılamadı' }, 502); }
+  }
+  if (islem === 'cal'){
+    const id = u.searchParams.get('id') || '';
+    if (!/^s\d{1,9}$/.test(id)) return jsonYanit({ hata: 'geçersiz' }, 400);
+    try { const adaylar = await tuneinCoz(id); return jsonYanit({ adaylar }, adaylar.length ? 200 : 404, adaylar.length > 0); } catch(e){ return jsonYanit({ hata: 'yayın adresi alınamadı' }, 502); }
+  }
   const name = (u.searchParams.get('name') || '').slice(0, 60);
   const cc = (u.searchParams.get('cc') || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
   const p = new URLSearchParams({ limit: '150', hidebroken: 'true', order: 'clickcount', reverse: 'true' });

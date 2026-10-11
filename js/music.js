@@ -280,7 +280,7 @@ function applyRadio(st, by, quiet){
 function playRadio(){
   const on = !!radio && !radio.paused && !radioMuted && joined;
   if (!on){
-    if (radioEl && radioEl._url){ radioEl._url = ''; radioEl.pause(); radioEl.removeAttribute('src'); radioEl.load(); }
+    if (radioEl && radioEl._url){ radioEl._url = ''; if (radioEl._hls){ try { radioEl._hls.destroy(); } catch(e){} radioEl._hls = null; } radioEl.pause(); radioEl.removeAttribute('src'); radioEl.load(); }
     return;
   }
   if (!radioEl){
@@ -289,9 +289,34 @@ function playRadio(){
     radioEl.addEventListener('playing', renderRadioChip);
     radioEl.addEventListener('waiting', renderRadioChip);
   }
-  if (radioEl._url !== radio.url){ radioEl._url = radio.url; radioEl.src = radio.url; }
+  if (radioEl._url !== radio.url){
+    radioEl._url = radio.url;
+    if (radioEl._hls){ try { radioEl._hls.destroy(); } catch(e){} radioEl._hls = null; }
+    if (/\.m3u8(\?|$)/i.test(radio.url) && !radioEl.canPlayType('application/vnd.apple.mpegurl')){
+      // HLS yayını (ör. Kral FM): Chrome kendi çalamıyor, hls.js ile çalınır (ilk seferde yüklenir)
+      const url = radio.url;
+      hlsYukle().then(() => {
+        if (radioEl._url !== url || !window.Hls || !Hls.isSupported()) return;
+        const h = new Hls({ lowLatencyMode: false }); radioEl._hls = h;
+        h.on(Hls.Events.ERROR, (e, d) => { if (d.fatal && radioEl._url === url) toast('Bu radyo şu an açılamadı, başka bir istasyon dene.'); });
+        h.loadSource(url); h.attachMedia(radioEl);
+        applyMusicVolume();
+        radioEl.play().catch(() => toast('Radyoyu başlatmak için sayfaya bir kez tıkla.'));
+      }).catch(() => toast('Bu radyo şu an açılamadı, başka bir istasyon dene.'));
+      return;
+    }
+    radioEl.src = radio.url;
+  }
   applyMusicVolume();
   radioEl.play().catch(() => toast('Radyoyu başlatmak için sayfaya bir kez tıkla.'));
+}
+let hlsSoz = null;
+function hlsYukle(){
+  if (window.Hls) return Promise.resolve();
+  return hlsSoz || (hlsSoz = new Promise((ok, no) => {
+    const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.15/hls.min.js';
+    sc.onload = ok; sc.onerror = () => { hlsSoz = null; no(); }; document.head.append(sc);
+  }));
 }
 // eski adı: kanal değiştirirken çağrılıyor (artık kanaldan bağımsız)
 const playRadioIfHere = playRadio;
@@ -330,6 +355,122 @@ document.querySelectorAll('[data-radioout]').forEach(o => o.textContent = Math.r
 // Radio Browser: ücretsiz, açık radyo dizini. Birkaç sunucusu var, biri cevap vermezse diğeri denenir.
 const RB_HOSTS = ['https://de1.api.radio-browser.info', 'https://de2.api.radio-browser.info', 'https://fi1.api.radio-browser.info', 'https://at1.api.radio-browser.info', 'https://nl1.api.radio-browser.info'];
 const RB_CACHE = 'oyunodasi-radyo-onbellek';
+// Yerleşik Türk radyoları: dizin (Radio Browser) çökükken de liste boş kalmasın. Hepsi denendi, çalıyor (Ekim 2026).
+const STW = 'https://playerservices.streamtheworld.com/api/livestream-redirect/';
+const YERLESIK_RADYO = [
+  ['Power FM', 'https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio', 'yabancı pop, hit'],
+  ['Power Türk', 'https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio', 'türkçe pop'],
+  ['Power Türk Taptaze', 'https://listen.powerapp.com.tr/powerturktaptaze/mpeg/icecast.audio', 'yeni türkçe pop'],
+  ['Power Türk Akustik', 'https://listen.powerapp.com.tr/powerturkakustik/mpeg/icecast.audio', 'akustik'],
+  ['Power Türk Slow', 'https://listen.powerapp.com.tr/powerturkslow/mpeg/icecast.audio', 'slow'],
+  ['Power Türk Rap', 'https://listen.powerapp.com.tr/powerturkrap/mpeg/icecast.audio', 'türkçe rap'],
+  ['Power Türk Rock', 'https://listen.powerapp.com.tr/powerturkrock/mpeg/icecast.audio', 'türkçe rock'],
+  ['Power Pop', 'https://listen.powerapp.com.tr/powerpop/mpeg/icecast.audio', 'pop'],
+  ['Power Love', 'https://listen.powerapp.com.tr/powerlove/mpeg/icecast.audio', 'aşk şarkıları'],
+  ['Power Dance', 'https://listen.powerapp.com.tr/powerdance/mpeg/icecast.audio', 'dance, elektronik'],
+  ['Kral FM', 'https://dygedge2.radyotvonline.net/kralfm/playlist.m3u8', 'arabesk, fantezi'],
+  ['Joy FM', STW + 'JOY_FM.mp3', 'yabancı slow'],
+  ['Joy Türk', STW + 'JOY_TURK.mp3', 'türkçe slow'],
+  ['Joy Türk (2)', STW + 'JOY_TURK_SC', 'türkçe slow'],
+  ['Joy Jazz', STW + 'JOY_JAZZ.mp3', 'caz'],
+  ['Metro FM', STW + 'METRO_FM.mp3', 'yabancı hit'],
+  ['Süper FM', STW + 'SUPER_FM.mp3', 'türkçe pop'],
+  ['Virgin Radio', STW + 'VIRGIN_RADIO.mp3', 'yabancı pop, hit'],
+  ['Virgin Radio Türkiye', STW + 'VIRGIN_RADIO_SC', 'yabancı pop'],
+  ['Radyo Fenomen', 'https://live.radyofenomen.com/fenomen/128/icecast.audio', 'hit'],
+  ['Fenomen Türk', 'https://live.radyofenomen.com/fenomenturk/128/icecast.audio', 'türkçe pop'],
+  ['Fenomen Pop', 'https://live.radyofenomen.com/fenomenpop/128/icecast.audio', 'pop'],
+  ['Fenomen Akustik', 'https://live.radyofenomen.com/fenomenakustik/128/icecast.audio', 'akustik'],
+  ['Slow Türk', 'https://radyo.duhnet.tv/ak_dtvh_slowturk', 'türkçe slow'],
+  ['Radyo D', 'https://radyo.duhnet.tv/radyod', 'türkçe pop'],
+  ['Alem FM', 'https://turkmedya.radyotvonline.net/alemfmaac', 'türkçe pop'],
+  ['Radyo Viva', 'https://radyoviva.radyotvonline.net/radyoviva', 'türkçe pop'],
+  ['Show Radyo', 'https://showradyo.radyotvonline.net/showradyo', 'türkçe pop']
+].map(([name, url, tags]) => ({ name, url_resolved: url, favicon: '', tags, bitrate: 0, country: 'Türkiye', yerlesik: true }));
+// Yerleşik yabancı radyolar (hepsi denendi, çalıyor)
+const MR = 'https://media-ssl.musicradio.com/';
+const DUNYA_RADYO = [
+  ['Radio Paradise', 'https://stream.radioparadise.com/mp3-192', 'rock, pop, eklektik', 'ABD'],
+  ['Radio Paradise Mellow', 'https://stream.radioparadise.com/mellow-192', 'sakin, chill', 'ABD'],
+  ['Radio Paradise Rock', 'https://stream.radioparadise.com/rock-192', 'rock', 'ABD'],
+  ['Radio Paradise Global', 'https://stream.radioparadise.com/global-192', 'dünya müziği', 'ABD'],
+  ['KEXP', 'https://kexp-mp3-128.streamguys1.com/kexp128.mp3', 'indie, alternatif', 'ABD'],
+  ['NTS 1', 'https://stream-relay-geo.ntslive.net/stream', 'underground, elektronik', 'İngiltere'],
+  ['NTS 2', 'https://stream-relay-geo.ntslive.net/stream2', 'underground, elektronik', 'İngiltere'],
+  ['BBC Radio 1', 'https://as-hls-ww-live.akamaized.net/pool_01505109/live/ww/bbc_radio_one/bbc_radio_one.isml/bbc_radio_one-audio%3d96000.norewind.m3u8', 'pop, hit', 'İngiltere'],
+  ['BBC World Service', 'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service', 'haber (İngilizce)', 'İngiltere'],
+  ['Capital FM', MR + 'CapitalMP3', 'pop, hit', 'İngiltere'],
+  ['Capital XTRA', MR + 'CapitalXTRANationalMP3', 'hip hop, r&b', 'İngiltere'],
+  ['Heart', MR + 'HeartLondonMP3', 'pop', 'İngiltere'],
+  ['Radio X', MR + 'RadioXUKMP3', 'rock, indie', 'İngiltere'],
+  ['Smooth Radio', MR + 'SmoothUKMP3', 'slow, soft', 'İngiltere'],
+  ['Gold', MR + 'GoldMP3', 'eski hitler', 'İngiltere'],
+  ['Classic FM', MR + 'ClassicFMMP3', 'klasik müzik', 'İngiltere'],
+  ['Virgin Radio UK', 'https://radio.virginradio.co.uk/stream', 'pop, rock', 'İngiltere'],
+  ['FIP', 'https://icecast.radiofrance.fr/fip-hifi.aac', 'eklektik', 'Fransa'],
+  ['FIP Rock', 'https://icecast.radiofrance.fr/fiprock-hifi.aac', 'rock', 'Fransa'],
+  ['FIP Jazz', 'https://icecast.radiofrance.fr/fipjazz-hifi.aac', 'caz, jazz', 'Fransa'],
+  ['FIP Electro', 'https://icecast.radiofrance.fr/fipelectro-hifi.aac', 'elektronik', 'Fransa'],
+  ['FIP Groove', 'https://icecast.radiofrance.fr/fipgroove-hifi.aac', 'funk, soul', 'Fransa'],
+  ['NRJ', 'https://scdn.nrjaudio.fm/adwz2/fr/30001/mp3_128.mp3', 'pop, dance', 'Fransa'],
+  ['Skyrock', 'https://icecast.skyrock.net/s/natio_mp3_128k', 'rap, hip hop', 'Fransa'],
+  ['Radio 538', STW + 'RADIO538.mp3', 'pop, dance', 'Hollanda'],
+  ['Sky Radio', STW + 'SKYRADIO.mp3', 'pop', 'Hollanda'],
+  ['Qmusic', 'https://stream.qmusic.nl/qmusic/mp3', 'pop', 'Hollanda'],
+  ['Los 40', STW + 'LOS40.mp3', 'pop, latin', 'İspanya'],
+  ['Kiss FM España', 'https://kissfm.kissfmradio.cires21.com/kissfm.mp3', 'pop', 'İspanya'],
+  ['Radio Deejay', 'https://streamcdnm4-4c4b867c89244861ac216426883d1ad0.msvdn.net/radiodeejay/radiodeejay/master_ma.m3u8', 'pop, dance', 'İtalya'],
+  ['Radio Monte Carlo', 'https://icy.unitedradio.it/RMC.mp3', 'soft pop', 'İtalya'],
+  ['Antenne Bayern', 'https://stream.antenne.de/antenne', 'pop', 'Almanya'],
+  ['1LIVE', 'https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3', 'pop, hit', 'Almanya'],
+  ['Rock Antenne', 'https://stream.rockantenne.de/rockantenne/stream/mp3', 'rock', 'Almanya'],
+  ['Chillhop (FluxFM)', 'https://streams.fluxfm.de/Chillhop/mp3-128/streams.fluxfm.de/', 'lofi, chill', 'Almanya'],
+  ['Radio Swiss Jazz', 'https://stream.srg-ssr.ch/m/rsj/mp3_128', 'caz, jazz', 'İsviçre'],
+  ['Radio Swiss Pop', 'https://stream.srg-ssr.ch/m/rsp/mp3_128', 'pop', 'İsviçre'],
+  ['Radio Swiss Classic', 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128', 'klasik müzik', 'İsviçre'],
+  ['Europa Plus', 'https://ep256.hostingradio.ru:8052/europaplus256.mp3', 'pop, dance', 'Rusya'],
+  ['Radio Record', 'https://radiorecord.hostingradio.ru/rr_main96.aacp', 'elektronik, dance', 'Rusya'],
+  ['181.fm 90s Alternative', 'https://listen.181fm.com/181-90salt_128k.mp3', '90lar, alternatif', 'ABD'],
+  ['181.fm Awesome 80s', 'https://listen.181fm.com/181-awesome80s_128k.mp3', '80ler', 'ABD'],
+  ['LISTEN.moe J-pop', 'https://listen.moe/stream', 'j-pop, anime', 'Japonya'],
+  ['LISTEN.moe K-pop', 'https://listen.moe/kpop/stream', 'k-pop', 'Kore']
+].map(([name, url, tags, country]) => ({ name, url_resolved: url, favicon: '', tags, bitrate: 0, country, yerlesik: true }));
+function yerlesikAra(q, cc){
+  const k = String(q || '').toLocaleLowerCase('tr-TR');
+  const havuz = cc === 'TR' ? YERLESIK_RADYO : DUNYA_RADYO.concat(YERLESIK_RADYO);
+  return havuz.filter(s => !k || (s.name + ' ' + s.tags + ' ' + s.country).toLocaleLowerCase('tr-TR').includes(k));
+}
+// TuneIn: dünya radyoları, bizim sunucu üzerinden aranır
+async function tuneinAra(q){
+  const r = await fetch('/api/radyo/tunein?' + new URLSearchParams({ q }));
+  if (!r.ok) throw new Error('tunein');
+  const j = await r.json();
+  return (Array.isArray(j) ? j : []).filter(x => x && /^s\d+$/.test(x.tid)).map(x => ({ name: x.name, tid: x.tid, url_resolved: '', favicon: x.favicon || '', tags: x.tags || '', country: '', bitrate: 0 }));
+}
+// bir yayın adresi bu tarayıcıda çalıyor mu? (sessizce dener)
+function radyoDene(url, ms){
+  return new Promise(async res => {
+    const a = new Audio(); a.muted = true; a.preload = 'auto'; let h = null, bitti = false;
+    const son = v => { if (bitti) return; bitti = true; clearTimeout(t); try { h && h.destroy(); } catch(e){} a.removeAttribute('src'); try { a.load(); } catch(e){} res(v); };
+    const t = setTimeout(() => son(false), ms || 7000);
+    a.oncanplay = () => son(true); a.onerror = () => son(false);
+    if (/\.m3u8(\?|$)/i.test(url) && !a.canPlayType('application/vnd.apple.mpegurl')){
+      try { await hlsYukle(); } catch(e){ return son(false); }
+      if (!window.Hls || !Hls.isSupported()) return son(false);
+      h = new Hls(); h.on(Hls.Events.ERROR, (e, d) => { if (d.fatal) son(false); }); h.loadSource(url); h.attachMedia(a);
+    } else { a.src = url; a.load(); }
+  });
+}
+// TuneIn istasyonunun çalışan yayın adresini bul (bir kez bulunur, sonra hatırlanır)
+async function tuneinAdres(st){
+  if (st.url) return st.url;
+  const r = await fetch('/api/radyo/cal?' + new URLSearchParams({ id: st.tid }));
+  const j = r.ok ? await r.json() : {};
+  for (const u of (Array.isArray(j.adaylar) ? j.adaylar : []).filter(x => /^https:\/\//i.test(x)).slice(0, 6)){
+    if (await radyoDene(u, 7000)){ st.url = u; return u; }
+  }
+  throw new Error('çalan adres yok');
+}
 function rbZamanli(url, ms){
   const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), ms);
   return fetch(url, { signal: ctl.signal }).then(r => { if (!r.ok) throw new Error('durum ' + r.status); return r.json(); })
@@ -350,7 +491,14 @@ async function rbSearch(q, cc){
     try { const c = JSON.parse(localStorage.getItem(RB_CACHE) || '{}'); c[key] = res.slice(0, 150); const ks = Object.keys(c); while (ks.length > 12) delete c[ks.shift()]; localStorage.setItem(RB_CACHE, JSON.stringify(c)); } catch(e){}
     return res;
   } catch(e){
-    try { const c = JSON.parse(localStorage.getItem(RB_CACHE) || '{}'); if (c[key]) { rbSearch.eski = true; return c[key]; } } catch(e2){}
+    let onbellek = null;
+    try { const c = JSON.parse(localStorage.getItem(RB_CACHE) || '{}'); onbellek = c[key] || null; } catch(e2){}
+    if (onbellek && !q){ rbSearch.eski = true; return onbellek; }
+    // dizin kapalı: yerleşik liste + (arama yazıldıysa) TuneIn
+    const y = yerlesikAra(q, cc);
+    const t = q ? await tuneinAra(q).catch(() => []) : [];
+    if (y.length || t.length){ rbSearch.eski = 'yerlesik'; return y.concat(t); }
+    if (onbellek){ rbSearch.eski = true; return onbellek; }
     throw new Error('radyo listesi alınamadı');
   }
 }
@@ -386,13 +534,27 @@ function stationRow(st, sub){
   t.append(nm, sb); b.append(t);
   const fav = document.createElement('button'); fav.type = 'button'; fav.className = 'st-fav' + (isFav(st.url) ? ' on' : '');
   fav.textContent = isFav(st.url) ? '★' : '☆'; fav.title = 'Favorilere ekle / çıkar';
-  fav.onclick = e => {
+  fav.onclick = async e => {
     e.stopPropagation();
+    if (!st.url && st.tid){
+      fav.disabled = true; fav.textContent = '…';
+      try { await tuneinAdres(st); } catch(er){ fav.disabled = false; fav.textContent = '☆'; toast('Bu radyo şu an açılamadı, başka bir istasyon dene.'); return; }
+      fav.disabled = false;
+    }
     const on = toggleFav(st); fav.textContent = on ? '★' : '☆'; fav.classList.toggle('on', on);
     if (!on && radioTab === 'fav') b.remove();
   };
   b.append(fav);
-  const play = () => { setRadio({ name: st.name, url: st.url, favicon: st.favicon || '', tags: st.tags || '' }); $('radioDlg').close(); toast('📻 ' + st.name + ' çalıyor'); };
+  const play = async () => {
+    if (!st.url && st.tid){
+      if (b.classList.contains('yukleniyor')) return;
+      b.classList.add('yukleniyor'); sb.textContent = '⏳ Bağlanıyor…';
+      try { await tuneinAdres(st); }
+      catch(er){ b.classList.remove('yukleniyor'); sb.textContent = '❌ Bu radyo şu an açılamıyor'; return; }
+      b.classList.remove('yukleniyor'); sb.textContent = sub;
+    }
+    setRadio({ name: st.name, url: st.url, favicon: st.favicon || '', tags: st.tags || '' }); $('radioDlg').close(); toast('📻 ' + st.name + ' çalıyor');
+  };
   b.onclick = play;
   b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); play(); } };
   return b;
@@ -420,17 +582,18 @@ async function doRadioSearch(){
     if (radioTab !== 'ara' || sira !== rbSira) return;
     const seen = new Set();
     const items = (Array.isArray(res) ? res : [])
-      .filter(s => s && typeof s.url_resolved === 'string' && /^https:\/\//i.test(s.url_resolved))
+      .filter(s => s && ((typeof s.url_resolved === 'string' && /^https:\/\//i.test(s.url_resolved)) || (typeof s.tid === 'string' && /^s\d+$/.test(s.tid))))
       .filter(s => { const k = String(s.name || '').trim().toLowerCase(); if (!k || seen.has(k)) return false; seen.add(k); return true; })
       .slice(0, 60);
     list.innerHTML = '';
-    if (rbSearch.eski) list.innerHTML = '<p class="note">⚠️ Radyo dizinine şu an ulaşılamadı, en son kaydedilen liste gösteriliyor.</p>';
+    if (rbSearch.eski === 'yerlesik') list.innerHTML = '<p class="note">⚠️ Radyo dizini şu an kapalı, yerleşik liste' + ($('radioQuery').value.trim() ? ' ve TuneIn sonuçları' : '') + ' gösteriliyor. Yabancı radyolar için “Tüm dünya”yı seç ya da isim yazıp ara (ör. jazz, BBC, rock).</p>';
+    else if (rbSearch.eski) list.innerHTML = '<p class="note">⚠️ Radyo dizinine şu an ulaşılamadı, en son kaydedilen liste gösteriliyor.</p>';
     if (!items.length){ list.innerHTML = '<p class="note">Sonuç bulunamadı. Başka bir isim dene ya da “Tüm dünya”yı seç.</p>'; return; }
     items.forEach(s => {
       const fav = typeof s.favicon === 'string' && /^https:\/\//i.test(s.favicon) ? s.favicon : '';
       const tags = String(s.tags || '').split(',').map(x => x.trim()).filter(Boolean).slice(0, 3).join(', ');
       const sub = [tags, s.bitrate ? s.bitrate + ' kbps' : '', s.country || ''].filter(Boolean).join(' · ');
-      list.append(stationRow({ name: String(s.name).trim(), url: s.url_resolved, favicon: fav, tags }, sub));
+      list.append(stationRow({ name: String(s.name).trim(), url: s.url_resolved || '', tid: s.tid || '', favicon: fav, tags }, s.tid ? [tags, 'TuneIn'].filter(Boolean).join(' · ') : sub));
     });
   } catch(e){
     if (radioTab !== 'ara' || sira !== rbSira) return;
