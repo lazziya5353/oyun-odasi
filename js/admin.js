@@ -82,6 +82,7 @@ async function loadTab(){
   if (tab === 'genel' || USER_TABS.includes(tab)) { try { await loadUsers(); } catch(e){} }
   if (tab === 'genel') await Promise.all([loadPush(), loadMuzik(), loadGunluk()]);
   if (tab === 'bildirim' || (tab === 'saka' && !SK.conn)) await loadPush();
+  if (tab === 'saka') await Promise.all([sakaAyarYukle(), replikYukle()]);
   if (tab === 'muzik') await loadMuzik();
   if (tab === 'skor') await loadSkor();
   if (tab === 'ayar') await loadGunluk();

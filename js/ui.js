@@ -408,7 +408,15 @@ $('mixerBtn2').onclick = openMixer;
 $('micTestBtn').onclick = () => { $('micDlg').showModal(); fillMicList(); };
 
 // ---------- emoji tepkileri ----------
-const EMOJIS = ['👍','😂','❤️','😮','👏','🎉','🔥','😢'];
+// her emojinin kendi küçük animasyonu var (css: .float .e[data-a])
+const EMOJI_ANIM = {
+  '👍': 'pop', '😂': 'gul', '❤️': 'kalp', '😮': 'pop', '👏': 'alkis', '🎉': 'patla', '🔥': 'alev', '😢': 'aglama',
+  '🤣': 'yuvarlan', '💀': 'olu', '🤡': 'don', '😈': 'sinsi', '🥶': 'titre', '🤯': 'patla', '🙄': 'goz', '😴': 'uyku',
+  '🤮': 'kus', '💩': 'zipla', '🥳': 'patla', '😎': 'havali', '🍿': 'zipla', '👀': 'goz', '💯': 'pop', '🫠': 'eri',
+  '😭': 'aglama', '🙏': 'pop', '💔': 'kir', '🐐': 'zipla', '🤌': 'sallan', '🫡': 'pop', '🤦': 'sallan', '😡': 'titre',
+  '🥱': 'uyku', '🤑': 'don', '🍅': 'zipla', '🎯': 'pop', '🚀': 'roket', '🍀': 'don', '👻': 'sinsi', '🤝': 'sallan'
+};
+const EMOJIS = Object.keys(EMOJI_ANIM);
 let lastReact = 0;
 EMOJIS.forEach(e => {
   const b = document.createElement('button'); b.textContent = e; b.setAttribute('aria-label', 'Tepki gönder ' + e);
@@ -429,7 +437,9 @@ function showReaction(e, name, card){
   const f = document.createElement('div'); f.className = 'float';
   f.style.setProperty('--x', Math.round(Math.random() * 60) + 'px');
   f.style.setProperty('--dx', Math.round(Math.random() * 80 - 40) + 'px');
-  const em = document.createElement('span'); em.className = 'e'; em.textContent = e;
+  const em = document.createElement('span'); em.className = 'e'; em.textContent = e; em.dataset.a = EMOJI_ANIM[e] || 'pop';
+  if (EMOJI_ANIM[e] === 'uyku'){ const z = document.createElement('i'); z.className = 'zzz'; z.textContent = 'z z z'; f.append(z); }
+  if (EMOJI_ANIM[e] === 'aglama'){ const z = document.createElement('i'); z.className = 'tear'; z.textContent = '💧'; f.append(z); }
   const nm = document.createElement('span'); nm.className = 'n'; nm.textContent = name;
   f.append(em, nm);
   $('reactions').append(f);

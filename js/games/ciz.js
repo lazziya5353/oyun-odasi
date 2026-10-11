@@ -11,7 +11,8 @@ const CizCore = (() => {
     'zar,tavla,satranç,kart,oyun kolu,robot,uzaylı,hayalet,korsan,şövalye,prenses,kral,büyücü,ejderha,deniz kızı,kardan adam,palyaço,' +
     'astronot,itfaiyeci,doktor,aşçı,polis,futbol,basketbol,yüzme,kayak,balık tutmak,uyumak,koşmak,dans etmek,gülmek,ağlamak,' +
     'pamuk şeker,mangal,piknik,çaydanlık,semaver,nazar boncuğu,kebap,lahmacun,baklava,ayran,martı,vapur,minare,lale,çınar,' +
-    'tren rayı,trafik lambası,yangın,çit,kuyu,değirmen,traktör,kamyon,ambulans,pusula,harita,hazine,dürbün,mıknatıs,pil,priz').split(',').map(w => w.trim()).filter(Boolean);
+    'tren rayı,trafik lambası,yangın,çit,kuyu,değirmen,traktör,kamyon,ambulans,pusula,harita,hazine,dürbün,mıknatıs,pil,priz,' +
+    'zebra,gergedan,su aygırı,kanguru,koala,panda,kutup ayısı,fok,balina,denizatı,denizyıldızı,yengeç,ıstakoz,karides,midye,papağan,flamingo,leylek,kartal,karga,güvercin,tavus kuşu,devekuşu,horoz,civciv,kaz,hindi,koyun,keçi,kuzu,eşek,geyik,sincap,fare,köstebek,yarasa,kertenkele,bukalemun,dinozor,solucan,uğur böceği,sivrisinek,karınca,çekirge,akrep,ateşböceği,denizanası,kunduz,lama,leopar,kaplan,goril,tembel hayvan,su samuru,kuğu,ekmek,peynir,zeytin,yumurta,sucuk,çorba,makarna,pilav,mantı,döner,köfte,şiş kebap,kumpir,gözleme,pide,poğaça,kurabiye,kek,çikolata,lokum,sütlaç,krep,sandviç,tost,patates kızartması,sosis,patlamış mısır,nar,kiraz,şeftali,ananas,kivi,hindistan cevizi,avokado,brokoli,lahana,salatalık,biber,soğan,sarımsak,patates,kabak,bezelye,fındık,ceviz,bal,yoğurt,süt,limonata,buzdolabı,çamaşır makinesi,ütü,süpürge,saç kurutma makinesi,diş fırçası,diş macunu,tarak,havlu,sabun,küvet,duş,tuvalet,kanepe,koltuk,dolap,çekmece,halı,perde,yastık,battaniye,saksı,vazo,tablo,çerçeve,takvim,çalar saat,kumanda,şarj aleti,klavye,hoparlör,radyo,fotoğraf makinesi,mektup,zarf,gazete,defter,ataç,zımba,yapıştırıcı,pergel,hesap makinesi,tebeşir,kara tahta,sırt çantası,cüzdan,bozuk para,kredi kartı,bavul,termos,el feneri,kibrit,balta,kürek,tırmık,hortum,el arabası,iğne,iplik,düğme,fermuar,kemer,bere,kask,maske,pijama,mayo,şort,etek,gömlek,ceket,mont,bot,terlik,topuklu ayakkabı,papyon,küpe,kolye,bilezik,hastane,eczane,market,fırın,kütüphane,müze,stadyum,havalimanı,liman,istasyon,park,salıncak,kaydırak,tahterevalli,lunapark,dönme dolap,atlıkarınca,sirk,kamp ateşi,piramit,yel değirmeni,çeşme,havuz,kum kalesi,iskele,tekne,yelkenli,kano,sal,taksi,tramvay,metro,teleferik,itfaiye arabası,polis arabası,kepçe,vinç,paten,kızak,sörf tahtası,uçurtma,zeplin,sıcak hava balonu,uydu,uzay mekiği,gezegen,kuyruklu yıldız,kara delik,kar tanesi,buz dağı,çöl,vaha,palmiye,mağara,nehir,göl,kasırga,deprem,dolu,sis,gün batımı,yonca,gül,papatya,ayçiçeği,bambu,çam ağacı,yılbaşı ağacı,kozalak,zıplamak,uçmak,tırmanmak,düşmek,hapşırmak,esnemek,el sallamak,alkışlamak,sarılmak,selfie,şarkı söylemek,kitap okumak,yemek pişirmek,bulaşık yıkamak,kamp yapmak,bisiklet sürmek,dalış,paraşütle atlamak,buz pateni,bowling,golf,tenis,voleybol,masa tenisi,boks,okçuluk,güreş,halat çekme,saklambaç,seksek,ip atlamak,misket,vampir,zombi,mumya,cadı,peri,melek,dev,cüce,ninja,kovboy,dedektif,sihirbaz,bebek,dede,nine,gelin,damat,berber,garson,çiftçi,ressam,şarkıcı,futbolcu,hakem,kaleci,noel baba,korkuluk,süper kahraman,pelerin,kılıç,kalkan,ok ve yay,hazine sandığı,sihirli değnek,kristal küre,uçan halı,tek boynuzlu at,göz,burun,kulak,ağız,diş,saç,bıyık,sakal,el,ayak,parmak,kalp,beyin,iskelet,göbek,diz,bayrak,fes,kilim,cezve,kokoreç,midye dolma,çay bardağı,okey taşı,boğaz köprüsü,kız kulesi,galata kulesi,peri bacası,karagöz,davul zurna,horon,halay,nazar,tespih,çömlek,testi,kazan,tencere,tava,çatal,kaşık,bıçak,tabak,bardak,fincan,demlik,süzgeç,rende,oklava,hamur,kepçe kaşık,mikser,blender,tost makinesi,kahve makinesi,su ısıtıcısı,mikrodalga,ocak,davlumbaz,çöp kutusu,kova,paspas,mandal,çamaşır ipi,askı,ayakkabılık,kapı zili,posta kutusu,çit,bahçe cücesi,kuş yuvası,kümes,ahır,saman balyası,korkuluk,su kuyusu,köprü altı,tünel,trafik konisi,yaya geçidi,otoyol,benzinlik,park metre,sokak lambası,bank,heykel,gökdelen,asansör,yürüyen merdiven,anten,çanak anten,güneş paneli,rüzgar türbini,baraj,deniz kabuğu,inci,mercan,dalga,kum,ada,yarımada,pusula gülü,dürbün,mikroskop,teleskop,deney tüpü,mıknatıs,ampul,kibrit kutusu,mum ışığı,fener alayı,havai fişek,doğum günü pastası,hediye kutusu,balon demeti,konfeti,maske balo,karnaval,tiyatro,sinema,patlamış mısır kovası,bilet,kamera arkası,film şeridi,mikrofon sehpası,sahne,alkış,kupa,madalya,podyum,bitiş çizgisi,düdük,kronometre').split(',').map(w => w.trim()).filter((w, i, a) => w && a.indexOf(w) === i);
   const FOLD = { ç: 'c', ğ: 'g', ı: 'i', i: 'i', ö: 'o', ş: 's', ü: 'u', â: 'a', î: 'i', û: 'u' };
   const fold = t => String(t || '').toLocaleLowerCase('tr-TR').replace(/[çğıiöşüâîû]/g, c => FOLD[c]).replace(/[^a-z0-9]/g, '');
   function lev(a, b){
@@ -46,8 +47,14 @@ if (typeof registerTableGame === 'function') (function(){
   const nameOf = (st, id) => st.names[id] || 'Oyuncu';
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
+  // önceki oyunlarda çıkan kelimeler (masa sahibinin cihazında) bir süre tekrar sunulmaz
+  const HK = 'oyunodasi-ciz-gecmis';
+  const hist = () => { try { return JSON.parse(localStorage.getItem(HK)) || []; } catch(e){ return []; } };
+  function remember(w){ const h = hist(); h.push(w); try { localStorage.setItem(HK, JSON.stringify(h.slice(-Math.floor(C.WORDS.length * 0.75)))); } catch(e){} }
   function pickWords(st){
-    const pool = C.WORDS.filter(w => !st.usedWords.includes(w));
+    const h = hist();
+    let pool = C.WORDS.filter(w => !st.usedWords.includes(w) && !h.includes(w));
+    if (pool.length < 3) pool = C.WORDS.filter(w => !st.usedWords.includes(w));
     return shuffle(pool.length >= 3 ? pool.slice() : C.WORDS.slice()).slice(0, 3);
   }
   function beginTurn(o){
@@ -65,7 +72,7 @@ if (typeof registerTableGame === 'function') (function(){
   }
   function chooseWord(o, i){
     const st = o.state;
-    st.word = st.choices[i] || st.choices[0]; st.usedWords.push(st.word);
+    st.word = st.choices[i] || st.choices[0]; st.usedWords.push(st.word); remember(st.word);
     st.phase = 'ciz'; st.endsAt = Date.now() + st.sure * 1000; st.total = st.sure * 1000; st.seq++;
     sendEvent(o, { k: 'sys', text: nameOf(st, st.drawer) + ' çiziyor!' });
   }

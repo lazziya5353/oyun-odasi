@@ -23,3 +23,40 @@
 .saka-mesaj small{font-size:13px;color:var(--accent, #5ee3b0);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .saka-ayar{display:flex;align-items:center;gap:8px;cursor:pointer}
 .saka-ayar input{width:18px;height:18px;accent-color:var(--accent)}
+.saka-sesbalon{left:50%;top:12%;display:flex;align-items:center;gap:12px;padding:12px 22px;border-radius:99px;background:var(--panel, #161b24);border:2px solid var(--accent, #5ee3b0);box-shadow:0 14px 40px rgb(0 0 0 / .5);color:var(--fg, #fff);font-weight:700;font-size:clamp(18px,3vw,26px);white-space:nowrap}
+.saka-sesbalon b{font-size:1.6em;line-height:1;font-weight:400;animation:ea-zipla .35s ease-in-out infinite alternate}
+.saka-flash.kirmizi{background:#ff2a2a;opacity:.35}
+/* kullanıcı şaka paneli */
+.saka-panel{display:grid;gap:12px}
+.saka-durum{margin:0;font-weight:600}
+.saka-durum.err{color:var(--danger)}
+.saka-kime{display:flex;flex-wrap:wrap;gap:6px}
+.saka-kime .chip{border:1px solid var(--line);background:var(--panel-2);color:var(--fg);border-radius:99px;padding:7px 13px;font:inherit;font-size:14px;cursor:pointer}
+.saka-kime .chip.on{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
+.saka-tabs{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;justify-self:start}
+.saka-tabs button{background:var(--panel-2);border:0;padding:8px 14px;font:inherit;color:var(--fg);cursor:pointer}
+.saka-tabs button+button{border-left:1px solid var(--line)}
+.saka-tabs button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.saka-izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.saka-izgara.bekle{opacity:.55}
+.saka-sec{display:grid;justify-items:center;gap:4px;padding:10px 4px;border-radius:14px;background:var(--panel-2);border:1px solid var(--line);color:var(--fg);font:inherit;font-size:12.5px;cursor:pointer;transition:transform .12s,border-color .12s}
+.saka-sec b{font-size:30px;line-height:1;font-weight:400}
+.saka-sec:hover:not(:disabled){border-color:var(--accent);transform:translateY(-2px)}
+.saka-sec:active:not(:disabled){transform:scale(.93)}
+.saka-sec:disabled{opacity:.35;cursor:not-allowed}
+.saka-mesajrow{display:flex;gap:8px}
+.saka-mesajrow input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;color:var(--fg)}
+/* replikler: ekranın ortasında video (Kick tarzı) */
+.saka-replik{left:50%;top:46%;display:grid;gap:0;width:min(560px,86vw);border-radius:18px;overflow:hidden;background:#000;border:3px solid var(--accent, #5ee3b0);box-shadow:0 0 0 6px rgb(0 0 0 / .35),0 24px 70px rgb(0 0 0 / .65),0 0 50px color-mix(in srgb,var(--accent, #5ee3b0) 45%,transparent);opacity:0;transform:translate(-50%,-50%)}
+.saka-replik video{display:block;width:100%;max-height:58vh;background:#000;object-fit:contain}
+.saka-replik-cap{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px;background:var(--panel, #161b24);color:var(--fg, #fff)}
+.saka-replik-cap b{font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saka-replik-cap span{font-size:13px;color:var(--muted, #9aa);white-space:nowrap}
+.saka-izgara.replikler{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));max-height:46vh;overflow:auto}
+.replik-sec{display:flex;gap:4px}
+.replik-at{flex:1;min-width:0;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 12px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);color:var(--fg);font:inherit;font-size:14px;cursor:pointer}
+.replik-at span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.replik-at b{font-weight:400;font-size:20px}
+.replik-at:hover:not(:disabled){border-color:var(--accent)}
+.replik-at:disabled{opacity:.4;cursor:not-allowed}
+.replik-on{flex:none;width:42px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);color:var(--fg);cursor:pointer}

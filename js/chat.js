@@ -4,7 +4,7 @@ const convos = new Map();     // 'all' ya da kişi id -> { msgs: [], unread: 0 }
 let activeConvo = 'all', chatOpen = false;
 const typingFrom = new Map(); // id -> { to, until }
 const IMG_RE = /^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/=]+$/;
-const MAX_IMG = 1600000;      // ~1.2 MB fotoğraf
+const MAX_IMG = 8000000;      // ~6 MB fotoğraf (hareketli GIF'ler dahil)
 
 function convo(key){ if (!convos.has(key)) convos.set(key, { msgs: [], unread: 0 }); return convos.get(key); }
 convo('all');
@@ -41,6 +41,16 @@ function loadSavedChat(){
   try { saved = JSON.parse(store.get(chatKey()) || '[]'); } catch(e){}
   if (Array.isArray(saved)) mergeChat(saved, true);
 }
+// en yeni fotoğraflardan başlayarak adet ve toplam boyut sınırına kadar olanların sırası
+function imgBudget(msgs, maxN, maxBytes){
+  const out = []; let total = 0;
+  for (let i = msgs.length - 1; i >= 0 && out.length < maxN; i--){
+    const m = msgs[i]; if (!m.img) continue;
+    if (total + m.img.length > maxBytes) continue;
+    total += m.img.length; out.push(i);
+  }
+  return out;
+}
 function saveChatSoon(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveChat, 600);
@@ -48,8 +58,8 @@ function saveChatSoon(){
 function saveChat(){
   if (!roomCode) return;
   const msgs = convo('all').msgs.filter(m => !m.sys).slice(-150);
-  // fotoğraflar yer kaplar: sadece son 6 fotoğrafı sakla, eskilerini "[fotoğraf]" yap
-  const imgIdx = msgs.map((m, i) => m.img ? i : -1).filter(i => i >= 0).slice(-6);
+  // fotoğraflar yer kaplar: en yenilerden toplam ~3 MB'lık kısmı sakla, eskilerini "[fotoğraf]" yap
+  const imgIdx = imgBudget(msgs, 6, 3000000);
   const pack = keepImgs => msgs.map((m, i) => ({
     mid: m.mid, from: m.from, name: m.mine ? myName : m.name, ts: m.ts, mine: !!m.mine,
     text: m.text || (m.img && !(keepImgs && imgIdx.includes(i)) ? '[fotoğraf]' : ''),
@@ -146,22 +156,22 @@ $('msgInput').addEventListener('input', () => {
 // ---------- fotoğraf ----------
 $('imgBtn').onclick = () => $('imgInput').click();
 $('imgInput').onchange = async e => {
-  const f = e.target.files && e.target.files[0];
+  const fs = [...(e.target.files || [])];
   e.target.value = '';
-  if (f) await sendImageFile(f);
+  for (const f of fs.slice(0, 20)) await sendImageFile(f);
 };
 $('msgInput').addEventListener('paste', async e => {
   const items = [...(e.clipboardData ? e.clipboardData.items : [])];
-  const it = items.find(i => i.type.startsWith('image/'));
-  if (it){ e.preventDefault(); await sendImageFile(it.getAsFile()); }
+  const its = items.filter(i => i.type.startsWith('image/'));
+  if (its.length){ e.preventDefault(); for (const it of its.slice(0, 20)) await sendImageFile(it.getAsFile()); }
 });
 const chatEl = $('chat');
 chatEl.addEventListener('dragover', e => { if ([...e.dataTransfer.types].includes('Files')){ e.preventDefault(); chatEl.classList.add('drop'); } });
 chatEl.addEventListener('dragleave', e => { if (!chatEl.contains(e.relatedTarget)) chatEl.classList.remove('drop'); });
 chatEl.addEventListener('drop', async e => {
   chatEl.classList.remove('drop');
-  const f = [...e.dataTransfer.files].find(x => x.type.startsWith('image/'));
-  if (f){ e.preventDefault(); await sendImageFile(f); }
+  const fs = [...e.dataTransfer.files].filter(x => x.type.startsWith('image/'));
+  if (fs.length){ e.preventDefault(); for (const f of fs.slice(0, 20)) await sendImageFile(f); }
 });
 
 async function sendImageFile(file){
@@ -169,14 +179,15 @@ async function sendImageFile(file){
   try {
     toast('Fotoğraf hazırlanıyor…');
     const url = await compressImage(file);
-    if (!url || url.length > MAX_IMG || !IMG_RE.test(url)){ toast('Fotoğraf çok büyük, gönderilemedi.'); return; }
+    if (!url || url.length > MAX_IMG || !IMG_RE.test(url)){ toast('Bu fotoğraf gönderilemedi.'); return; }
     sendChat('', url);
   } catch(e){ toast('Bu fotoğraf açılamadı.'); }
 }
 const readAsDataURL = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
-// Fotoğrafı küçült: en fazla 1280 px, JPEG. Küçük hareketli GIF'ler olduğu gibi gider.
+// Fotoğrafı gerekirse küçült (en fazla 2048 px, JPEG). Hareketli GIF'ler 5.5 MB'a kadar olduğu gibi gider.
+// Ne kadar büyük olursa olsun gönderilir: sığmazsa adım adım küçültülür.
 async function compressImage(file){
-  if (file.type === 'image/gif' && file.size < 1000000) return readAsDataURL(file);
+  if (file.type === 'image/gif' && file.size < 5800000) return readAsDataURL(file);
   const src = await readAsDataURL(file);
   const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
   const make = (max, q) => {
@@ -187,9 +198,8 @@ async function compressImage(file){
     x.drawImage(img, 0, 0, c.width, c.height);
     return c.toDataURL('image/jpeg', q);
   };
-  let out = make(1280, 0.82);
-  if (out.length > MAX_IMG) out = make(960, 0.7);
-  if (out.length > MAX_IMG) out = make(720, 0.6);
+  let out = make(2048, 0.86);
+  for (const [m, q] of [[1600, 0.8], [1280, 0.75], [960, 0.7], [720, 0.6], [520, 0.5]]){ if (out.length <= MAX_IMG) break; out = make(m, q); }
   return out;
 }
 
@@ -350,7 +360,7 @@ function refreshChatColors(){
 // ---------- sonradan gelene geçmiş ----------
 function chatHistoryForSync(){
   const msgs = convo('all').msgs.filter(m => !m.sys).slice(-60);
-  const imgIdx = msgs.map((m, i) => m.img ? i : -1).filter(i => i >= 0).slice(-8);
+  const imgIdx = imgBudget(msgs, 8, 6000000);
   return msgs.map((m, i) => ({
     mid: m.mid, from: m.from, name: m.mine ? myName : m.name, ts: m.ts,
     text: m.text || (m.img && !imgIdx.includes(i) ? '[fotoğraf]' : ''),

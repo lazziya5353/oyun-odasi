@@ -62,6 +62,15 @@
   .saka-btn b{font-size:34px;line-height:1;font-weight:400}
   .saka-btn:hover{border-color:var(--accent);transform:translateY(-2px)}
   .saka-btn:active{transform:scale(.94)}
+  .saka-grid.kucuk{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}
+  .saka-grid.kucuk .saka-btn{padding:8px 4px;font-size:12px}
+  .saka-grid.kucuk .saka-btn b{font-size:24px}
+  .saka-btn.kapali{opacity:.4;text-decoration:line-through;border-style:dashed}
+  .saka-engel{display:grid;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+  .replik-liste{display:grid;gap:6px;max-height:420px;overflow:auto}
+  .replik-satir{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--line)}
+  .replik-ad{flex:1;min-width:160px;font-weight:600;overflow-wrap:anywhere}
+  .replik-onizle{flex-basis:100%;max-width:420px;max-height:260px;border-radius:10px;background:#000}
   @media (max-width:600px){ .u{grid-template-columns:auto 1fr} .u-acts{grid-column:1/-1;justify-content:flex-start} }
 </style>
 </head>

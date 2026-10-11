@@ -79,7 +79,7 @@ function showIkram(from, to, item, line){
   const fromName = nameOf(from), toName = nameOf(to);
   const saying = it.lines[line] || it.lines[0];
   const toMe = to === (peer && peer.id);
-  addSys((it.svg ? '🍵' : it.emoji) + ' ' + fromName + ', ' + (toMe ? 'sana' : toName + '\'e') + ' ' + it.name.toLocaleLowerCase('tr-TR') + ' ısmarladı · “' + saying + '”');
+  addSys((it.svg ? '🍵' : it.emoji) + ' ' + fromName + ', ' + (toMe ? 'sana' : trYonelme(toName)) + ' ' + it.name.toLocaleLowerCase('tr-TR') + ' ısmarladı · “' + saying + '”');
   if (toMe){ toast((it.svg ? '🍵' : it.emoji) + ' ' + fromName + ' sana ' + it.name.toLocaleLowerCase('tr-TR') + ' ısmarladı! “' + saying + '”'); }
   ikramSound(it);
   // görünür hedef: kişinin kutucuğu, masadaki koltuğu

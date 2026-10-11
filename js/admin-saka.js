@@ -6,6 +6,111 @@ const SAKA_LIST = [
   ['korku', '👻', 'Korku'], ['orumcek', '🕷️', 'Örümcek'], ['cam', '💥', 'Ekran kırıldı'], ['sarhos', '🌀', 'Baş dönmesi'],
   ['donma', '🥶', 'Dondur'], ['osuruk', '💨', 'Pırrt'], ['korna', '📯', 'Korna'], ['tavuk', '🐔', 'Tavuklar'], ['konfeti', '🎉', 'Konfeti']
 ];
+// komik sesler (odada herkes duyar, ekranda küçük balon çıkar)
+const SAKA_SES = [
+  ['pirtuzun', '💨', 'Uzun pırrt'], ['badumtss', '🥁', 'Ba dum tss'], ['huzun', '🎺', 'Hüzünlü trompet'], ['kriket', '🦗', 'Cır cır'],
+  ['alkis', '👏', 'Alkış'], ['yuh', '👎', 'Yuhalama'], ['dramatik', '😱', 'Dramatik'], ['boing', '🌀', 'Boing'], ['kaydirak', '🎢', 'Kaydırak düdüğü'],
+  ['zil', '🔔', 'Ring zili'], ['vak', '🦆', 'Vak vak'], ['opucuk', '😘', 'Öpücük'], ['yanlis', '❌', 'Yanlış cevap'], ['dogru', '✅', 'Doğru cevap'], ['davul', '🥁', 'Davul gerilimi']
+];
+const SAKA_TUM = SAKA_LIST.concat([['mesaj', '📣', 'Ekrana mesaj']], SAKA_SES, [['replik', '🎬', 'Replikler']]);
+// replik videoları: sitedeki "replikler" klasörü (liste Netlify yayınında otomatik çıkar)
+let REPLIKLER = null;
+async function replikYukle(){
+  try { const r = await fetch('replikler/liste.json', { cache: 'no-store' }); const d = r.ok ? await r.json() : null; REPLIKLER = d && Array.isArray(d.klipler) ? d.klipler : []; } catch(e){ REPLIKLER = []; }
+}
+function replikKutusu(list, gonderilebilir){
+  const box = el('div', 'ad-box'); box.id = 'sakaReplik';
+  box.append(el('h3', '', '🎬 Replikler (' + (REPLIKLER ? REPLIKLER.length : '…') + ')'));
+  if (!REPLIKLER){ box.append(note('Yükleniyor…')); list.append(box); replikYukle().then(() => { if (tab === 'saka') renderList(); }); return; }
+  if (!REPLIKLER.length) box.append(note('Henüz replik yok. GitHub’da “replikler” klasörüne mp4 video at (dosya adı = replik adı); site güncellenince burada ve herkesin Şaka panelinde çıkar.'));
+  const g = el('div', 'replik-liste');
+  REPLIKLER.forEach(k => {
+    const row = el('div', 'replik-satir');
+    const ad = el('span', 'replik-ad', '🎬 ' + k.ad);
+    const mb = el('span', 'note', (k.boyut / 1048576).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' MB');
+    row.append(ad, mb);
+    row.append(button('👁 Önizle', '', () => {
+      const ex = row.querySelector('video'); if (ex){ ex.remove(); return; }
+      const v = el('video'); v.src = 'replikler/' + encodeURIComponent(k.dosya); v.controls = true; v.autoplay = true; v.className = 'replik-onizle';
+      row.append(v);
+    }));
+    if (gonderilebilir){ const b = button('📤 Gönder', 'primary', () => sakaSend('replik', '', k.dosya)); row.append(b); }
+    g.append(row);
+  });
+  box.append(g);
+  if (REPLIKLER.length && !gonderilebilir) box.append(note('Göndermek için yukarıdan odaya bağlan.'));
+  box.append(note('Yeni replik eklemek için: GitHub → replikler klasörü → Add file → Upload files → mp4 videoları sürükle → Commit. Silmek için dosyayı GitHub’dan sil.'));
+  list.append(box);
+}
+// kullanıcıların birbirine şaka yapma ayarları
+const SA = { ayar: null, kayit: false };
+async function sakaAyarYukle(){
+  try { const r = await fetch('/api/uye/saka-ayar', { cache: 'no-store' }); SA.ayar = r.ok ? await r.json() : null; } catch(e){ SA.ayar = null; }
+}
+async function sakaAyarKaydet(patch, msg){
+  const a = Object.assign({}, SA.ayar || { acik: true, kapali: [], engel: [], bekleme: 5 }, patch);
+  SA.kayit = true;
+  try {
+    const d = await api('admin-saka-ayar', a); SA.ayar = d.ayar;
+    // odaya bağlıysan ayar herkese anında ulaşsın (bağlı değilsen en geç birkaç dakika içinde)
+    if (SK.conn && SK.conn.open) try { SK.conn.send({ t: 'saka-ayar' }); } catch(e){}
+    toast(msg || 'Kaydedildi');
+  } catch(e){ toast(e.message); }
+  SA.kayit = false;
+  if (tab === 'saka') renderList();
+}
+function renderKullaniciSaka(list){
+  const box = el('div', 'ad-box'); box.id = 'sakaKullanici';
+  box.append(el('h3', '', '👥 Kullanıcıların birbirine şaka yapması'));
+  if (!SA.ayar){ box.append(note('Ayarlar yükleniyor…')); list.append(box); sakaAyarYukle().then(() => { if (tab === 'saka' && SA.ayar) renderList(); }); return; }
+  const a = SA.ayar;
+  const top = el('div', 'u-acts start');
+  top.append(button(a.acik ? '🟢 Açık · kapat' : '🔴 Kapalı · aç', a.acik ? '' : 'primary', () => sakaAyarKaydet({ acik: !a.acik }, a.acik ? '🔒 Kullanıcı şakaları kapatıldı' : '🎭 Kullanıcı şakaları açıldı')));
+  const sel = el('select'); sel.className = 'inp';
+  [[0, 'Bekleme yok'], [3, '3 sn'], [5, '5 sn'], [10, '10 sn'], [30, '30 sn'], [60, '1 dk'], [300, '5 dk']].forEach(([v, t]) => { const o = el('option', '', 'İki şaka arası: ' + t); o.value = v; o.selected = +a.bekleme === v; sel.append(o); });
+  sel.onchange = () => sakaAyarKaydet({ bekleme: +sel.value }, 'Bekleme süresi kaydedildi');
+  top.append(sel);
+  box.append(top, note(a.acik ? 'Odadakiler alt şeritteki 🎭 Şaka düğmesinden birbirine atabiliyor. Sürekli atan olursa aşağıdan onu engelle ya da efekti kapat.' : 'Şu an kimse şaka yapamıyor (senin panelden attıkların hariç).'));
+  // engellenen kişiler
+  const eb = el('div', 'saka-engel');
+  eb.append(el('b', '', '🚫 Şaka yapması engellenenler'));
+  const chips = el('div', 'u-acts start');
+  if (!a.engel.length) chips.append(el('span', 'note', 'Kimse engelli değil.'));
+  a.engel.forEach(n => chips.append(button(n + ' ✕', 'kick-btn', () => sakaAyarKaydet({ engel: a.engel.filter(x => x !== n) }, n + ' artık şaka yapabilir'))));
+  eb.append(chips);
+  const addRow = el('div', 'u-acts start');
+  const inp = el('input'); inp.className = 'inp'; inp.placeholder = 'Engellenecek kişinin adı'; inp.maxLength = 20; inp.setAttribute('list', 'sakaAdlar');
+  const dl = el('datalist'); dl.id = 'sakaAdlar';
+  const adlar = new Set();
+  (SK.list || []).forEach(p => adlar.add(p.name));
+  (users || []).filter(u => u.durum === 'onayli').forEach(u => adlar.add(u.name));
+  adlar.forEach(n => { const o = el('option'); o.value = n; dl.append(o); });
+  const ekle = () => { const n = inp.value.trim().toLocaleLowerCase('tr-TR'); if (!n) return; if (a.engel.includes(n)){ toast('Zaten engelli'); return; } sakaAyarKaydet({ engel: a.engel.concat(n) }, '🚫 ' + inp.value.trim() + ' artık şaka yapamaz'); };
+  inp.onkeydown = e => { if (e.key === 'Enter') ekle(); };
+  addRow.append(inp, dl, button('🚫 Engelle', 'kick-btn', ekle));
+  eb.append(addRow);
+  if (SK.list && SK.list.length){
+    const hz = el('div', 'u-acts start'); hz.append(el('span', 'note', 'Odadakiler:'));
+    SK.list.filter(p => !a.engel.includes(p.name.toLocaleLowerCase('tr-TR'))).forEach(p => hz.append(button('🚫 ' + p.name, '', () => sakaAyarKaydet({ engel: a.engel.concat(p.name.toLocaleLowerCase('tr-TR')) }, '🚫 ' + p.name + ' artık şaka yapamaz'))));
+    eb.append(hz);
+  }
+  box.append(eb);
+  // efektler: tıklayınca aç / kapat
+  const fb = el('div', 'saka-engel');
+  fb.append(el('b', '', 'Efektler (üstü çizili olanlar kullanıcılara kapalı)'));
+  const g = el('div', 'saka-grid kucuk');
+  SAKA_TUM.forEach(([id, ikon, ad]) => {
+    const off = a.kapali.includes(id);
+    const b = el('button', 'saka-btn' + (off ? ' kapali' : '')); b.type = 'button';
+    b.append(el('b', '', ikon), el('span', '', ad));
+    b.title = off ? 'Kapalı · açmak için tıkla' : 'Açık · kapatmak için tıkla';
+    b.onclick = () => sakaAyarKaydet({ kapali: off ? a.kapali.filter(x => x !== id) : a.kapali.concat(id) }, ikon + ' ' + ad + (off ? ' açıldı' : ' kapatıldı'));
+    g.append(b);
+  });
+  fb.append(g);
+  box.append(fb);
+  list.append(box);
+}
 const SK = { peer: null, conn: null, code: '', list: [], to: '*', status: '', busy: false, ticket: null, listSig: '' };
 
 function sakaServers(){
@@ -38,7 +143,7 @@ function sakaTry(srv, code){
     let pr;
     try { pr = new Peer({ debug: 0, host: srv.host, port: srv.port, secure: srv.secure, path: srv.path, config: { iceServers: await sakaIce() } }); }
     catch(e){ rej('network'); return; }
-    let done = false, cur = null, stepT = null, old = false, found = false;
+    let done = false, cur = null, stepT = null, old = false, found = false, redCount = 0;
     const queue = [SAKA_PREFIX + code], tried = new Set();
     const fail = t => { if (done) return; done = true; clearTimeout(allT); clearTimeout(stepT); try { pr.destroy(); } catch(e){} rej(t); };
     const allT = setTimeout(() => fail(old ? 'eski' : found ? 'timeout' : 'timeout'), 40000);
@@ -47,7 +152,7 @@ function sakaTry(srv, code){
       clearTimeout(stepT);
       if (cur){ const c = cur; cur = null; try { c.close(); } catch(e){} }
       const id = queue.shift();
-      if (!id){ fail(old ? 'eski' : found ? 'timeout' : 'yok'); return; }
+      if (!id){ fail(old || redCount ? 'eski' : found ? 'timeout' : 'yok'); return; }
       tried.add(id);
       const c = pr.connect(id, { reliable: true, metadata: { saka: SK.ticket } });
       cur = c;
@@ -65,13 +170,14 @@ function sakaTry(srv, code){
           return;
         }
         if (d.t === 'saka-ok' && SK.conn === c){
-          const e = SAKA_LIST.find(x => x[0] === d.e) || ['mesaj', '📣', 'Mesaj'];
+          const e = SAKA_TUM.find(x => x[0] === d.e) || ['mesaj', '📣', 'Mesaj'];
           const who = d.to === '*' ? 'herkese' : ((SK.list.find(x => x.id === d.to) || {}).name || 'kişiye');
           toast(e[1] + ' ' + e[2] + ' → ' + who + ' gönderildi');
           return;
         }
         if (cur !== c || done) return;
-        if (d.t === 'saka-red'){ if (d.joined === false) next(); else fail('red'); return; }
+        // reddeden kişi: ilk şaka sürümündeki oda sahibi olmayan biri (host:false) ya da odaya girmemiş biri → sıradakini dene
+        if (d.t === 'saka-red'){ redCount++; if (d.joined === false || d.host === false || queue.length) next(); else fail('red'); return; }
         // eski sürüm bizi normal bir kişi sanıp odaya alıyor: içerideki kişileri öğren, onlardan birini dene
         if (d.t === 'peers' || d.t === 'redirect'){
           old = true;
@@ -121,14 +227,16 @@ async function sakaConnect(code){
 // açıkken kişi listesini tazele
 setInterval(() => { if (SK.conn && SK.conn.open && tab === 'saka' && !document.hidden) try { SK.conn.send({ t: 'saka-liste' }); } catch(e){} }, 5000);
 
-function sakaSend(e, m){
+function sakaSend(e, m, r){
   if (!SK.conn || !SK.conn.open){ toast('Önce bir odaya bağlan'); return; }
-  try { SK.conn.send({ t: 'saka', e, to: SK.to, m: m || '' }); } catch(err){ toast('Gönderilemedi'); }
+  const msg = { t: 'saka', e, to: SK.to, m: m || '' };
+  if (r) msg.r = r;
+  try { SK.conn.send(msg); } catch(err){ toast('Gönderilemedi'); }
 }
 function renderSaka(list){
   if (!SK.conn){
     const box = el('div', 'ad-box');
-    box.append(el('h3', '', '🎭 Odadakilere şaka yap'), note('Açık bir odaya bağlan; domates, yumurta, korku… seçtiğin kişinin ekranında birden çıksın. Odadakiler seni kişi listesinde görmez, sohbette “Yönetici …” yazar.'));
+    box.append(el('h3', '', '🎭 Yönetici olarak şaka yap'), note('Açık bir odaya bağlan; domates, yumurta, korku… seçtiğin kişinin ekranında birden çıksın. Odadakiler seni kişi listesinde görmez, sohbette “Yönetici …” yazar.'));
     const recent = [];
     if (push) push.gecmis.forEach(g => { if (!g.duyuru && g.code && Date.now() - g.at < 12 * 3600e3 && !recent.includes(g.code)) recent.push(g.code); });
     if (recent.length){
@@ -145,12 +253,14 @@ function renderSaka(list){
     box.append(row);
     if (SK.status) box.append(note(SK.status, /bulunamadı|kabul|koptu|eski|kurulamadı/.test(SK.status) ? 'err' : ''));
     list.append(box);
+    replikKutusu(list, false);
+    renderKullaniciSaka(list);
     return;
   }
   const head = el('div', 'ad-banner ok');
   head.append(el('span', '', '🟢 ' + SK.code + ' odasına bağlısın · ' + SK.list.length + ' kişi'), button('Bağlantıyı kes', '', () => { sakaDisconnect(); SK.status = ''; renderList(); }));
   list.append(head);
-  const tg = el('div', 'ad-box'); tg.append(el('h3', '', '🎯 Kime?'));
+  const tg = el('div', 'ad-box'); tg.id = 'sakaKime'; tg.append(el('h3', '', '🎯 Kime?'));
   const chips = el('div', 'u-acts start');
   [{ id: '*', name: '👥 Herkes' }].concat(SK.list).forEach(p => {
     const b = button(p.name, SK.to === p.id ? 'primary' : '', () => { SK.to = p.id; renderList(); });
@@ -158,7 +268,7 @@ function renderSaka(list){
   });
   tg.append(chips);
   list.append(tg);
-  const fx = el('div', 'ad-box'); fx.append(el('h3', '', '🎭 Efekt'));
+  const fx = el('div', 'ad-box'); fx.id = 'sakaEfekt'; fx.append(el('h3', '', '🎭 Efekt'));
   const grid = el('div', 'saka-grid');
   SAKA_LIST.forEach(([id, ikon, ad]) => {
     const b = el('button', 'saka-btn'); b.type = 'button';
@@ -166,7 +276,14 @@ function renderSaka(list){
     b.onclick = () => sakaSend(id);
     grid.append(b);
   });
-  fx.append(grid, note('👻 Korku efekti ani ve sesli bir “korkutma”dır. Herkes Görünüm penceresinden şakaları kapatabilir.'));
+  const sg = el('div', 'saka-grid');
+  SAKA_SES.forEach(([id, ikon, ad]) => {
+    const b = el('button', 'saka-btn'); b.type = 'button';
+    b.append(el('b', '', ikon), el('span', '', ad));
+    b.onclick = () => sakaSend(id);
+    sg.append(b);
+  });
+  fx.append(grid, el('h3', '', '🔊 Komik sesler'), sg, note('👻 Korku efekti ani ve sesli bir “korkutma”dır. Herkes Görünüm penceresinden şakaları kapatabilir.'), note('Kendine gönderirsen: oda sekmesine geçince efekt oynar. Efekti görmek için kişinin sayfasının güncel olması gerekir (güncellemeden sonra bir kez yenilemiş olmalı).'));
   list.append(fx);
   const mb = el('div', 'ad-box'); mb.append(el('h3', '', '📣 Ekrana mesaj yaz'));
   const r = el('div', 'u-acts start');
@@ -176,4 +293,6 @@ function renderSaka(list){
   r.append(m, button('Gönder', 'primary', sendM));
   mb.append(r);
   list.append(mb);
+  replikKutusu(list, true);
+  renderKullaniciSaka(list);
 }

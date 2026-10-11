@@ -39,3 +39,10 @@ const hhmm = ts => new Date(ts).toLocaleTimeString('tr-TR', { hour: '2-digit', m
 document.querySelectorAll('dialog [data-close]').forEach(b => b.onclick = () => b.closest('dialog').close());
 // Pencerenin dışına tıklayınca kapansın
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+
+// Türkçe yönelme eki: Mert'e, Ayşe'ye, Kaan'a
+function trYonelme(ad){
+  ad = String(ad || '').trim(); if (!ad) return 'birine';
+  const l = ad.toLocaleLowerCase('tr-TR'), v = (l.match(/[aeıioöuü](?=[^aeıioöuü]*$)/) || ['e'])[0];
+  return ad + '\'' + (/[aeıioöuü]$/.test(l) ? 'y' : '') + ('aıou'.includes(v) ? 'a' : 'e');
+}

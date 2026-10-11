@@ -637,15 +637,23 @@ function sceneIstanbul(W, H, o){
 }
 
 /* ---------- Cyberpunk şehir ---------- */
-const NEON = ['255,42,140', '0,240,255', '255,230,0', '190,80,255', '60,255,170', '255,120,40'];
-// tabela ve hologram yazıları: kullanıcının istediği ifadeler (sırayla dağıtılır)
-const PHRASES = ['Kim attı o flaşı ?', 'Adam burda…', 'A bastılar', 'B bastılar', 'Amk hepsi mid', 'Açık büfe', '7/24 Açığız', 'Drop pls'];
-const PH_SHORT = ['Drop pls', 'A bastılar', 'B bastılar', 'Açık büfe', '7/24 Açığız'];
+let NEON = ['255,42,140', '0,240,255', '255,230,0', '190,80,255', '60,255,170', '255,120,40'];
+const NEON_ALL = NEON.slice();
+// tabela ve hologram yazıları: kullanıcının istediği ifadeler + ek tabelalar (karışık dağıtılır; kullanıcınınkiler sık çıkar)
+const PH_USER = ['Kim attı o flaşı ?', 'Adam burda…', 'A bastılar', 'B bastılar', 'Amk hepsi mid', 'Açık büfe', '7/24 Açığız', 'Drop pls'];
+const PH_EXTRA = ['Respawn Bar', 'Lag Yok', 'GG WP', 'Headshot Kafe', 'Ping 999', 'Wi-Fi Bedava', 'Siber Çarşı', 'Döner 2077', 'Çay Ocağı',
+  'Lahmacun.exe', 'Okey Salonu', 'Sabaha Kadar', 'Gece Kuşları', 'Son Tur', 'Clutch Kafe', 'Glitch Bar', 'Hotel Neon', 'Berber 3000',
+  'Simit 2.0', 'Tostçu Neo', 'Rüya Market', 'Bit Pazarı', 'Overclock', 'Uyku Yok', 'Boğaz Hattı', 'Kokoreç 24', 'Turbo Kumpir', 'Neon Pansiyon',
+  'Ramen Ustası', 'Kahve Moda', 'Aim Bot Yok', 'Tek Atar', 'Eco Round', 'Full Buy', 'Rush B', 'Kombo Kafe', 'Piksel Pide', 'Gece Pazarı'];
+const PH_SHORT_U = ['Drop pls', 'A bastılar', 'B bastılar', 'Açık büfe', '7/24 Açığız'];
+const PH_SHORT_X = ['GG', 'AFK', 'LAG YOK', 'ÇAY', 'DÖNER', 'BAR', 'HOTEL', 'OTEL', 'KAFE', 'RAMEN', 'MARKET', 'GECE', 'NEON', '24 SAAT', 'PİDE'];
 let phI = 0, phS = 0;
+const phrase = () => (phI++ % 2 === 0 ? PH_USER[(phI >> 1) % PH_USER.length] : pick(PH_EXTRA));
+const phraseShort = () => (phS++ % 2 === 0 ? PH_SHORT_U[(phS >> 1) % PH_SHORT_U.length] : pick(PH_SHORT_X));
 const signFont = f => '700 ' + f + 'px "Segoe UI",system-ui,sans-serif';
 // neon tabela; yatay ya da dikey (yazı 90° döner). Genişliğe/boya sığmazsa küçülür, çok küçülürse null
 function neonSign(u, vertical, maxW, maxLen){
-  const col = pick(NEON), word = vertical ? PH_SHORT[phS++ % PH_SHORT.length] : PHRASES[phI++ % PHRASES.length];
+  const col = pick(NEON), word = vertical ? phraseShort() : phrase();
   const pad = 5 * u, gm = 10 * u, meas = c2(mk(1, 1));
   let fs = (vertical ? rnd(12, 15) : rnd(13, 20)) * u; meas.font = signFont(fs); let tw = meas.measureText(word).width;
   const k = vertical ? Math.min(1, (maxLen - pad * 2 - gm * 2) / tw, (maxW - gm * 2 - pad * 2) / (fs * 1.15)) : Math.min(1, (maxW - gm * 2 - pad * 2) / tw);
@@ -733,46 +741,117 @@ function drawCity(c, L, off, W){
     c.drawImage(b.c, x, b.top);
   }
 }
-function sceneCyber(W, H, o){
+// cyberpunk temaları: aynı şehir, farklı renk/atmosfer (ve İstanbul siluetli olanı)
+const CYBER_THEMES = {
+  pembe: { sky: [[0, '#05020f'], [.35, '#12052a'], [.65, '#3a0c4a'], [.85, '#6a1656'], [1, '#2a0a30']], g1: '255,60,150', g2: '0,200,255', moonGlow: '255,80,150',
+    moon: [[0, 'rgba(255,200,120,.55)'], [.55, 'rgba(255,90,140,.45)'], [1, 'rgba(160,40,140,.2)']], neon: NEON_ALL,
+    far: [[0, '#1d1240'], [1, '#2a1448']], farFog: [[0, 'rgba(120,30,110,0)'], [1, 'rgba(160,40,120,.75)']], low: '255,70,170',
+    mid: [[0, '#0e0822'], [1, '#170a2a']], midFog: [[0, 'rgba(90,20,90,0)'], [1, 'rgba(150,30,110,.55)']],
+    near: [[0, '#06030d'], [1, '#0b0516']], nearFog: [[0, 'rgba(60,10,70,0)'], [1, 'rgba(110,20,90,.45)']], rain: '175,195,255', beams: ['120,200,255', '255,120,200'], holo: ['0,240,255', '255,42,140'] },
+  istanbul: { sky: [[0, '#030414'], [.4, '#0b0b33'], [.7, '#251a5a'], [.9, '#4b1f63'], [1, '#170a2c']], g1: '120,90,255', g2: '0,230,220', moonGlow: '200,170,255',
+    moon: [[0, 'rgba(255,240,210,.75)'], [.6, 'rgba(210,190,255,.45)'], [1, 'rgba(120,90,220,.2)']], neon: ['255,42,140', '0,240,255', '255,200,60', '190,80,255'],
+    far: [[0, '#151036'], [1, '#1d1442']], farFog: [[0, 'rgba(80,40,160,0)'], [1, 'rgba(110,60,190,.7)']], low: '130,90,255', istanbul: true,
+    mid: [[0, '#0b0820'], [1, '#120b2a']], midFog: [[0, 'rgba(60,30,120,0)'], [1, 'rgba(90,50,170,.5)']],
+    near: [[0, '#05030d'], [1, '#090615']], nearFog: [[0, 'rgba(40,20,90,0)'], [1, 'rgba(70,40,140,.42)']], rain: '170,190,255', beams: ['150,140,255', '0,230,220'], holo: ['0,240,255', '255,200,60'] },
+  kizil: { sky: [[0, '#0a0303'], [.35, '#2a0a06'], [.62, '#6a1d08'], [.82, '#b0420e'], [1, '#3a1206']], g1: '255,120,30', g2: '255,40,40', moonGlow: '255,150,60',
+    moon: [[0, 'rgba(255,220,150,.6)'], [.55, 'rgba(255,140,60,.45)'], [1, 'rgba(180,60,20,.2)']], neon: ['255,60,40', '255,160,30', '255,220,90', '0,230,255'],
+    far: [[0, '#2a0f0a'], [1, '#3a160c']], farFog: [[0, 'rgba(160,60,20,0)'], [1, 'rgba(210,90,30,.75)']], low: '255,110,30',
+    mid: [[0, '#140805'], [1, '#1f0c07']], midFog: [[0, 'rgba(120,40,10,0)'], [1, 'rgba(190,70,20,.55)']],
+    near: [[0, '#070302'], [1, '#0e0604']], nearFog: [[0, 'rgba(90,30,10,0)'], [1, 'rgba(150,50,15,.45)']], rain: '255,200,160', beams: ['255,170,90', '255,80,60'], holo: ['255,170,60', '0,230,255'] },
+  liman: { sky: [[0, '#01060c'], [.35, '#03142a'], [.65, '#06304a'], [.85, '#0d4a66'], [1, '#04182a']], g1: '0,180,255', g2: '0,255,200', moonGlow: '120,200,255',
+    moon: [[0, 'rgba(220,245,255,.6)'], [.55, 'rgba(120,200,255,.42)'], [1, 'rgba(40,120,200,.2)']], neon: ['0,240,255', '60,160,255', '255,255,255', '255,42,140', '60,255,200'],
+    far: [[0, '#0a1a30'], [1, '#0f2440']], farFog: [[0, 'rgba(20,90,140,0)'], [1, 'rgba(30,130,180,.7)']], low: '0,170,255', rainMul: 1.8,
+    mid: [[0, '#06101f'], [1, '#0a1a2c']], midFog: [[0, 'rgba(10,70,110,0)'], [1, 'rgba(20,110,160,.55)']],
+    near: [[0, '#02060c'], [1, '#050c16']], nearFog: [[0, 'rgba(10,50,80,0)'], [1, 'rgba(20,90,130,.45)']], rain: '170,220,255', beams: ['120,220,255', '120,255,220'], holo: ['0,240,255', '255,255,255'] },
+  yesil: { sky: [[0, '#010603'], [.35, '#03140a'], [.65, '#063018'], [.85, '#0b4a24'], [1, '#03180b']], g1: '0,255,120', g2: '120,255,60', moonGlow: '120,255,160',
+    moon: [[0, 'rgba(220,255,220,.55)'], [.55, 'rgba(120,255,150,.4)'], [1, 'rgba(30,160,80,.2)']], neon: ['0,255,120', '150,255,60', '0,230,255', '255,240,120'],
+    far: [[0, '#0a2414'], [1, '#0f301b']], farFog: [[0, 'rgba(20,120,60,0)'], [1, 'rgba(30,170,80,.65)']], low: '0,255,120', matrix: true,
+    mid: [[0, '#05120a'], [1, '#081c0f']], midFog: [[0, 'rgba(10,90,40,0)'], [1, 'rgba(20,140,60,.5)']],
+    near: [[0, '#020704'], [1, '#040d07']], nearFog: [[0, 'rgba(10,60,30,0)'], [1, 'rgba(20,100,50,.42)']], rain: '150,255,180', beams: ['120,255,160', '200,255,120'], holo: ['0,255,140', '200,255,120'] }
+};
+// İstanbul silueti (camiler, minareler, Galata): uzak katmana
+function istanbulSilhouette(g, W, H, U, body, fog){
+  const base = H * .76, c = mk(W, H), s = c2(c);
+  s.fillStyle = vgrad(s, H * .35, H, body);
+  s.fillRect(0, base, W, H - base);
+  const mosque = (cx, r) => {
+    s.fillRect(cx - r * 1.4, base - r * .7, r * 2.8, r * .7 + 2);
+    s.beginPath(); s.arc(cx, base - r * .7, r, Math.PI, 0); s.fill();
+    for (const k of [-1, 1]){ s.beginPath(); s.arc(cx + k * r * 1.05, base - r * .7, r * .48, Math.PI, 0); s.fill(); }
+    s.fillRect(cx - Math.max(1, .8 * U), base - r * 1.85, Math.max(2, 1.6 * U), r * .3);
+    const nm = r > 34 * U ? 4 : 2;
+    for (let i = 0; i < nm; i++){
+      const mx = cx + (i < nm / 2 ? -1 : 1) * r * (1.6 + (i % 2) * .5), mh = r * (2.6 - (i % 2) * .35), mw = Math.max(2, r * .09);
+      s.fillRect(mx - mw / 2, base - mh, mw, mh);
+      s.beginPath(); s.moveTo(mx - mw * .7, base - mh); s.lineTo(mx, base - mh - r * .45); s.lineTo(mx + mw * .7, base - mh); s.fill();
+      s.fillRect(mx - mw, base - mh * .72, mw * 2, Math.max(1, mw * .35));
+    }
+  };
+  const n = Math.max(2, Math.round(W / (360 * U)));
+  for (let i = 0; i < n; i++) mosque(W * (i + .5) / n + rnd(-40, 40) * U, rnd(40, 62) * U);
+  // Galata kulesi
+  const gx = W * .62, gw = 22 * U, gh = 150 * U;
+  s.fillRect(gx - gw / 2, base - gh, gw, gh);
+  s.fillRect(gx - gw * .7, base - gh - 6 * U, gw * 1.4, 7 * U);
+  s.beginPath(); s.moveTo(gx - gw * .65, base - gh - 6 * U); s.lineTo(gx, base - gh - 48 * U); s.lineTo(gx + gw * .65, base - gh - 6 * U); s.fill();
+  s.fillStyle = 'rgba(255,210,120,.85)';
+  for (let y = base - gh + 10 * U; y < base - 8 * U; y += 14 * U) s.fillRect(gx - gw * .25, y, gw * .5, 2 * U);
+  s.globalCompositeOperation = 'source-atop'; s.fillStyle = vgrad(s, H * .45, H, fog); s.fillRect(0, 0, W, H);
+  s.globalCompositeOperation = 'source-over';
+  g.drawImage(c, 0, 0);
+}
+function sceneCyber(W, H, o, th){
+  th = th || CYBER_THEMES.pembe;
+  NEON = th.neon;
   const u = o.u, A = W * H / 1.04e6 * o.q, land = W >= H, U = Math.max(.4, u);
   const sky = mk(W, H), g = c2(sky);
-  g.fillStyle = vgrad(g, 0, H, [[0, '#05020f'], [.35, '#12052a'], [.65, '#3a0c4a'], [.85, '#6a1656'], [1, '#2a0a30']]); g.fillRect(0, 0, W, H);
+  g.fillStyle = vgrad(g, 0, H, th.sky); g.fillRect(0, 0, W, H);
   g.globalCompositeOperation = 'lighter';
-  sprite(g, glow('255,60,150', 's'), W * .3, H * .72, W * .6, H * .3, .22);
-  sprite(g, glow('0,200,255', 's'), W * .8, H * .65, W * .45, H * .25, .14);
+  sprite(g, glow(th.g1, 's'), W * .3, H * .72, W * .6, H * .3, .22);
+  sprite(g, glow(th.g2, 's'), W * .8, H * .65, W * .45, H * .25, .14);
   g.globalCompositeOperation = 'source-over';
-  stars(g, 140 * A, 0, 0, W, H * .4, { u, max: .4, big: 0 });
+  stars(g, (th.istanbul ? 600 : 140) * A, 0, 0, W, H * .4, { u, max: th.istanbul ? .7 : .4, big: 0 });
   // dumanın ardında büyük, soluk ay
-  const smx = W * (land ? .3 : .3), smy = H * (land ? .3 : .25), smr = Math.min(W, H) * .17;
-  g.globalCompositeOperation = 'lighter'; sprite(g, glow('255,80,150', 's'), smx, smy, smr * 3, smr * 3, .2); g.globalCompositeOperation = 'source-over';
+  const smx = W * (land ? .3 : .3), smy = H * (land ? .3 : .25), smr = Math.min(W, H) * (th.istanbul ? .11 : .17);
+  g.globalCompositeOperation = 'lighter'; sprite(g, glow(th.moonGlow, 's'), smx, smy, smr * 3, smr * 3, .2); g.globalCompositeOperation = 'source-over';
   g.save(); g.beginPath(); g.arc(smx, smy, smr, 0, TAU); g.clip();
-  g.fillStyle = vgrad(g, smy - smr, smy + smr, [[0, 'rgba(255,200,120,.55)'], [.55, 'rgba(255,90,140,.45)'], [1, 'rgba(160,40,140,.2)']]); g.fillRect(smx - smr, smy - smr, smr * 2, smr * 2);
+  g.fillStyle = vgrad(g, smy - smr, smy + smr, th.moon); g.fillRect(smx - smr, smy - smr, smr * 2, smr * 2);
   g.globalCompositeOperation = 'destination-out'; g.fillStyle = '#000';
   for (let k = 0; k < 7; k++){ const yy = smy + smr * (.15 + k * .13), hh0 = smr * (.02 + k * .012); g.fillRect(smx - smr, yy, smr * 2, hh0); }
   g.restore();
   // uzak kuleler (sabit)
-  const L0 = cityLayer(W, H, U, { wMin: 14, wMax: 34, hMin: .3, hMax: .72, gapMin: .5, gapMax: 1, body: [[0, '#1d1240'], [1, '#2a1448']], fog: [[0, 'rgba(120,30,110,0)'], [1, 'rgba(160,40,120,.75)']], winP: .2, win: .45, edge: .15, signs: 0, signScale: .6 });
-  drawCity(g, L0, 0, W);
+  if (th.istanbul){
+    g.globalCompositeOperation = 'lighter';
+    sprite(g, glow('150,110,255', 's'), W * .5, H * .7, W * .75, H * .16, .45);
+    sprite(g, glow('0,220,220', 's'), W * .62, H * .62, W * .2, H * .2, .25);
+    g.globalCompositeOperation = 'source-over';
+    istanbulSilhouette(g, W, H, U, [[0, '#07051a'], [1, '#0d0a24']], [[0, 'rgba(80,40,160,0)'], [1, 'rgba(110,60,190,.3)']]);
+  }
+  else { const L0 = cityLayer(W, H, U, { wMin: 14, wMax: 34, hMin: .3, hMax: .72, gapMin: .5, gapMax: 1, body: th.far, fog: th.farFog, winP: .2, win: .45, edge: .15, signs: 0, signScale: .6 }); drawCity(g, L0, 0, W); }
   g.globalCompositeOperation = 'lighter';
-  sprite(g, glow('255,70,170', 's'), W * .5, H * .95, W * .7, H * .22, .25);
+  sprite(g, glow(th.low, 's'), W * .5, H * .95, W * .7, H * .22, .25);
   g.globalCompositeOperation = 'source-over';
   dither(g, W, H, .03);
   const TW1 = Math.ceil(Math.max(W * 1.6, 600 * U)), TW2 = Math.ceil(Math.max(W * 1.8, 700 * U));
-  const L1 = cityLayer(TW1, H, U, { wMin: 26, wMax: 60, hMin: .25, hMax: .62, gapMin: .75, gapMax: 1.15, body: [[0, '#0e0822'], [1, '#170a2a']], fog: [[0, 'rgba(90,20,90,0)'], [1, 'rgba(150,30,110,.55)']], winP: .3, win: .8, edge: .35, signs: .6, signScale: .8 }), L1s = cityStrip(L1, H);
-  const L2 = cityLayer(TW2, H, U, { wMin: 70, wMax: 150, hMin: .45, hMax: 1.05, gapMin: 1.5, gapMax: 3.2, body: [[0, '#06030d'], [1, '#0b0516']], fog: [[0, 'rgba(60,10,70,0)'], [1, 'rgba(110,20,90,.45)']], winP: .12, win: 1, edge: .7, signs: 1.6, signScale: 1.25 });
+  const IST = !!th.istanbul;
+  const L1 = cityLayer(TW1, H, U, { wMin: 26, wMax: 60, hMin: IST ? .1 : .25, hMax: IST ? .26 : .62, gapMin: IST ? 1.1 : .75, gapMax: IST ? 2 : 1.15, body: th.mid, fog: th.midFog, winP: th.istanbul ? .22 : .3, win: .8, edge: .35, signs: .6, signScale: .8 }), L1s = cityStrip(L1, H);
+  const L2 = cityLayer(TW2, H, U, { wMin: 70, wMax: 150, hMin: IST ? .18 : .45, hMax: IST ? .5 : 1.05, gapMin: IST ? 2.6 : 1.5, gapMax: IST ? 4.5 : 3.2, body: th.near, fog: th.nearFog, winP: .12, win: 1, edge: .7, signs: 1.6, signScale: 1.25 });
   // hologram pano
   const hw2 = 236 * U, hh = 96 * U;
-  const HOLO = [['Kim attı o flaşı ?', 'Açık büfe'], ['Amk hepsi mid', 'Drop pls'], ['7/24 Açığız', 'A bastılar'], ['Adam burda…', 'B bastılar']];
+  const HOLO = [['Kim attı o flaşı ?', 'Açık büfe'], ['Respawn Bar', 'sabaha kadar açık'], ['Amk hepsi mid', 'Drop pls'], ['Siber Çarşı', 'her şey 1 kredi'],
+    ['7/24 Açığız', 'A bastılar'], ['Lahmacun.exe', 'yükleniyor… %99'], ['Adam burda…', 'B bastılar'], ['GG WP', 'bir el daha?'], ['Döner 2077', 'acılı mı olsun?'], ['Ping 999', 'ama oynarız']];
+  const hc1 = th.holo[0], hc2 = th.holo[1];
   const holos = HOLO.map(([big, small]) => {
     const c = mk(hw2, hh), hg = c2(c);
-    hg.fillStyle = vgrad(hg, 0, hh, [[0, 'rgba(0,240,255,.16)'], [1, 'rgba(255,42,140,.08)']]); hg.fillRect(0, 0, hw2, hh);
-    hg.strokeStyle = 'rgba(0,240,255,.8)'; hg.lineWidth = Math.max(1, 1.2 * U); hg.strokeRect(1, 1, hw2 - 2, hh - 2);
+    hg.fillStyle = vgrad(hg, 0, hh, [[0, 'rgba(' + hc1 + ',.16)'], [1, 'rgba(' + hc2 + ',.08)']]); hg.fillRect(0, 0, hw2, hh);
+    hg.strokeStyle = 'rgba(' + hc1 + ',.8)'; hg.lineWidth = Math.max(1, 1.2 * U); hg.strokeRect(1, 1, hw2 - 2, hh - 2);
     hg.fillStyle = 'rgba(255,255,255,.05)'; for (let y = 0; y < hh; y += 3) hg.fillRect(0, y, hw2, 1);
     hg.textAlign = 'center'; hg.textBaseline = 'middle';
     let fs = 34 * U; hg.font = '800 ' + fs + 'px "Segoe UI",system-ui,sans-serif'; const tw = hg.measureText(big).width, avail = hw2 * .68;
     if (tw > avail){ fs *= avail / tw; hg.font = '800 ' + fs + 'px "Segoe UI",system-ui,sans-serif'; }
-    hg.shadowColor = '#00f0ff'; hg.shadowBlur = 12 * U; hg.fillStyle = 'rgba(160,250,255,.95)'; hg.fillText(big, hw2 * .62, hh * .42);
-    hg.font = '700 ' + (13 * U) + 'px "Segoe UI",system-ui,sans-serif'; hg.shadowColor = '#ff2a8c'; hg.fillStyle = 'rgba(255,150,210,.95)'; hg.fillText(small, hw2 * .62, hh * .78);
+    hg.shadowColor = 'rgb(' + hc1 + ')'; hg.shadowBlur = 12 * U; hg.fillStyle = 'rgba(235,255,255,.95)'; hg.fillText(big, hw2 * .62, hh * .42);
+    let fs2 = 13 * U; hg.font = '700 ' + fs2 + 'px "Segoe UI",system-ui,sans-serif'; const tw2 = hg.measureText(small).width; if (tw2 > avail){ fs2 *= avail / tw2; hg.font = '700 ' + fs2 + 'px "Segoe UI",system-ui,sans-serif'; }
+    hg.shadowColor = 'rgb(' + hc2 + ')'; hg.fillStyle = 'rgba(' + hc2 + ',.95)'; hg.fillText(small, hw2 * .62, hh * .78);
     return c;
   });
   const hx = W * (land ? .8 : .5) - hw2 / 2, hy = H * (land ? .15 : .12);
@@ -782,10 +861,13 @@ function sceneCyber(W, H, o){
   const cars = Array.from({ length: Math.round(16 * clamp(A, .4, 1.3)) }, () => { const d = rnd(.35, 1); return { d, x: R() * W, y: H * rnd(.12, .6), v: rnd(40, 120) * U * d * (R() < .5 ? -1 : 1), col: pick(['255,40,60', '255,40,60', '0,220,255', '255,220,140']), ph: R() * TAU }; });
   cars.sort((a, b) => a.d - b.d);
   // yağmur
-  const NR = Math.round(180 * clamp(A, .35, 1.4)), rx = new Float32Array(NR), ry = new Float32Array(NR), rl = new Float32Array(NR), rv = new Float32Array(NR);
+  const NR = Math.round(180 * (th.rainMul || 1) * clamp(A, .35, 1.4)), rx = new Float32Array(NR), ry = new Float32Array(NR), rl = new Float32Array(NR), rv = new Float32Array(NR);
   for (let i = 0; i < NR; i++){ rx[i] = R() * W * 1.2; ry[i] = R() * H; const near = i < NR * .25; rl[i] = (near ? rnd(20, 34) : rnd(9, 18)) * U; rv[i] = (near ? rnd(900, 1200) : rnd(550, 800)) * U; }
   const wl = glow('255,250,235', 'h'), redS = glow('255,40,60', 'h');
-  const holoGlow = glow('0,220,255', 's'), beamOK = !o.mobile;
+  const holoGlow = glow(hc1, 's'), beamOK = !o.mobile;
+  // yeşil şebeke: düşen karakter yağmuru (arka planda)
+  const MX = th.matrix ? Array.from({ length: Math.round(W / (16 * U)) }, (_, i) => ({ x: i * 16 * U, y: R() * H, v: rnd(40, 140) * U, s: rnd(.4, 1) })) : null;
+  const MCH = 'ABCDEFGHİJKLMNOÖPRSŞTUÜVYZ0123456789#$%&*+=<>';
   // titreyen tabela: kısa süre sönük görünür (üstüne koyu, yarı saydam kutu)
   function signsDraw(c, Ly, off, t){
     c.fillStyle = 'rgb(8,4,18)';
@@ -819,13 +901,20 @@ function sceneCyber(W, H, o){
     // projektör ışıkları
     if (beamOK){
       c.globalCompositeOperation = 'lighter';
-      for (const [bx, sp, ph, col] of [[W * .22, .23, 0, '120,200,255'], [W * .84, .17, 2, '255,120,200']]){
+      for (const [bx, sp, ph, col] of [[W * .22, .23, 0, th.beams[0]], [W * .84, .17, 2, th.beams[1]]]){
         const a = -Math.PI / 2 + Math.sin(t * sp + ph) * .45, L = H * 1.1, wdt = .05;
         const gr = c.createLinearGradient(bx, H, bx + Math.cos(a) * L, H + Math.sin(a) * L);
         gr.addColorStop(0, 'rgba(' + col + ',.16)'); gr.addColorStop(1, 'rgba(' + col + ',0)');
         c.fillStyle = gr; c.beginPath(); c.moveTo(bx, H); c.lineTo(bx + Math.cos(a - wdt) * L, H + Math.sin(a - wdt) * L); c.lineTo(bx + Math.cos(a + wdt) * L, H + Math.sin(a + wdt) * L); c.fill();
       }
       c.globalCompositeOperation = 'source-over';
+    }
+    if (MX){
+      c.font = '600 ' + Math.round(13 * U) + 'px monospace'; c.textAlign = 'center';
+      for (const m of MX){
+        if (!still){ m.y += m.v * dt; if (m.y > H * .8 + 200 * U) m.y = -rnd(0, 300) * U; }
+        for (let k = 0; k < 9; k++){ const yy = m.y - k * 15 * U; if (yy < 0 || yy > H) continue; c.fillStyle = k === 0 ? 'rgba(210,255,220,' + .5 * m.s + ')' : 'rgba(0,255,120,' + (.26 - k * .028) * m.s + ')'; c.fillText(MCH[((m.x * 7 + Math.floor(t * 8) + k * 13) | 0) % MCH.length], m.x, yy); }
+      }
     }
     // orta katman
     const o1 = Math.round(t * 6 * U), o2 = Math.round(t * 16 * U);   // tam piksel: kopyalama filtresiz ve ucuz
@@ -851,7 +940,7 @@ function sceneCyber(W, H, o){
     // yağmur
     const slant = -.18;
     for (const [i0, i1, a, lw] of [[Math.floor(NR * .25), NR, .2, Math.max(.7, .8 * U)], [0, Math.floor(NR * .25), .3, Math.max(1, 1.3 * U)]]){
-      c.strokeStyle = 'rgba(175,195,255,' + a + ')'; c.lineWidth = lw; c.beginPath();
+      c.strokeStyle = 'rgba(' + th.rain + ',' + a + ')'; c.lineWidth = lw; c.beginPath();
       for (let i = i0; i < i1; i++){
         if (!still){ ry[i] += rv[i] * dt; rx[i] += rv[i] * slant * dt; if (ry[i] > H){ ry[i] = -rl[i]; rx[i] = R() * W * 1.2; } }
         c.moveTo(rx[i], ry[i]); c.lineTo(rx[i] + slant * rl[i], ry[i] + rl[i]);
@@ -1962,8 +2051,12 @@ const SCENES = {
   istanbul: { grup: 'Şehir', name: 'İstanbul gecesi', icon: '🌉', desc: 'Galata, camiler, ışıklı köprü; Boğaz’da vapur ve martılar.', make: sceneIstanbul },
   kapadokya: { grup: 'Doğa', name: 'Kapadokya', icon: '🎈', desc: 'Gün doğumunda peri bacalarının üstünde süzülen balonlar.', make: sceneKapadokya },
   atesbocekleri: { grup: 'Doğa', name: 'Ateşböcekleri', icon: '🌲', desc: 'Puslu gece ormanında yanıp sönen ateşböcekleri.', make: sceneAtes },
-  cyberpunk: { grup: 'Şehir', name: 'Cyberpunk şehir', icon: '🌆', desc: 'Neon tabelalar, uçan arabalar, yağmur ve hologram.', make: sceneCyber },
-  neonsokak: { grup: 'Şehir', name: 'Neon sokak', icon: '🌃', desc: 'Yağmurlu neon ara sokak: titreyen neonlar, sis, su birikintileri.', make: sceneNeonSokak },
+  cyberpunk: { grup: 'Cyberpunk', name: 'Cyberpunk şehir', icon: '🌆', desc: 'Neon tabelalar, uçan arabalar, yağmur ve hologram.', make: (W, H, o) => sceneCyber(W, H, o, CYBER_THEMES.pembe) },
+  siberistanbul: { grup: 'Cyberpunk', name: 'Siber İstanbul', icon: '🕌', desc: 'Neon gecede cami siluetleri, minareler ve Galata; uçan arabalar, hologram tabelalar.', make: (W, H, o) => sceneCyber(W, H, o, CYBER_THEMES.istanbul) },
+  kizilgece: { grup: 'Cyberpunk', name: 'Kızıl gece', icon: '🌇', desc: 'Turuncu sisli, kızıl ışıklı distopik şehir.', make: (W, H, o) => sceneCyber(W, H, o, CYBER_THEMES.kizil) },
+  siberliman: { grup: 'Cyberpunk', name: 'Siber liman', icon: '🌧️', desc: 'Mavi neonlu, sağanak yağmurlu soğuk liman şehri.', make: (W, H, o) => sceneCyber(W, H, o, CYBER_THEMES.liman) },
+  yesilsebeke: { grup: 'Cyberpunk', name: 'Yeşil şebeke', icon: '🟩', desc: 'Yeşil neonlar ve arkada akan karakter yağmuru.', make: (W, H, o) => sceneCyber(W, H, o, CYBER_THEMES.yesil) },
+  neonsokak: { grup: 'Cyberpunk', name: 'Neon sokak', icon: '🌃', desc: 'Yağmurlu neon ara sokak: titreyen neonlar, sis, su birikintileri.', make: sceneNeonSokak },
   neondalga: { grup: 'Soyut', name: 'Neon dalgalar', icon: '💫', desc: 'Soyut, akan neon ipek dalgalar.', make: sceneDalga },
   ejderha: { grup: 'Fantastik', name: 'Ejderha Vadisi', icon: '🐉', desc: 'Alacakaranlıkta sisli sıradağlar, süzülen ejderha, kıvılcım saçan yanardağ.', make: sceneEjderha },
   buyuluorman: { grup: 'Fantastik', name: 'Büyülü Orman', icon: '🍄', desc: 'Işıldayan mantarlar, gezinen ışık perileri, sisli ışık huzmeleri.', make: sceneBuyuluOrman },

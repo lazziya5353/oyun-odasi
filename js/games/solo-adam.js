@@ -19,7 +19,23 @@
     'Yemekler': 'lahmacun mantı karnıyarık imambayıldı pilav dolma sarma köfte kebap döner pide börek gözleme menemen ezogelin tarhana musakka türlü kumpir kokoreç simit poğaça baklava künefe sütlaç kazandibi aşure revani tulumba lokma helva kadayıf güllaç cacık haydari humus mücver şakşuka kısır ayran salep boza şalgam piyaz tantuni iskender|kuru fasulye|mercimek çorbası|hünkar beğendi|midye dolma|tavuk göğsü|çiğ köfte|içli köfte|hamsi tava|balık ekmek',
     'Spor': 'futbol basketbol voleybol hentbol tenis badminton yüzme atletizm maraton güreş boks judo karate tekvando eskrim okçuluk binicilik bisiklet kayak kürek yelken sörf dalış tırmanış jimnastik halter golf beyzbol ragbi hokey satranç bilardo bovling kaykay paraşüt triatlon cirit kaleci penaltı korner smaç ofsayt madalya kupa forvet antrenör stadyum|masa tenisi|buz pateni',
     'Müzik Aletleri': 'bağlama kemençe darbuka davul zurna kanun klarnet keman viyolonsel piyano gitar flüt trompet saksafon akordeon mandolin banjo armonika kontrbas trombon obua fagot ksilofon kaval tambur çello bendir kudüm santur mızıka tulum',
-    'Doğa': 'şelale volkan okyanus gökkuşağı yıldırım kasırga orman vadi kanyon mağara buzul yarımada körfez nehir ırmak dere bulut yağmur dolu rüzgar fırtına şimşek güneş yıldız gezegen şafak çiçek papatya lale menekşe karanfil ayçiçeği sümbül nergis orkide kaktüs çınar meşe söğüt kavak zeytin palmiye yosun|gün batımı|kuyruklu yıldız'
+    'Doğa': 'şelale volkan okyanus gökkuşağı yıldırım kasırga orman vadi kanyon mağara buzul yarımada körfez nehir ırmak dere bulut yağmur dolu rüzgar fırtına şimşek güneş yıldız gezegen şafak çiçek papatya lale menekşe karanfil ayçiçeği sümbül nergis orkide kaktüs çınar meşe söğüt kavak zeytin palmiye yosun|gün batımı|kuyruklu yıldız',
+    'Giysiler': 'gömlek pantolon etek elbise ceket mont kaban yelek hırka kazak tişört şort mayo bikini pijama sabahlık atkı bere şapka eldiven çorap ayakkabı terlik çizme sandalet bot kemer kravat papyon fular eşarp şal eşofman tayt kot önlük smokin takım cüzdan çanta küpe kolye bilezik yüzük broş gözlük şemsiye|spor ayakkabı|yağmurluk|kar botu',
+    'Ulaşım': 'otomobil otobüs minibüs dolmuş taksi tramvay metro metrobüs tren vapur feribot gemi tekne yat kano sal denizaltı uçak helikopter zeplin roket bisiklet motosiklet scooter kaykay paten kızak traktör kamyon kamyonet ambulans itfaiye teleferik füniküler karavan römork forklift kepçe vinç|sıcak hava balonu|deniz otobüsü',
+    'Vücut': 'kafa saç alın kaş kirpik göz burun yanak kulak dudak diş dil çene boyun omuz kol dirsek bilek el parmak tırnak göğüs karın sırt bel kalça bacak diz baldır ayak topuk kalp akciğer mide beyin kemik kas damar deri böbrek karaciğer bağırsak iskelet|serçe parmak|ayak bileği',
+    'Okul': 'öğretmen öğrenci sınıf tahta tebeşir kalem silgi defter kitap cetvel pergel iletki gönye boya kalemtıraş çanta beslenme teneffüs zil müdür karne sınav ödev proje laboratuvar kütüphane kantin bahçe servis forma ders matematik fizik kimya biyoloji tarih coğrafya edebiyat resim müzik beden|yazı tahtası|kurşun kalem|hesap makinesi|ders programı',
+    'Bitkiler': 'gül lale papatya menekşe karanfil zambak orkide sümbül nergis kardelen leylak manolya ayçiçeği gelincik lavanta yasemin begonya kaktüs aloe sarmaşık eğrelti yosun bambu çınar meşe çam köknar ladin kavak söğüt ıhlamur zeytin palmiye akasya erguvan ardıç defne nane fesleğen kekik biberiye maydanoz dereotu|aslan ağzı|hanımeli|sardunya',
+    'Kuşlar': 'kartal şahin doğan atmaca akbaba baykuş karga saksağan güvercin serçe kumru bülbül kanarya muhabbetkuşu papağan tavuskuşu flamingo leylek turna pelikan martı karabatak ördek kaz kuğu tavuk horoz hindi bıldırcın keklik sülün devekuşu penguen kolibri ağaçkakan kırlangıç sığırcık iskete|yalıçapkını|ibibik',
+    'Deniz': 'dalga kumsal sahil iskele liman fener mercan yosun midye istiridye istakoz yengeç karides denizanası denizatı denizyıldızı ahtapot kalamar yunus balina köpekbalığı fok mors orkinos hamsi palamut lüfer levrek çipura istavrit sardalya kefal barbunya kalkan uskumru çapa dümen yelken kaptan tayfa dalgıç sörf|deniz feneri|can yeleği|deniz kabuğu',
+    'Uzay': 'güneş ay dünya merkür venüs mars jüpiter satürn uranüs neptün yıldız gezegen uydu galaksi nebula meteor göktaşı kuyrukluyıldız astronot roket teleskop yörünge atmosfer krater tutulma takımyıldız evren kozmos uzaylı|kara delik|samanyolu|uzay istasyonu|uzay mekiği|büyük ayı|kutup yıldızı',
+    'Tatlılar': 'baklava künefe kadayıf revani şekerpare tulumba lokma sütlaç kazandibi tavukgöğsü keşkül muhallebi aşure güllaç helva lokum pişmaniye kurabiye pasta kek tiramisu profiterol puding dondurma çikolata karamel krep sufle ekler macun pestil cezerye|irmik helvası|maraş dondurması|fırın sütlaç|kemalpaşa',
+    'İçecekler': 'çay kahve ayran şalgam boza sahlep limonata şerbet süt kakao gazoz soda komposto ıhlamur adaçayı papatya kuşburnu|maden suyu|meyve suyu|türk kahvesi|sıcak çikolata|nane limon|portakal suyu|vişne suyu',
+    'Renkler': 'kırmızı turuncu sarı yeşil mavi lacivert mor pembe beyaz siyah gri kahverengi bej krem bordo turkuaz eflatun lila fuşya haki zeytin altın gümüş bronz bakır somon mercan şampanya fildişi kiremit|gece mavisi|çimen yeşili|gök mavisi|bebek mavisi|nar çiçeği',
+    'Duygular': 'mutluluk hüzün öfke korku şaşkınlık heyecan merak sevgi özlem kıskançlık utanç gurur huzur endişe umut neşe sabırsızlık şefkat cesaret yalnızlık minnet pişmanlık coşku sıkıntı rahatlama|hayal kırıklığı|tatlı heyecan',
+    'Hobiler': 'satranç tavla okey bulmaca yapboz örgü dikiş resim heykel fotoğraf origami seramik bahçecilik balıkçılık kamp trekking dağcılık yüzme dans şarkı gitar piyano koleksiyon okumak yazmak oyun kodlama yemek yoga meditasyon bisiklet koşu kayak dalış sörf|pul koleksiyonu|el işi|kuş gözlemciliği|model uçak',
+    'Ev': 'salon mutfak banyo yatakodası balkon teras bodrum çatı merdiven koridor antre kapı pencere perde halı kilim koltuk kanepe sehpa dolap gardırop komodin şifonyer kitaplık ayna avize abajur şömine kalorifer klima buzdolabı fırın ocak süpürge ütü|çalışma odası|çocuk odası|yemek masası|bulaşık makinesi|çamaşır makinesi',
+    'Masal & Fantastik': 'ejderha peri dev cüce cadı büyücü sihirbaz prens prenses kral kraliçe şövalye şato kale hazine harita pusula iksir asa değnek kristal kılıç kalkan zırh taç tılsım muska yaratık canavar hayalet vampir kurtadam deniz kızı anka|tek boynuzlu at|uçan halı|sihirli lamba|kristal küre|altın yumurta|dev ayna|büyülü orman',
+    'Teknoloji': 'bilgisayar dizüstü tablet telefon şarj klavye fare monitör yazıcı tarayıcı hoparlör kulaklık mikrofon kamera modem internet uygulama robot yazılım donanım işlemci bellek ekran kablo şifre bulut sunucu |akıllı saat|oyun konsolu|sanal gerçeklik|yapay zeka|harici disk',
   };
   // "a b c|iki kelime|..." → normalize, tekrarları at
   const KATEGORILER = {};
@@ -80,7 +96,7 @@
   if (typeof registerSolo !== 'function') return;
   const Core = window.AdamCore;
   const KB = [['E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Ğ', 'Ü'], ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ş', 'İ'], ['Z', 'C', 'V', 'B', 'N', 'M', 'Ö', 'Ç']];
-  const CAT_ICO = { 'Hayvanlar': '🐾', 'Meyve & Sebze': '🍎', 'Şehirler': '🏙️', 'Ülkeler': '🌍', 'Meslekler': '🧑‍🔧', 'Eşyalar': '🧺', 'Yemekler': '🍲', 'Spor': '⚽', 'Müzik Aletleri': '🎻', 'Doğa': '🌿' };
+  const CAT_ICO = { 'Hayvanlar': '🐾', 'Meyve & Sebze': '🍎', 'Şehirler': '🏙️', 'Ülkeler': '🌍', 'Meslekler': '🧑‍🔧', 'Eşyalar': '🧺', 'Yemekler': '🍲', 'Spor': '⚽', 'Müzik Aletleri': '🎻', 'Doğa': '🌿', 'Giysiler': '👕', 'Ulaşım': '🚌', 'Vücut': '🫀', 'Okul': '🏫', 'Bitkiler': '🌷', 'Kuşlar': '🐦', 'Deniz': '🌊', 'Uzay': '🚀', 'Tatlılar': '🍰', 'İçecekler': '🥤', 'Renkler': '🎨', 'Duygular': '💭', 'Hobiler': '🧩', 'Ev': '🏠', 'Masal & Fantastik': '🐉', 'Teknoloji': '💻' };
   const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
   // sahne: darağacı + adam (parçalar sırayla çizilir)
   const SAHNE = '<svg class="adam-svg" viewBox="0 0 220 240" preserveAspectRatio="xMidYMax meet" aria-hidden="true">' +
@@ -203,8 +219,14 @@
         sWord.textContent = (run.words + 1) + '. kelime';
       }
       function newWord(){
-        const nx = Core.pickNext(used, lastCat, rnd);
+        // önceki oyunlarda çıkan kelimeler de (bu cihazda) bir süre tekrar gelmesin
+        let seen = [];
+        try { seen = JSON.parse(localStorage.getItem('oyunodasi-adam-gecmis')) || []; } catch(e){}
+        let nx = Core.pickNext(new Set([...used, ...seen]), lastCat, rnd);
+        if (!nx){ seen = []; nx = Core.pickNext(used, lastCat, rnd); }
         if (!nx){ endRun(true); return; }
+        seen.push(nx.word);
+        try { localStorage.setItem('oyunodasi-adam-gecmis', JSON.stringify(seen.slice(-900))); } catch(e){}
         used.add(nx.word); lastCat = nx.cat;
         r = Core.newRound(nx.word, nx.cat); r.hinted = [];
         state = 'play';

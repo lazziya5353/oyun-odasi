@@ -78,6 +78,7 @@ function ensureMusicGraph(){
   };
   musicEl.addEventListener('timeupdate', () => sendPos(false));
   musicEl.addEventListener('loadedmetadata', () => sendPos(true));
+  musicEl.addEventListener('seeked', () => sendPos(true));
   musicEl.addEventListener('pause', () => { sendPos(true); refreshMusicUI(); });
   musicEl.addEventListener('play', () => { sendPos(true); refreshMusicUI(); });
   musicEl.addEventListener('error', () => {
@@ -208,6 +209,21 @@ function applyPause(paused){
   if (current.owner === peer.id && musicEl){ if (paused) musicEl.pause(); else musicEl.play().catch(() => {}); }
   refreshMusicUI();
 }
+// ileri / geri sarma: herkes yapabilir; şarkıyı çalan kişi (sahibi) yeni konuma atlar, diğerleri onu duyar
+function seekTo(pos){
+  if (!current || radio) return;
+  const dur = current.dur || 0;
+  pos = Math.max(0, dur ? Math.min(dur - 0.5, pos) : pos);
+  broadcast({ t: 'q-seek', id: current.id, pos });
+  applySeek(current.id, pos);
+}
+function applySeek(id, pos){
+  if (!current || current.id !== id || !Number.isFinite(pos)) return;
+  current.pos = pos; current.at = performance.now();
+  if (current.owner === peer.id && musicEl && musicEl.getAttribute('src')){ try { musicEl.currentTime = pos; } catch(e){} }
+  updateMusicProgress();
+}
+const seekBy = d => seekTo(estPos() + d);
 function removeItem(id){ broadcast({ t: 'q-remove', id }); removeItemLocal(id); }
 function removeItemLocal(id){
   if (current && current.id === id){ skipItemLocal(id); return; }
@@ -283,6 +299,7 @@ function renderRadioChip(){
   const chip = $('radioChip'), open = $('radioOpenBtn');
   if (!chip) return;
   chip.hidden = !radio || !joined;
+  const fb = $('radioFavBtn'); if (fb) fb.hidden = !joined;
   open.hidden = !!radio || !joined;
   if (!radio) return;
   chip.style.setProperty('--c', colorFor(radio.by));
@@ -298,10 +315,11 @@ function renderRadioChip(){
   $('rcPause').textContent = radio.paused ? '▶' : '⏸';
   $('rcPause').title = radio.paused ? 'Radyoyu herkes için devam ettir' : 'Radyoyu herkes için durdur';
   $('rcPause').setAttribute('aria-pressed', !!radio.paused);
+  renderFavCount();
 }
 $('rcPause').onclick = () => { if (radio) setRadioPaused(!radio.paused); };
-$('radioOpenBtn').onclick = openRadioDialog;
-$('rcChange').onclick = openRadioDialog;
+$('radioOpenBtn').onclick = () => openRadioDialog('ara');
+$('rcChange').onclick = () => openRadioDialog();
 $('rcMute').onclick = () => setRadioMuted(!radioMuted);
 $('rcStop').onclick = () => { setRadio(null); toast('📻 Radyo herkes için kapatıldı'); };
 document.querySelectorAll('[data-radiovol]').forEach(r => { r.value = Math.round(radioVol * 100); r.oninput = () => setRadioVol(r.value / 100); });
@@ -323,11 +341,68 @@ async function rbSearch(q, cc){
   }
   throw new Error('radyo listesi alınamadı');
 }
+// ---------- favori radyolar (bu cihazda saklanır) ----------
+const FAV_KEY = 'oyunodasi-radyo-fav';
+function radioFavs(){ try { const l = JSON.parse(localStorage.getItem(FAV_KEY)); return Array.isArray(l) ? l : []; } catch(e){ return []; } }
+function saveFavs(l){ try { localStorage.setItem(FAV_KEY, JSON.stringify(l.slice(0, 80))); } catch(e){} renderFavCount(); }
+const isFav = url => radioFavs().some(f => f.url === url);
+function toggleFav(st){
+  const l = radioFavs();
+  const i = l.findIndex(f => f.url === st.url);
+  if (i >= 0){ l.splice(i, 1); saveFavs(l); toast('☆ Favorilerden çıkarıldı'); return false; }
+  l.unshift({ name: clip(st.name, 80), url: st.url, favicon: st.favicon || '', tags: clip(st.tags || '', 80) });
+  saveFavs(l); toast('⭐ ' + clip(st.name, 40) + ' favorilere eklendi'); return true;
+}
+function renderFavCount(){
+  const n = radioFavs().length;
+  const t = $('radioTabFav'); if (t) t.textContent = '⭐ Favorilerim' + (n ? ' (' + n + ')' : '');
+  const fb = $('radioFavBtn'); if (fb) fb.hidden = !joined;
+  const rs = $('rcFav'); if (rs && radio){ const on = isFav(radio.url); rs.textContent = on ? '★' : '☆'; rs.classList.toggle('on', on); rs.title = on ? 'Favorilerden çıkar' : 'Favorilere ekle'; }
+}
+function stationRow(st, sub){
+  const b = document.createElement('div'); b.className = 'station'; b.tabIndex = 0; b.setAttribute('role', 'button');
+  const ph = document.createElement('span'); ph.className = 'ph'; ph.textContent = '📻';
+  if (st.favicon){
+    const im = document.createElement('img'); im.src = st.favicon; im.alt = ''; im.loading = 'lazy';
+    im.onerror = () => im.replaceWith(ph);
+    b.append(im);
+  } else b.append(ph);
+  const t = document.createElement('span'); t.className = 't';
+  const nm = document.createElement('b'); nm.textContent = st.name;
+  const sb = document.createElement('span'); sb.textContent = sub;
+  t.append(nm, sb); b.append(t);
+  const fav = document.createElement('button'); fav.type = 'button'; fav.className = 'st-fav' + (isFav(st.url) ? ' on' : '');
+  fav.textContent = isFav(st.url) ? '★' : '☆'; fav.title = 'Favorilere ekle / çıkar';
+  fav.onclick = e => {
+    e.stopPropagation();
+    const on = toggleFav(st); fav.textContent = on ? '★' : '☆'; fav.classList.toggle('on', on);
+    if (!on && radioTab === 'fav') b.remove();
+  };
+  b.append(fav);
+  const play = () => { setRadio({ name: st.name, url: st.url, favicon: st.favicon || '', tags: st.tags || '' }); $('radioDlg').close(); toast('📻 ' + st.name + ' çalıyor'); };
+  b.onclick = play;
+  b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); play(); } };
+  return b;
+}
+let radioTab = 'ara';
+function setRadioTab(t){
+  radioTab = t;
+  $('radioTabAra').classList.toggle('on', t === 'ara'); $('radioTabFav').classList.toggle('on', t === 'fav');
+  $('radioForm').hidden = t !== 'ara';
+  if (t === 'fav') renderFavList(); else doRadioSearch();
+}
+function renderFavList(){
+  const list = $('radioList'); list.innerHTML = '';
+  const l = radioFavs();
+  if (!l.length){ list.innerHTML = '<p class="note">Henüz favorin yok. “Ara” sekmesinde beğendiğin istasyonun yanındaki ☆ yıldıza bas.</p>'; return; }
+  l.forEach(st => list.append(stationRow(st, st.tags || '')));
+}
 async function doRadioSearch(){
   const list = $('radioList');
   list.innerHTML = '<p class="note">Aranıyor…</p>';
   try {
     const res = await rbSearch($('radioQuery').value.trim(), $('radioScope').value);
+    if (radioTab !== 'ara') return;
     const seen = new Set();
     const items = (Array.isArray(res) ? res : [])
       .filter(s => s && typeof s.url_resolved === 'string' && /^https:\/\//i.test(s.url_resolved))
@@ -336,35 +411,27 @@ async function doRadioSearch(){
     list.innerHTML = '';
     if (!items.length){ list.innerHTML = '<p class="note">Sonuç bulunamadı. Başka bir isim dene ya da “Tüm dünya”yı seç.</p>'; return; }
     items.forEach(s => {
-      const b = document.createElement('button'); b.className = 'station';
       const fav = typeof s.favicon === 'string' && /^https:\/\//i.test(s.favicon) ? s.favicon : '';
-      const ph = document.createElement('span'); ph.className = 'ph'; ph.textContent = '📻';
-      if (fav){
-        const im = document.createElement('img'); im.src = fav; im.alt = ''; im.loading = 'lazy';
-        im.onerror = () => im.replaceWith(ph);
-        b.append(im);
-      } else b.append(ph);
-      const t = document.createElement('span'); t.className = 't';
-      const nm = document.createElement('b'); nm.textContent = String(s.name).trim();
-      const sub = document.createElement('span');
       const tags = String(s.tags || '').split(',').map(x => x.trim()).filter(Boolean).slice(0, 3).join(', ');
-      sub.textContent = [tags, s.bitrate ? s.bitrate + ' kbps' : '', s.country || ''].filter(Boolean).join(' · ');
-      t.append(nm, sub);
-      b.append(t);
-      b.onclick = () => {
-        setRadio({ name: String(s.name).trim(), url: s.url_resolved, favicon: fav, tags });
-        $('radioDlg').close();
-        toast('📻 ' + String(s.name).trim() + ' çalıyor');
-      };
-      list.append(b);
+      const sub = [tags, s.bitrate ? s.bitrate + ' kbps' : '', s.country || ''].filter(Boolean).join(' · ');
+      list.append(stationRow({ name: String(s.name).trim(), url: s.url_resolved, favicon: fav, tags }, sub));
     });
   } catch(e){
-    list.innerHTML = '<p class="note">Radyo listesi şu an alınamadı. İnternet bağlantını kontrol edip biraz sonra tekrar dene.</p>';
+    if (radioTab === 'ara') list.innerHTML = '<p class="note">Radyo listesi şu an alınamadı. İnternet bağlantını kontrol edip biraz sonra tekrar dene.</p>';
   }
 }
 $('radioForm').onsubmit = e => { e.preventDefault(); doRadioSearch(); };
 $('radioScope').onchange = doRadioSearch;
-function openRadioDialog(){ $('radioDlg').showModal(); if (!$('radioList')._loaded){ $('radioList')._loaded = true; doRadioSearch(); } }
+function openRadioDialog(tab){
+  $('radioDlg').showModal(); renderFavCount();
+  if (tab === 'fav' || (!tab && radioTab === 'fav')){ setRadioTab('fav'); return; }
+  if (radioTab !== 'ara') setRadioTab('ara');
+  else if (!$('radioList')._loaded){ $('radioList')._loaded = true; doRadioSearch(); }
+}
+$('radioTabAra').onclick = () => setRadioTab('ara');
+$('radioTabFav').onclick = () => setRadioTab('fav');
+$('radioFavBtn').onclick = () => openRadioDialog('fav');
+$('rcFav').onclick = () => { if (radio){ toggleFav(radio); renderFavCount(); } };
 
 // ---------- gelen mesajlar ----------
 function musicOnData(id, d){
@@ -376,6 +443,7 @@ function musicOnData(id, d){
     case 'q-ended': if (current && current.id === d.id && current.owner === id) advance(d.id); return true;
     case 'q-skip': if (typeof d.id === 'string') skipItemLocal(d.id); return true;
     case 'q-pause': applyPause(!!d.paused); return true;
+    case 'q-seek': if (typeof d.id === 'string') applySeek(d.id, Number(d.pos)); return true;
     case 'q-pos':
       if (current && current.id === d.id && id === current.owner){
         current.pos = Number(d.pos) || 0; current.dur = Number(d.dur) || 0; current.paused = !!d.paused; current.at = performance.now();
@@ -446,8 +514,20 @@ function renderMusicDeck(d){
   const viz = document.createElement('canvas'); viz.className = 'np-viz'; viz.id = 'npViz'; viz._c = color;
   info.append(tag, title, sub, viz);
   if (current && !radio){
-    const prog = document.createElement('div'); prog.className = 'np-progress';
+    const prog = document.createElement('div'); prog.className = 'np-progress seekable';
+    prog.title = 'İleri / geri sarmak için tıkla ya da sürükle';
     const bar = document.createElement('i'); bar.id = 'npProg'; prog.append(bar);
+    const knob = document.createElement('b'); knob.className = 'np-knob'; prog.append(knob);
+    // tıkla / sürükle: bırakınca herkes için o noktaya atlar
+    const frac = e => { const r = prog.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)); };
+    prog.onpointerdown = e => {
+      if (!current || !current.dur) return;
+      e.preventDefault(); prog.setPointerCapture(e.pointerId); prog.classList.add('drag');
+      const show = ev => { const f = frac(ev); bar.style.width = knob.style.left = f * 100 + '%'; const p = $('npPos'); if (p) p.textContent = fmtTime(f * current.dur); };
+      show(e);
+      prog.onpointermove = show;
+      prog.onpointerup = ev => { prog.onpointermove = null; prog.onpointerup = null; prog.classList.remove('drag'); if (current && current.dur) seekTo(frac(ev) * current.dur); };
+    };
     const tm = document.createElement('div'); tm.className = 'np-time';
     tm.innerHTML = '<span id="npPos">0:00</span><span id="npDur"></span>';
     info.append(prog, tm);
@@ -455,9 +535,12 @@ function renderMusicDeck(d){
   const ctl = document.createElement('div'); ctl.className = 'np-ctl';
   const btn = (label, fn, cls) => { const b = document.createElement('button'); b.className = 'btn ' + (cls || ''); b.textContent = label; b.onclick = fn; ctl.append(b); return b; };
   btn('🎵 Müzik yükle', () => $('musicInput').click(), 'primary');
-  btn('📻 Radyo', openRadioDialog);
+  btn('📻 Radyo', () => openRadioDialog());
+  btn('⭐ Favori radyolar', () => openRadioDialog('fav'));
   if (current && !radio){
+    btn('⏪ 10 sn', () => seekBy(-10)).title = '10 saniye geri';
     btn(current.paused ? '▶ Devam' : '⏸ Duraklat', togglePause);
+    btn('10 sn ⏩', () => seekBy(10)).title = '10 saniye ileri';
     btn('⏭ Geç', () => skipItem(current.id));
   }
   if (radio){
@@ -506,8 +589,10 @@ function renderMusicDeck(d){
 }
 function updateMusicProgress(){
   const bar = $('npProg'); if (!bar || !current) return;
+  if (bar.parentNode.classList.contains('drag')) return;
   const pos = estPos(), dur = current.dur || 0;
   bar.style.width = dur ? Math.min(100, pos / dur * 100) + '%' : '0';
+  const kn = bar.parentNode.querySelector('.np-knob'); if (kn) kn.style.left = bar.style.width;
   const p = $('npPos'), q = $('npDur');
   if (p) p.textContent = fmtTime(pos);
   if (q) q.textContent = dur ? fmtTime(dur) : '';

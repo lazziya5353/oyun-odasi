@@ -1,6 +1,7 @@
-# Netlify ayarları: derleme yok, klasör olduğu gibi yayınlanır.
+# Netlify ayarları: klasör olduğu gibi yayınlanır. Tek derleme adımı: replikler klasöründeki videoların listesini çıkarmak.
 [build]
   publish = "."
+  command = "node scripts/replik-liste.mjs"
   # Bildirim gönderen sunucu fonksiyonu (ek kurulum gerektirmez)
   functions = "netlify/functions"
 
@@ -17,3 +18,9 @@
   from = "/admin"
   to = "/admin.html"
   status = 200
+
+# replik videoları değişmez (aynı adla yeni dosya atılırsa ad değişsin): tarayıcı bir gün saklasın
+[[headers]]
+  for = "/replikler/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"

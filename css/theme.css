@@ -140,3 +140,4 @@
 :root[data-ledfb="1"][data-tema=led][data-ledauto="1"] :is(.btn,.lobby-card,.person,.np,.lib,.make-card,.tcard,dialog,.chan.here,.count-pill,.notif-card,.rejoin,.mictest,.queue,.lib-tab.on,.radio-chip,.solo-card,.lb)::before{
   --led-paint:linear-gradient(90deg,#ff004c,#ffe600,#39ff14,#00e5ff,#b03dff);animation:led-hue calc(var(--led-speed) * 2) linear infinite}
 :root[data-tema=cyber] .bar .btn{letter-spacing:0;padding-inline:12px}
+@media (max-width:860px){ :root[data-tema=cyber] .bar .btn{padding-inline:9px} }

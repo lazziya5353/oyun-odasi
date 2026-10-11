@@ -73,8 +73,23 @@
     levels: [], daily: true, better: 'low',
     format: fmtScore,
     mount(root, ctx){
+      // günlük kelime + istenirse "serbest" mod: sınırsız yeni kelime (sıralamaya girmez, aynı kelime tekrar gelmez)
+      let cur = null;
+      const restart = ans => { if (cur) cur.destroy(); cur = mountK(root, ctx, ans, restart); };
+      restart(null);
+      return { destroy(){ if (cur) cur.destroy(); } };
+    }
+  });
+  const FREE_KEY = 'oyunodasi-kelime-serbest', HIST_KEY = 'oyunodasi-kelime-serbest-gecmis';
+  function pickFree(S, daily){
+    let hist = store.get(HIST_KEY) || [];
+    let pool = S.cevaplar.filter(w => w !== daily && !hist.includes(w));
+    if (!pool.length){ hist = []; store.set(HIST_KEY, hist); pool = S.cevaplar.filter(w => w !== daily); }
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function mountK(root, ctx, free, restart){
       const rm = ctx.reducedMotion;
-      const key = 'oyunodasi-kelime-' + ctx.dayKey;
+      const key = free ? FREE_KEY : 'oyunodasi-kelime-' + ctx.dayKey;
       const timers = new Set();
       const later = (fn, ms) => { const t = setTimeout(() => { timers.delete(t); fn(); }, ms); timers.add(t); return t; };
       let alive = true, iv = 0, onKey = null, saveNow = null;
@@ -82,6 +97,7 @@
       const wrap = el('div', 'kelime-wrap');
       const bar = el('div', 'kelime-bar');
       const info = el('span', 'kelime-info', 'Tahmin 0/6');
+      if (free) bar.append(el('span', 'kelime-mode', '🔀 Serbest'));
       const timerEl = el('span', 'kelime-timer', '⏱ 0:00');
       bar.append(info, timerEl);
       const boardWrap = el('div', 'kelime-boardwrap');
@@ -111,7 +127,7 @@
       }
       bottom.append(kb, msg);
       wrap.append(bar, boardWrap, bottom);
-      if (ctx.alreadyPlayed) wrap.append(el('p', 'kelime-note', 'Bugünkü sonucun zaten tabloda; bu oyun sıralamaya girmez.'));
+      if (ctx.alreadyPlayed && !free) wrap.append(el('p', 'kelime-note', 'Bugünkü sonucun zaten tabloda; bu oyun sıralamaya girmez.'));
       root.append(wrap);
       board.classList.add('is-loading');
       msg.textContent = 'Sözlük yükleniyor…';
@@ -120,10 +136,12 @@
 
       function start(S){
         board.classList.remove('is-loading'); msg.textContent = '';
-        const answer = Core.dailyAnswer(S.cevaplar, ctx.seed);
+        const daily = Core.dailyAnswer(S.cevaplar, ctx.seed);
+        const answer = free === true ? ((store.get(FREE_KEY) || {}).answer || pickFree(S, daily)) : free || daily;
         const valid = new Set(S.gecerli); S.cevaplar.forEach(w => valid.add(w));
         const saved = store.get(key);
         const st = saved && saved.answer === answer ? saved : { answer, guesses: [], secs: 0, done: false, won: false };
+        if (free) store.set(FREE_KEY, st);
         let cur = [], busy = false;
         let t0 = performance.now() - st.secs * 1000;
         const secs = () => (st.done ? st.secs : (performance.now() - t0) / 1000);
@@ -206,6 +224,10 @@
           } else ctx.sound('err');
           showEnd(false);
           const n = st.guesses.length;
+          if (free){
+            const h = store.get(HIST_KEY) || []; if (!h.includes(answer)) h.push(answer); store.set(HIST_KEY, h.slice(-2000));
+            return;
+          }
           later(() => {
             if (won) ctx.finish({ score: Core.makeScore(n, st.secs), detail: { guesses: n, ms: Math.round(st.secs * 1000) } });
             else ctx.finish({ score: Core.makeScore(7, st.secs), ranked: false, detail: { failed: true, answer } });
@@ -219,9 +241,14 @@
             box.append(el('b', '', ['Dahice! 🤯', 'Müthiş! 🎉', 'Harika! 🎉', 'Güzel! 👏', 'İyi iş! 👍', 'Kıl payı! 😅'][n - 1] || 'Bravo!'));
             box.append(el('span', '', n + '/6 tahmin · ' + fmtTime(Math.floor(st.secs))));
           } else {
-            box.append(el('span', '', 'Günün kelimesi:'), el('b', 'kelime-answer', answer));
+            box.append(el('span', '', free ? 'Kelime:' : 'Günün kelimesi:'), el('b', 'kelime-answer', answer));
           }
-          if (restored) box.append(el('small', '', 'Bugünkü kelimeyi zaten oynadın. Yeni kelime yarın!'));
+          if (restored && !free) box.append(el('small', '', 'Bugünkü kelimeyi zaten oynadın. Yeni günlük kelime yarın; istersen serbest modda devam et!'));
+          const nb = el('button', 'btn primary small kelime-yeni', free ? '🔀 Yeni kelime' : '🔀 Serbest oyna (sınırsız kelime)');
+          nb.type = 'button';
+          nb.onclick = () => { store.set(FREE_KEY, null); restart(pickFree(S, daily)); };
+          box.append(nb);
+          if (free){ const bk = el('button', 'btn small', '📅 Günlük kelimeye dön'); bk.type = 'button'; bk.onclick = () => restart(null); box.append(bk); }
           msg.append(box);
         }
 
@@ -256,6 +283,5 @@
           wrap.remove();
         }
       };
-    }
-  });
+  }
 })();

@@ -1,0 +1,12 @@
+REPLİKLER KLASÖRÜ
+=================
+Bu klasöre attığın her video, site güncellenince (1-2 dakika) otomatik olarak
+hem yönetim panelindeki hem de herkesin 🎭 Şaka panelindeki "🎬 Replikler" bölümüne düşer.
+
+- Dosyanın adı = replik adı. Örnek: "Ben bu filmi görmüştüm.mp4"
+- Video mp4 olsun (iPhone .mov videoları bazı bilgisayarlarda açılmayabilir).
+- Kısa olsun: 3-15 saniye, birkaç MB. (GitHub web yüklemesinde dosya başına sınır 25 MB.)
+- Silmek için GitHub'da dosyayı sil; listeden de kalkar.
+
+Nasıl atılır: GitHub'da bu "replikler" klasörüne gir → Add file → Upload files → videoları sürükle → Commit.
+liste.json dosyasına dokunma, kendiliğinden oluşur.

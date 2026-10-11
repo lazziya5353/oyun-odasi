@@ -129,7 +129,22 @@ export default async (req, context) => {
     }
     if (req.method === 'GET' && islem === 'saka-anahtar'){
       const k = await sakaKey();
-      return new Response(JSON.stringify({ jwk: { kty: k.pub.kty, crv: k.pub.crv, x: k.pub.x, y: k.pub.y } }), { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=3600' } });
+      return json({ jwk: { kty: k.pub.kty, crv: k.pub.crv, x: k.pub.x, y: k.pub.y } });
+    }
+    if (req.method === 'GET' && islem === 'saka-ayar'){
+      // herkesin birbirine şaka yapma ayarları (yönetim panelinden değişir)
+      const a = (await store().get('sakaayar', { type: 'json' })) || {};
+      return json({ acik: a.acik !== false, kapali: a.kapali || [], engel: a.engel || [], bekleme: a.bekleme == null ? 5 : a.bekleme });
+    }
+    if (req.method === 'POST' && islem === 'saka-dogrula'){
+      // yedek doğrulama: tarayıcı imzayı kendisi doğrulayamazsa sunucuya sorar
+      const b = await req.json().catch(() => ({}));
+      const exp = Number(b.exp), sig = String(b.sig || '');
+      if (!(exp > Date.now()) || sig.length > 200) return json({ ok: false });
+      const k = await sakaKey();
+      let ok = false;
+      try { ok = crypto.verify('sha256', Buffer.from('oyunodasi-saka-v1|' + exp), { key: crypto.createPublicKey({ key: k.pub, format: 'jwk' }), dsaEncoding: 'ieee-p1363' }, Buffer.from(sig, 'base64url')); } catch(e){}
+      return json({ ok });
     }
     if (req.method === 'GET' && islem === 'admin-gunluk'){
       if (!(await authAdmin(req))) return json({ hata: 'yetki' }, 401);
@@ -239,6 +254,25 @@ export default async (req, context) => {
       const key = crypto.createPrivateKey({ key: k.priv, format: 'jwk' });
       const sig = crypto.sign('sha256', Buffer.from('oyunodasi-saka-v1|' + exp), { key, dsaEncoding: 'ieee-p1363' }).toString('base64url');
       return json({ ok: true, exp, sig });
+    }
+    if (islem === 'admin-saka-ayar'){
+      const a = {
+        acik: b.acik !== false,
+        kapali: Array.isArray(b.kapali) ? b.kapali.filter(x => typeof x === 'string' && /^[a-z]{2,12}$/.test(x)).slice(0, 60) : [],
+        engel: Array.isArray(b.engel) ? [...new Set(b.engel.map(x => clip(x, 20).toLocaleLowerCase('tr-TR')).filter(Boolean))].slice(0, 100) : [],
+        bekleme: [0, 3, 5, 10, 30, 60, 300].includes(Number(b.bekleme)) ? Number(b.bekleme) : 5
+      };
+      const old = (await store().get('sakaayar', { type: 'json' })) || {};
+      await store().setJSON('sakaayar', a);
+      const notes = [];
+      if ((old.acik !== false) !== a.acik) notes.push(a.acik ? 'şakalar açıldı' : 'şakalar kapatıldı');
+      const ne = a.engel.filter(x => !(old.engel || []).includes(x)), ce = (old.engel || []).filter(x => !a.engel.includes(x));
+      if (ne.length) notes.push('engellendi: ' + ne.join(', '));
+      if (ce.length) notes.push('engel kalktı: ' + ce.join(', '));
+      if ((old.bekleme == null ? 5 : old.bekleme) !== a.bekleme) notes.push('bekleme ' + a.bekleme + ' sn');
+      if (JSON.stringify(old.kapali || []) !== JSON.stringify(a.kapali)) notes.push('kapalı efektler: ' + (a.kapali.join(', ') || 'yok'));
+      await logAdmin('Kullanıcı şakaları: ' + (notes.join(' · ') || 'kaydedildi'));
+      return json({ ok: true, ayar: a });
     }
     if (islem === 'admin-sifre-degis'){
       if (process.env.ADMIN_SIFRE) return json({ hata: 'Şifre Netlify ayarlarından (ADMIN_SIFRE) belirlenmiş; oradan değiştir.' }, 400);
