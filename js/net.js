@@ -308,6 +308,7 @@ function setupPeer(pr){
 function enterRoom(){
   if (joined) return;
   joined = true;
+  if (typeof hareket === 'function') setTimeout(() => hareket(isHost ? 'oda' : 'giris', roomCode + (isHost ? ' odasını açtı' : ' odasına girdi'), true), 300);
   $('lobby').hidden = true; $('room').hidden = false;
   $('roomCode').textContent = roomCode;
   $('micDlgBody').append($('micPanel'));
@@ -376,7 +377,7 @@ function handleConn(conn){
   conn.on('open', () => {
     p.linked = true; p.failed = false; p.lastSeen = Date.now(); clearTimeout(p.linkTimer);
     if (!joined) enterRoom();
-    send(conn, { t: 'hello', name: myName, muted: micMuted, noMic, sharing: !!screenStream, channel: me.channel, foto: typeof myFoto !== 'undefined' ? myFoto : null });
+    send(conn, { t: 'hello', name: myName, muted: micMuted, noMic, sharing: !!screenStream, channel: me.channel, foto: typeof myFoto !== 'undefined' ? myFoto : null, stil: typeof myStil !== 'undefined' ? myStil : null, vfx: typeof vfxId !== 'undefined' ? vfxId : 'normal' });
     if (isHost){
       send(conn, { t: 'peers', ids: [...peers.values()].filter(o => o.linked && o.id !== conn.peer).map(o => o.id) });
       send(conn, Object.assign({ t: 'sync' }, makeSync()));
@@ -431,6 +432,9 @@ function onData(id, d){
       p.muted = !!d.muted; p.noMic = !!d.noMic; p.sharing = !!d.sharing;
       p.channel = chanById(d.channel) ? d.channel : 'genel';
       p.foto = typeof safeFoto === 'function' ? safeFoto(d.foto) : null;
+      p.stil = typeof cleanStil === 'function' ? cleanStil(d.stil) : null;
+      p.vfx = typeof VFX !== 'undefined' && VFX.some(v => v[0] === d.vfx) ? d.vfx : 'normal';
+      if (p.stil) p.color = colorFor(p.id);
       if (!p.helloed){
         p.helloed = true;
         gamesOnHello(p);
@@ -506,6 +510,8 @@ function onData(id, d){
   if (typeof soloOnData === 'function' && soloOnData(id, d)) return;
   if (ikramOnData(id, d)) return;
   if (typeof sakaOnData === 'function' && sakaOnData(id, d)) return;
+  if (typeof stilOnData === 'function' && stilOnData(id, d)) return;
+  if (typeof vfxOnData === 'function' && vfxOnData(id, d)) return;
   if (chatOnData(id, d)) return;
   if (musicOnData(id, d)) return;
   if (filmOnData(id, d)) return;
@@ -713,12 +719,14 @@ function closeIfAlone(){
   try { localStorage.removeItem('oyunodasi-chat-' + roomCode); localStorage.removeItem('oyunodasi-chatclr-' + roomCode); } catch(e){}
 }
 function leaveRoom(){
+  if (typeof hareket === 'function' && joined){ hareket('cikis', roomCode + ' odasından çıktı'); hareketGonder(true); }
   closeIfAlone();
   try { lobbyPeer && lobbyPeer.destroy(); } catch(e){}
   try { peer && peer.destroy(); } catch(e){}
   location.reload();
 }
 window.addEventListener('beforeunload', () => {
+  if (typeof hareket === 'function' && joined){ hareket('cikis', roomCode + ' odasından çıktı (sayfa kapandı)'); hareketGonder(true); }
   closeIfAlone();
   try { lobbyPeer && lobbyPeer.destroy(); } catch(e){}
   try { peer && peer.destroy(); } catch(e){}

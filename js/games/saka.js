@@ -689,6 +689,7 @@ function sakaGonder(e, to, m, r){
   if (e === 'replik') msg.r = r;
   peers.forEach(p => { if (p.linked) send(p.conn, msg); });
   sakaShow(msg, myName, peer.id);
+  if (typeof hareket === 'function'){ const hedef = to === '*' ? 'herkese' : to === peer.id ? 'kendine' : ((peers.get(to) || {}).name || 'birine'); hareket(e === 'replik' ? 'replik' : 'saka', hedef + ' → ' + (e === 'replik' ? '🎬 ' + replikAd(r) : SAKA[e].ikon + ' ' + SAKA[e].ad)); }
   renderSakaPanel();
 }
 
@@ -699,7 +700,8 @@ function sakaPanelAc(){
     const d = document.createElement('dialog'); d.id = 'sakaDlg'; d.className = 'wide'; d.setAttribute('aria-labelledby', 'sakaDlgT');
     d.innerHTML = '<div class="dlg-head"><h3 id="sakaDlgT">🎭 Şaka yap</h3><button class="btn small" data-close>Kapat</button></div>' +
       '<div class="dlg-body saka-panel"><p class="note saka-durum"></p><div class="saka-kime"></div>' +
-      '<div class="saka-tabs"><button type="button" data-tab="firlat">🍅 Fırlat</button><button type="button" data-tab="ses">🔊 Komik sesler</button><button type="button" data-tab="replik">🎬 Replikler</button></div>' +
+      '<div class="saka-tabs"><button type="button" data-tab="firlat">🍅 Fırlat</button><button type="button" data-tab="ses">🔊 Komik sesler</button><button type="button" data-tab="replik">🎬 Replikler</button><button type="button" data-tab="sesim">🎤 Sesim</button></div>' +
+      '<div class="vfx-kutu saka-vfx" hidden></div>' +
       '<div class="saka-izgara"></div><form class="saka-mesajrow"><input type="text" maxlength="90" placeholder="Ekrana kocaman yazı gönder…"><button class="btn primary" type="submit">📣 Gönder</button></form>' +
       '<p class="note">Şakalar herkesin ekranında birden çıkar. İsteyen Görünüm → 🎭 Şakalar’dan kendi ekranında kapatabilir.</p></div>';
     document.body.append(d); sp.dlg = d;
@@ -719,6 +721,7 @@ function renderSakaDurum(){
   const el = sp.dlg.querySelector('.saka-durum');
   const kalan = Math.ceil((benimSon + AYAR.bekleme * 1000 - Date.now()) / 1000);
   el.classList.toggle('err', !AYAR.acik || engelli(myName));
+  if (sp.tab === 'sesim'){ el.classList.remove('err'); el.textContent = '🎤 Sesine efekt ver: odadaki herkes seni böyle duyar.'; return; }
   el.textContent = !AYAR.acik ? '🔒 Şakalar şu an yönetici tarafından kapalı.' : engelli(myName) ? '🚫 Yönetici senin şaka yapmanı kapattı.' : kalan > 0 ? '⏳ Yeni şaka için ' + kalan + ' sn bekle' : 'Kime atacağını seç, sonra efekte bas!';
   sp.dlg.querySelector('.saka-izgara').classList.toggle('bekle', kalan > 0);
 }
@@ -734,6 +737,9 @@ function renderSakaPanel(){
   d.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === sp.tab));
   const g = d.querySelector('.saka-izgara'); g.innerHTML = '';
   g.classList.toggle('replikler', sp.tab === 'replik');
+  const vk = d.querySelector('.saka-vfx'); vk.hidden = sp.tab !== 'sesim'; g.hidden = sp.tab === 'sesim';
+  d.querySelector('.saka-kime').hidden = sp.tab === 'sesim';
+  if (sp.tab === 'sesim'){ if (typeof renderVfx === 'function') renderVfx(); d.querySelector('.saka-mesajrow').hidden = true; renderSakaDurum(); return; }
   if (sp.tab === 'replik'){
     if (!efektAcik('replik')) g.append(Object.assign(document.createElement('p'), { className: 'note', textContent: 'Replikler yönetici tarafından kapatıldı.' }));
     else if (!REPLIK.length) g.append(Object.assign(document.createElement('p'), { className: 'note', textContent: replikAt ? 'Henüz replik yok. Yönetici “replikler” klasörüne video ekleyince burada çıkar.' : 'Yükleniyor…' }));

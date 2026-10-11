@@ -144,6 +144,8 @@ function renderDeck(){
 const COLORS = ['#5ee0b5','#7aa2ff','#ff7ab6','#ffb454','#b18cff','#4fd1ff','#ff8a65','#c3e86b','#f7d36a','#9fb4ff','#ff9ed0','#6ee7d8'];
 let colorMap = {};
 function colorFor(id){
+  const st = typeof stilOf === 'function' ? stilOf(id) : null;
+  if (st && st.renk) return st.renk;
   if (colorMap[id] != null) return COLORS[colorMap[id] % COLORS.length];
   let h = 2166136261; for (const ch of String(id)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
   return COLORS[h % COLORS.length];
@@ -246,11 +248,13 @@ function renderSelf(){
   c.style.setProperty('--c', colorFor(peer ? peer.id : myName));
   if (typeof paintAvatar === 'function') paintAvatar(c.querySelector('.avatar'), myName, myFoto); else c.querySelector('.avatar').textContent = initial(myName);
   c.querySelector('.pname').textContent = myName;
+  if (typeof applyStil === 'function'){ applyStil(c, myStil); renderStilPicker(); }
   c.classList.toggle('muted', micMuted);
   const ic = c.querySelector('.icons'); ic.innerHTML = '';
   if (noMic) ic.insertAdjacentHTML('beforeend', '<span class="pill">🎧 Dinleyici</span>');
   if (screenStream) ic.insertAdjacentHTML('beforeend', '<span class="pill live">🖥 Yayında</span>');
   if (isHost) ic.insertAdjacentHTML('beforeend', '<span class="pill">👑 Oda sahibi</span>');
+  if (typeof vfxId !== 'undefined' && vfxId !== 'normal') ic.insertAdjacentHTML('beforeend', '<span class="pill vfx">' + vfxEtiket(vfxId) + '</span>');
   updateCount();
 }
 
@@ -264,7 +268,7 @@ function renderPeer(p){
     const meter = document.createElement('div'); meter.className = 'meter';
     const bar = document.createElement('i'); bar.dataset.meter = p.id; meter.append(bar);
     const row = document.createElement('div'); row.className = 'kick-row';
-    const dm = document.createElement('button'); dm.className = 'btn dm-btn'; dm.textContent = '💬 Özel mesaj';
+    const dm = document.createElement('button'); dm.className = 'btn dm-btn'; dm.textContent = '💬 Mesaj'; dm.title = 'Özel mesaj gönder';
     dm.onclick = () => openChat(p.id);
     const ik = document.createElement('button'); ik.className = 'btn dm-btn'; ik.textContent = '🍵 İkram';
     ik.title = 'Çay, simit, kahve ısmarla';
@@ -285,6 +289,8 @@ function renderPeer(p){
   }
   if (typeof paintAvatar === 'function') paintAvatar(c.querySelector('.avatar'), p.name, p.foto); else c.querySelector('.avatar').textContent = initial(p.name);
   c.querySelector('.pname').textContent = p.name;
+  if (typeof applyStil === 'function') applyStil(c, p.stil);
+  p.color = colorFor(p.id); c.style.setProperty('--c', p.color);
   c.classList.toggle('muted', !!p.muted);
   c.querySelectorAll('[data-vol]').forEach(r => r.setAttribute('aria-label', p.name + ' ses seviyesi'));
   ensureKickControl(p);
@@ -298,6 +304,7 @@ function renderPeer(p){
   if (p.noMic) ic.insertAdjacentHTML('beforeend', '<span class="pill">🎧 Dinleyici</span>');
   if (p.sharing) ic.insertAdjacentHTML('beforeend', '<span class="pill live">🖥 Yayında</span>');
   if (p.id === currentHostId) ic.insertAdjacentHTML('beforeend', '<span class="pill">👑 Oda sahibi</span>');
+  if (p.vfx && p.vfx !== 'normal' && typeof vfxEtiket === 'function') ic.insertAdjacentHTML('beforeend', '<span class="pill vfx">' + vfxEtiket(p.vfx) + '</span>');
   if (p.tile){ const w = p.tile.querySelector('.who'); if (w) w.textContent = screenTitleFor(p); }
   syncPeerUI(p);
   updateCount();
@@ -306,7 +313,7 @@ function renderPeer(p){
 function updateCount(){
   const here = [...peers.values()].filter(p => p.helloed && p.linked && sameChan(p)).length;
   const total = [...peers.values()].filter(p => p.helloed && p.linked).length + 1;
-  $('peopleTitle').textContent = '👥 ' + total + ' kişi';
+  $('peopleTitle').innerHTML = '👥 ' + total + '<span class="pt-k"> kişi</span>';
   const e = $('emptyStage');
   e.hidden = here > 0;
   e.textContent = total > 1 ? 'Bu kanalda şimdilik yalnızsın. Soldan diğer kanallara geçebilirsin.' : 'Odada şimdilik yalnızsın. Yukarıdan daveti kopyalayıp arkadaşlarına gönder.';

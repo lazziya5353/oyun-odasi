@@ -105,6 +105,15 @@ Netlify'da `ADMIN_SIFRE` ortam değişkeni tanımlıysa şifre oradan gelir ve p
 `netlify/functions/skor.mjs` tekli oyunların sonuçlarını Netlify Blobs'ta saklar (her isim için en iyi sonuç, ilk 100).
 Giriş sistemi olmadığı için isimler yazılan ada göre tutulur.
 
+## Kişisel stil, ses değiştirici, etiketler
+- **✨ Kartım** (Görünüm penceresi): kart rengi (fosforlu renkler veya özel renk), hareketli renk (gökkuşağı, cyberpunk, LED, nabız) ve isim efekti (gökkuşağı, neon, ateş, altın, glitch, buz). Ücretsiz; odadaki herkes öyle görür.
+- **🎤 Ses değiştirici**: Şaka paneli → "🎤 Sesim" ya da Mikrofon testi penceresi. Robot, sincap, helyum, dev, uzaylı, mağara, stadyum, telefon, telsiz, megafon, keçi, sarhoş, kedi…
+- **@etiket**: sohbette `@isim` veya `@herkes`; etiketlenen kişiye ses + bildirim + (telefonda) titreşim gider.
+- **Bağlantı göstergesi**: kartların köşesindeki sinyal çubukları (üstüne gelince ping ve ses kaybı).
+- **Saat ve tarih**: üst çubukta.
+- **📻 Radyo arama**: dizin sunucuları aynı anda denenir; ulaşılamazsa `netlify/functions/radyo.mjs` üzerinden aranır, o da olmazsa son liste gösterilir.
+- **📋 Hareketler** (yönetim paneli): kim nereden girdi (💻 bilgisayar / 📱 telefon), etiketler, şakalar, oyunlar, radyo, ses efekti… Son 500 hareket saklanır (`netlify/functions/hareket.mjs`).
+
 ## Sınırlar
 
 - Herkes herkese bağlandığı için sesli sohbette 8–10 kişi, ekran paylaşımında 4–5 izleyici rahat çalışır.

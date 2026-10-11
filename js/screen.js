@@ -94,6 +94,7 @@ async function startScreenShare(){
 // ortak başlangıç: ekran paylaşımı ve dosyadan film aynı yoldan geçer
 function startShareWithStream(stream, info){
   if (screenStream) stopShare();
+  if (typeof hareket === 'function') hareket('ekran', 'ekran paylaşımı başlattı');
   screenStream = stream;
   shareInfo = info || { mode: shareQ };
   const vt = stream.getVideoTracks()[0];

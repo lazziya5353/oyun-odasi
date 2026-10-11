@@ -150,6 +150,7 @@ async function openMic(deviceId){
   noMic = false;
   if (wasNoMic) micMuted = false;
   out.getAudioTracks()[0].enabled = !micMuted;
+  if (typeof vfxWrap === 'function') out = vfxWrap(out);   // ses değiştirici açıksa efekti ekle
   rawStream = raw;
   localStream = out;
   if (typeof peers !== 'undefined') peers.forEach(p => updateMicRouting(p));   // herkese giden sesi yeni mikrofonla değiştir

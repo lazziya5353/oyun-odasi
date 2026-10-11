@@ -129,6 +129,7 @@ function sendChat(text, img){
   }
   const m = { t: 'chat', mid: rid() + rid(), to: key === 'all' ? 'all' : 'dm', text, img: img || null };
   if (key === 'all') broadcast(m); else send(peers.get(key).conn, m);
+  if (typeof etiketBul === 'function' && typeof hareket === 'function'){ const tg = etiketBul(text); if (tg.length) hareket('etiket', 'sohbette ' + [...new Set(tg.map(t => '@' + t.ad))].join(', ') + ' etiketledi' + (key !== 'all' ? ' (özel mesaj)' : '')); }
   addMsg(key, { mid: m.mid, from: peer.id, name: myName, text, img: m.img, ts: Date.now(), mine: true });
 }
 
@@ -212,6 +213,7 @@ function chatOnData(id, d){
     if (!text && !img) return true;
     const key = d.to === 'dm' ? id : 'all';
     addMsg(key, { mid: clip(d.mid, 40), from: id, name: p ? p.name : 'Biri', text, img, ts: Date.now() });
+    if (typeof etiketGeldi === 'function') etiketGeldi(id, p ? p.name : 'Biri', text, key !== 'all');
     typingFrom.delete(id); renderTyping();
     return true;
   }
@@ -309,6 +311,7 @@ function appendMsgEl(m, prev, animate){
     if (!animate) el.style.animation = 'none';
     const who = document.createElement('div'); who.className = 'who';
     who.textContent = m.mine ? 'Sen' : m.name;
+    { const st = typeof stilOf === 'function' && peer ? stilOf(m.mine ? peer.id : m.from) : null; if (st && st.isim){ who.dataset.isim = st.isim; who.dataset.text = who.textContent; } }
     const t = document.createElement('time'); t.textContent = hhmm(m.ts); who.append(t);
     el.append(who);
     if (m.img){
@@ -319,7 +322,8 @@ function appendMsgEl(m, prev, animate){
     }
     if (m.text){
       const b = document.createElement('div'); b.className = 'body';
-      linkify(m.text, b); el.append(b);
+      if (typeof etiketliYaz === 'function'){ etiketliYaz(m.text, b); if (!m.mine && etiketBeni(m.text)) el.classList.add('etiketli'); } else linkify(m.text, b);
+      el.append(b);
     }
     box.append(el);
   }

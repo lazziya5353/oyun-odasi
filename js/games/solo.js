@@ -81,6 +81,7 @@ function renderSoloCards(d){
 
 // ---------- oyunu aç / kapat ----------
 function openSolo(id, lv){
+  if (typeof hareket === 'function' && SOLO.get(id)) hareket('oyun', 'tek kişilik oyun: ' + SOLO.get(id).name);
   const def = SOLO.get(id); if (!def) return;
   if (typeof openTable !== 'undefined' && openTable) closeTableView(true);
   closeSolo(true);

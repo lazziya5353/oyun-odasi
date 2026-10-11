@@ -167,6 +167,7 @@ function addFiles(files){
   });
   sortQueue();
   toast(list.length === 1 ? '🎵 Sıraya eklendi' : '🎵 ' + list.length + ' şarkı sıraya eklendi');
+  if (typeof hareket === 'function') hareket('muzik', list.length + ' şarkı yükledi: ' + list.slice(0, 3).map(f => f.name.replace(/\.[^.]+$/, '')).join(', '));
   if (!current && !radio) startItem(queue[0].id);
   refreshMusicUI();
   if (typeof uploadMany === 'function') uploadMany(list);   // kütüphaneye de kaydet (kalıcı)
@@ -256,6 +257,7 @@ function applyRadioPause(paused, by, quiet){
 }
 function setRadio(st){
   const station = st ? { name: clip(st.name, 80), url: st.url, favicon: st.favicon || '', tags: clip(st.tags, 80) } : null;
+  if (typeof hareket === 'function') hareket('radyo', station ? 'radyo açtı: ' + station.name : 'radyoyu kapattı');
   broadcast({ t: 'radio', station });
   applyRadio(station, peer.id);
 }
@@ -326,20 +328,31 @@ document.querySelectorAll('[data-radiovol]').forEach(r => { r.value = Math.round
 document.querySelectorAll('[data-radioout]').forEach(o => o.textContent = Math.round(radioVol * 100) + '%');
 
 // Radio Browser: ücretsiz, açık radyo dizini. Birkaç sunucusu var, biri cevap vermezse diğeri denenir.
-const RB_HOSTS = ['https://de1.api.radio-browser.info', 'https://fi1.api.radio-browser.info', 'https://nl1.api.radio-browser.info', 'https://de2.api.radio-browser.info'];
+const RB_HOSTS = ['https://de1.api.radio-browser.info', 'https://de2.api.radio-browser.info', 'https://fi1.api.radio-browser.info', 'https://at1.api.radio-browser.info', 'https://nl1.api.radio-browser.info'];
+const RB_CACHE = 'oyunodasi-radyo-onbellek';
+function rbZamanli(url, ms){
+  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), ms);
+  return fetch(url, { signal: ctl.signal }).then(r => { if (!r.ok) throw new Error('durum ' + r.status); return r.json(); })
+    .then(j => { if (!Array.isArray(j)) throw new Error('liste değil'); return j; })
+    .finally(() => clearTimeout(tm));
+}
+// Tüm sunucular aynı anda denenir, ilk cevap veren kazanır. 2,5 sn içinde cevap yoksa bizim sunucu (Netlify) üzerinden de denenir.
+// Hepsi başarısız olursa bu cihazda en son alınan liste gösterilir.
 async function rbSearch(q, cc){
-  const params = new URLSearchParams({ limit: '120', hidebroken: 'true', order: 'clickcount', reverse: 'true' });
+  const params = new URLSearchParams({ limit: '150', hidebroken: 'true', order: 'clickcount', reverse: 'true' });
   if (q) params.set('name', q);
   if (cc) params.set('countrycode', cc);
-  for (const h of RB_HOSTS){
-    try {
-      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 7000);
-      const r = await fetch(h + '/json/stations/search?' + params, { signal: ctl.signal });
-      clearTimeout(tm);
-      if (r.ok) return await r.json();
-    } catch(e){}
+  const key = (cc || '*') + '|' + q.toLocaleLowerCase('tr-TR');
+  const dogrudan = Promise.any(RB_HOSTS.map(h => rbZamanli(h + '/json/stations/search?' + params, 8000)));
+  const yedek = new Promise(r => setTimeout(r, 2500)).then(() => rbZamanli('/api/radyo/ara?' + new URLSearchParams({ name: q, cc }), 12000));
+  try {
+    const res = await Promise.any([dogrudan, yedek]);
+    try { const c = JSON.parse(localStorage.getItem(RB_CACHE) || '{}'); c[key] = res.slice(0, 150); const ks = Object.keys(c); while (ks.length > 12) delete c[ks.shift()]; localStorage.setItem(RB_CACHE, JSON.stringify(c)); } catch(e){}
+    return res;
+  } catch(e){
+    try { const c = JSON.parse(localStorage.getItem(RB_CACHE) || '{}'); if (c[key]) { rbSearch.eski = true; return c[key]; } } catch(e2){}
+    throw new Error('radyo listesi alınamadı');
   }
-  throw new Error('radyo listesi alınamadı');
 }
 // ---------- favori radyolar (bu cihazda saklanır) ----------
 const FAV_KEY = 'oyunodasi-radyo-fav';
@@ -397,18 +410,21 @@ function renderFavList(){
   if (!l.length){ list.innerHTML = '<p class="note">Henüz favorin yok. “Ara” sekmesinde beğendiğin istasyonun yanındaki ☆ yıldıza bas.</p>'; return; }
   l.forEach(st => list.append(stationRow(st, st.tags || '')));
 }
+let rbSira = 0;
 async function doRadioSearch(){
-  const list = $('radioList');
+  const list = $('radioList'), sira = ++rbSira;
   list.innerHTML = '<p class="note">Aranıyor…</p>';
   try {
+    rbSearch.eski = false;
     const res = await rbSearch($('radioQuery').value.trim(), $('radioScope').value);
-    if (radioTab !== 'ara') return;
+    if (radioTab !== 'ara' || sira !== rbSira) return;
     const seen = new Set();
     const items = (Array.isArray(res) ? res : [])
       .filter(s => s && typeof s.url_resolved === 'string' && /^https:\/\//i.test(s.url_resolved))
       .filter(s => { const k = String(s.name || '').trim().toLowerCase(); if (!k || seen.has(k)) return false; seen.add(k); return true; })
       .slice(0, 60);
     list.innerHTML = '';
+    if (rbSearch.eski) list.innerHTML = '<p class="note">⚠️ Radyo dizinine şu an ulaşılamadı, en son kaydedilen liste gösteriliyor.</p>';
     if (!items.length){ list.innerHTML = '<p class="note">Sonuç bulunamadı. Başka bir isim dene ya da “Tüm dünya”yı seç.</p>'; return; }
     items.forEach(s => {
       const fav = typeof s.favicon === 'string' && /^https:\/\//i.test(s.favicon) ? s.favicon : '';
@@ -417,7 +433,10 @@ async function doRadioSearch(){
       list.append(stationRow({ name: String(s.name).trim(), url: s.url_resolved, favicon: fav, tags }, sub));
     });
   } catch(e){
-    if (radioTab === 'ara') list.innerHTML = '<p class="note">Radyo listesi şu an alınamadı. İnternet bağlantını kontrol edip biraz sonra tekrar dene.</p>';
+    if (radioTab !== 'ara' || sira !== rbSira) return;
+    list.innerHTML = '<p class="note">Radyo listesi şu an alınamadı. İnternet bağlantını kontrol edip tekrar dene.</p>';
+    const tb = document.createElement('button'); tb.type = 'button'; tb.className = 'btn'; tb.textContent = '🔄 Tekrar dene'; tb.onclick = doRadioSearch;
+    list.append(tb);
   }
 }
 $('radioForm').onsubmit = e => { e.preventDefault(); doRadioSearch(); };

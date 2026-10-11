@@ -67,6 +67,13 @@
   .saka-grid.kucuk .saka-btn b{font-size:24px}
   .saka-btn.kapali{opacity:.4;text-decoration:line-through;border-style:dashed}
   .saka-engel{display:grid;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+  .hk-satir{display:grid;grid-template-columns:auto auto 1fr auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+  .hk-cihaz{font-size:18px}
+  .hk-ad{white-space:nowrap}
+  .hk-metin{overflow-wrap:anywhere}
+  .hk-ozet{display:flex;flex-wrap:wrap;gap:6px}
+  .hk-chip{padding:5px 10px;border-radius:99px;background:var(--panel-2);border:1px solid var(--line);font-size:13px}
+  @media (max-width:600px){ .hk-satir{grid-template-columns:auto 1fr auto} .hk-metin{grid-column:1/-1} }
   .replik-liste{display:grid;gap:6px;max-height:420px;overflow:auto}
   .replik-satir{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--line)}
   .replik-ad{flex:1;min-width:160px;font-weight:600;overflow-wrap:anywhere}

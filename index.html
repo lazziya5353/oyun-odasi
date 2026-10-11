@@ -35,6 +35,7 @@
 <link rel="stylesheet" href="css/bg.css">
 <link rel="stylesheet" href="css/hava.css">
 <link rel="stylesheet" href="css/saka.css">
+<link rel="stylesheet" href="css/stil.css">
 <script>try{var t=JSON.parse(localStorage.getItem("oyunodasi-tema")||"{}");if(t.mode==="cyber"||t.mode==="led")document.documentElement.dataset.tema=t.mode;}catch(e){}</script>
 </head>
 <body>
@@ -118,16 +119,17 @@
 <section class="room ch-voice" id="room" hidden>
   <header class="top">
     <button class="btn icon-btn only-mobile" id="chanToggle" aria-label="Kanallar">☰</button>
-    <h1 class="top-brand"><img src="logo.svg" alt="" width="30" height="30">Oyun Odası</h1>
+    <h1 class="top-brand"><img src="logo.svg" alt="" width="30" height="30"><span class="brand-ad">Oyun Odası</span></h1>
+    <span class="top-saat only-mobile" aria-hidden="true"><b></b><small></small></span>
     <div class="top-mid">
       <span class="count-pill" id="peopleTitle">👥 1 kişi</span>
       <span class="sig-pill" id="sigStatus" hidden title="Eşleştirme sunucusuna yeniden bağlanılıyor. Odadakilerle konuşma devam ediyor; bu sırada yeni gelenler katılamayabilir.">⟳ <span class="lbl">Sunucuya bağlanıyor</span></span>
-      <button class="btn small" id="mixerBtn2">🎚 <span class="lbl">Sesleri ayarla</span></button>
-      <button class="btn small" id="profilBtn2" title="Profilim">👤 <span class="lbl">Profil</span></button>
-      <button class="btn small" id="temaBtn2" title="Görünüm: Standart / Cyberpunk / LED">🎨 <span class="lbl">Görünüm</span></button>
-      <button class="btn small notif-top" id="notifBtn2" hidden>🔕 <span class="lbl">Bildirim</span></button>
-      <button class="btn small" id="radioOpenBtn" title="Odadaki herkes için radyo aç">📻 <span class="lbl">Radyo</span></button>
-      <button class="btn small" id="radioFavBtn" title="Favori radyoların" hidden>⭐ <span class="lbl">Favorilerim</span></button>
+      <button class="btn small" id="mixerBtn2" data-k="Ses ayarı">🎚 <span class="lbl">Sesleri ayarla</span></button>
+      <button class="btn small" id="profilBtn2" data-k="Profil" title="Profilim">👤 <span class="lbl">Profil</span></button>
+      <button class="btn small" id="temaBtn2" data-k="Görünüm" title="Görünüm: Standart / Cyberpunk / LED">🎨 <span class="lbl">Görünüm</span></button>
+      <button class="btn small notif-top" id="notifBtn2" data-k="Bildirim" hidden>🔕 <span class="lbl">Bildirim</span></button>
+      <button class="btn small" id="radioOpenBtn" data-k="Radyo" title="Odadaki herkes için radyo aç">📻 <span class="lbl">Radyo</span></button>
+      <button class="btn small" id="radioFavBtn" data-k="Favori" title="Favori radyoların" hidden>⭐ <span class="lbl">Favorilerim</span></button>
       <div class="radio-chip" id="radioChip" hidden>
         <span class="rc-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
         <button class="rc-name" id="rcChange" title="İstasyon değiştir"><span id="rcName"></span></button>
@@ -139,6 +141,7 @@
       </div>
     </div>
     <div class="codebox">
+      <span class="top-saat hide-mobile" title="Saat ve tarih"><b></b><small></small></span>
       <span class="tag hide-mobile">Oda kodu</span>
       <b id="roomCode">-----</b>
       <button class="btn small" id="copyBtn">Daveti kopyala</button>
@@ -196,17 +199,17 @@
   </div>
 
   <footer class="bar">
-    <button class="btn on" id="micBtn" title="Mikrofonu aç/kapat">🎙 <span class="lbl">Mikrofon açık</span></button>
-    <button class="btn" id="deafBtn" title="Herkesi sustur">🔊 <span class="lbl">Sesler açık</span></button>
-    <button class="btn" id="shareBtn">🖥 <span class="lbl">Ekran paylaş</span></button>
+    <button class="btn on" id="micBtn" data-k="Mikrofon" title="Mikrofonu aç/kapat">🎙 <span class="lbl">Mikrofon açık</span></button>
+    <button class="btn" id="deafBtn" data-k="Sesler" title="Herkesi sustur">🔊 <span class="lbl">Sesler açık</span></button>
+    <button class="btn" id="shareBtn" data-k="Ekran">🖥 <span class="lbl">Ekran paylaş</span></button>
     <div class="react-wrap">
-      <button class="btn" id="reactBtn" aria-expanded="false">😀 <span class="lbl">Tepki</span></button>
+      <button class="btn" id="reactBtn" data-k="Tepki" aria-expanded="false">😀 <span class="lbl">Tepki</span></button>
       <div class="emoji-pop" id="emojiPop" hidden></div>
     </div>
-    <button class="btn" id="sakaBtn" title="Arkadaşlarına domates at, komik ses çal">🎭 <span class="lbl">Şaka</span></button>
-    <button class="btn" id="chatBtn">💬 <span class="lbl">Sohbet</span><b class="badge-count" id="chatBadge" hidden>0</b></button>
+    <button class="btn" id="sakaBtn" data-k="Şaka" title="Arkadaşlarına domates at, komik ses çal">🎭 <span class="lbl">Şaka</span></button>
+    <button class="btn" id="chatBtn" data-k="Sohbet">💬 <span class="lbl">Sohbet</span><b class="badge-count" id="chatBadge" hidden>0</b></button>
     <button class="btn hide-mobile" id="mixerBtn">🎚 <span class="lbl">Ses mikseri</span></button>
-    <button class="btn" id="micTestBtn" title="Mikrofon testi">🎧 <span class="lbl">Mikrofon testi</span></button>
+    <button class="btn" id="micTestBtn" data-k="Test" title="Mikrofon testi">🎧 <span class="lbl">Mikrofon testi</span></button>
     <div class="vol hide-mobile">
       <span>Genel ses</span>
       <input type="range" id="masterVol" min="0" max="100" value="100" aria-label="Genel ses">
@@ -295,6 +298,10 @@
       <div class="tema-row" id="havaAyar"><span>Yoğunluk</span><input type="range" id="havaYog" min="0.2" max="1" step="0.1" aria-label="Hava yoğunluğu"><button type="button" class="btn small" id="havaTemizle">🧹 Temizle</button></div>
     </div>
     <div class="tema-led">
+      <div class="tema-row"><span>✨ Kartım</span><small class="note">Odadaki herkes seni böyle görür</small></div>
+      <div id="stilPicker" class="stil-picker"></div>
+    </div>
+    <div class="tema-led">
       <div class="tema-row"><span>🎭 Şakalar</span><label class="saka-ayar"><input type="checkbox" id="sakaAcik" checked> Yöneticinin şakaları (domates, korku…) ekranımda çıksın</label></div>
     </div>
     <div class="row"><button class="btn small" id="temaReset" style="flex:0 0 auto">Varsayılana dön</button><p class="note" style="flex:1 1 200px;align-self:center">Görünüm sadece senin ekranını değiştirir.</p></div>
@@ -336,6 +343,7 @@
 <dialog id="micDlg" aria-labelledby="micDlgTitle">
   <div class="dlg-head"><h3 id="micDlgTitle">Mikrofon testi</h3><button class="btn small" data-close>Kapat</button></div>
   <div class="dlg-body" id="micDlgBody"></div>
+  <div class="dlg-body vfx-bolum"><h4>🎤 Ses değiştirici</h4><div class="vfx-kutu"></div></div>
 </dialog>
 
 <dialog id="radioDlg" aria-labelledby="radioTitle" class="wide">
@@ -397,15 +405,20 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/util.js"></script>
+<script src="js/hareket.js"></script>
 <script src="js/backgrounds.js"></script>
 <script src="js/hava.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/audio.js"></script>
+<script src="js/sesdegis.js"></script>
 <script src="js/net.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/account.js"></script>
+<script src="js/stil.js"></script>
+<script src="js/baglanti.js"></script>
 <script src="js/screen.js"></script>
 <script src="js/chat.js"></script>
+<script src="js/etiket.js"></script>
 <script src="js/music.js"></script>
 <script src="js/film.js"></script>
 <script src="js/library.js"></script>

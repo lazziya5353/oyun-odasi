@@ -41,6 +41,7 @@ function waitForVideoTrack(cap, ms){
   });
 }
 async function startFilmFile(file){
+  if (typeof hareket === 'function' && file) hareket('film', 'film yayını: ' + String(file.name || '').replace(/\.[^.]+$/, ''));
   if (!canCapture()){ toast('Bu tarayıcı dosyadan yayını desteklemiyor. Chrome ya da Edge kullan.'); return; }
   ensureCtx();
   toast('🎬 Film hazırlanıyor…');

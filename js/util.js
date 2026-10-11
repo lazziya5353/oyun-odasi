@@ -46,3 +46,15 @@ function trYonelme(ad){
   const l = ad.toLocaleLowerCase('tr-TR'), v = (l.match(/[aeıioöuü](?=[^aeıioöuü]*$)/) || ['e'])[0];
   return ad + '\'' + (/[aeıioöuü]$/.test(l) ? 'y' : '') + ('aıou'.includes(v) ? 'a' : 'e');
 }
+
+// üst şeritteki saat ve tarih (her 10 sn)
+(function topSaat(){
+  const fT = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  const fD = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', weekday: 'short' });
+  const tick = () => {
+    const now = new Date(), t = fT.format(now), d = fD.format(now);
+    document.querySelectorAll('.top-saat').forEach(el => { el.querySelector('b').textContent = t; el.querySelector('small').textContent = d; el.title = new Intl.DateTimeFormat('tr-TR', { dateStyle: 'full', timeStyle: 'short' }).format(now); });
+  };
+  const start = () => { tick(); setInterval(tick, 10000); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();

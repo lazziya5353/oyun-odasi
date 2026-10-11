@@ -30,6 +30,7 @@ const mySeat = sum => sum ? sum.seats.findIndex(x => x && !x.bot && x.id === (pe
 // ---------- masa aç ----------
 function createTable(game, opts){
   if (!GAME_INFO[game]) return;
+  if (typeof hareket === 'function') hareket('oyun', (GAME_INFO[game].name || game) + ' masası açtı');
   const id = 't' + rid() + rid();
   const sum = {
     id, game, opts: cleanOpts(game, opts), owner: peer.id, ownerName: myName,

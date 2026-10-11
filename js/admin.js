@@ -86,6 +86,7 @@ async function loadTab(){
   if (tab === 'muzik') await loadMuzik();
   if (tab === 'skor') await loadSkor();
   if (tab === 'ayar') await loadGunluk();
+  if (tab === 'hareket' || tab === 'genel') await loadHareket();
 }
 // arka plan kontrolü: sadece değişiklik varsa çiz; yazı yazarken / düzenlerken asla
 async function poll(){
@@ -94,6 +95,7 @@ async function poll(){
     renderTabs();
     const busy = editing || (document.activeElement && document.activeElement.matches('#list input, #list textarea, #list select'));
     if (changed && !busy && (tab === 'genel' || USER_TABS.includes(tab))) renderList();
+    if (tab === 'hareket' && !busy){ const old = hk.sig; await loadHareket(); if (hk.sig !== old) renderList(); }
   } catch(e){}
 }
 
@@ -101,7 +103,7 @@ async function poll(){
 function counts(){ const c = { bekliyor: 0, onayli: 0, askida: 0, red: 0 }; users.forEach(u => { c[u.durum] = (c[u.durum] || 0) + 1; }); return c; }
 function renderTabs(){
   const c = counts();
-  const defs = [['genel', '📊 Genel'], ['bekliyor', '⏳ Onay bekleyen (' + c.bekliyor + ')'], ['onayli', '✅ Üyeler (' + c.onayli + ')']];
+  const defs = [['genel', '📊 Genel'], ['hareket', '📋 Hareketler'], ['bekliyor', '⏳ Onay bekleyen (' + c.bekliyor + ')'], ['onayli', '✅ Üyeler (' + c.onayli + ')']];
   if (c.askida || tab === 'askida') defs.push(['askida', '⏸ Durdurulan (' + c.askida + ')']);
   defs.push(['red', '✗ Reddedilen (' + c.red + ')'], ['saka', '🎭 Şaka'], ['bildirim', '🔔 Bildirimler'], ['skor', '🏆 Skorlar'], ['muzik', '🎵 Müzik'], ['ayar', '⚙️ Ayarlar']);
   const s = JSON.stringify(defs) + tab;
@@ -129,6 +131,7 @@ function renderList(){
   else if (tab === 'skor') renderSkor(list);
   else if (tab === 'muzik') renderMuzik(list);
   else if (tab === 'ayar') renderAyar(list);
+  else if (tab === 'hareket') renderHareket(list);
   fresh.clear();
 }
 
@@ -170,6 +173,12 @@ function renderGenel(list){
   rooms.slice(0, 8).forEach(g => { const r = el('div', 'ad-mini'); r.append(el('span', '', g.by + ' · ' + g.code), el('span', 'ad-muted', ago(g.at) + ' · ' + g.sent + '/' + g.total + ' bildirim')); rm.append(r); });
   cols.append(seen, rm);
   list.append(cols);
+  if (hk.liste && hk.liste.length){
+    const hb = el('div', 'ad-box'); hb.append(el('h3', '', '📋 Son hareketler'));
+    hk.liste.slice(0, 8).forEach(x => hb.append(hareketSatir(x)));
+    hb.append(button('Tümünü gör', '', () => go('hareket')));
+    list.append(hb);
+  }
   if (gunluk && gunluk.hataliDeneme >= 3) list.append(note('⚠️ Son 24 saatte ' + gunluk.hataliDeneme + ' kez yanlış yönetici şifresi denendi.', 'err'));
 }
 
@@ -362,6 +371,51 @@ function renderMuzik(list){
     r.append(ren, dangerBtn('🗑', async () => { try { await req('/api/muzik/admin-sarki-sil', { id: s.id }); toast('Şarkı silindi'); await loadMuzik(); renderList(); } catch(e){ toast(e.message); } }));
     box.append(r);
   });
+  list.append(box);
+}
+
+// ---------- kullanıcı hareketleri ----------
+const hk = { liste: null, sig: '', kisi: '', tur: '' };
+const HK_TUR = { giris: ['🚪', 'Giriş'], cikis: ['👋', 'Çıkış'], oda: ['🏠', 'Oda açtı'], etiket: ['📣', 'Etiket'], saka: ['🍅', 'Şaka'], replik: ['🎬', 'Replik'], oyun: ['🎲', 'Oyun'], muzik: ['🎵', 'Müzik'], radyo: ['📻', 'Radyo'], ses: ['🎤', 'Ses efekti'], film: ['🎞️', 'Film'], ekran: ['🖥', 'Ekran'] };
+const HK_CIHAZ = { mobil: ['📱', 'Telefondan'], tablet: ['📲', 'Tabletten'], pc: ['💻', 'Bilgisayardan'] };
+async function loadHareket(){
+  try { const d = await req('/api/hareket/admin-liste'); hk.liste = d.liste || []; hk.sig = hk.liste.length + ':' + (hk.liste[0] ? hk.liste[0].ts : 0); } catch(e){ hk.liste = hk.liste || []; }
+}
+function hareketSatir(x){
+  const r = el('div', 'hk-satir');
+  const c = HK_CIHAZ[x.cihaz] || HK_CIHAZ.pc, t = HK_TUR[x.tur] || ['•', x.tur];
+  const cih = el('span', 'hk-cihaz', c[0]); cih.title = c[1];
+  const ad = el('b', 'hk-ad', x.ad + (x.uye ? ' ✓' : ''));
+  const ne = el('span', 'hk-metin', t[0] + ' ' + x.metin);
+  const ek = el('span', 'ad-muted', (x.oda ? x.oda + ' · ' : '') + ago(x.ts)); ek.title = fmt(x.ts);
+  r.append(cih, ad, ne, ek);
+  return r;
+}
+function renderHareket(list){
+  const all = hk.liste || [];
+  const bar = el('div', 'u-acts start');
+  const ks = el('select'); ks.className = 'inp';
+  [''].concat([...new Set(all.map(x => x.ad))].sort((a, b) => a.localeCompare(b, 'tr'))).forEach(n => { const o = el('option', '', n || '👥 Herkes'); o.value = n; o.selected = hk.kisi === n; ks.append(o); });
+  ks.onchange = () => { hk.kisi = ks.value; renderList(); };
+  const ts = el('select'); ts.className = 'inp';
+  [['', 'Tüm hareketler']].concat(Object.entries(HK_TUR).map(([k, v]) => [k, v[0] + ' ' + v[1]])).forEach(([k, n]) => { const o = el('option', '', n); o.value = k; o.selected = hk.tur === k; ts.append(o); });
+  ts.onchange = () => { hk.tur = ts.value; renderList(); };
+  bar.append(ks, ts, button('🔄 Yenile', '', async () => { await loadHareket(); renderList(); }));
+  bar.append(dangerBtn('🧹 Temizle', async () => { try { await req('/api/hareket/admin-temizle', {}); toast('Hareket geçmişi temizlendi'); await loadHareket(); renderList(); } catch(e){ toast(e.message); } }));
+  list.append(bar);
+  const shown = all.filter(x => (!hk.kisi || x.ad === hk.kisi) && (!hk.tur || x.tur === hk.tur));
+  // kim nereden: son görülen cihaz
+  const son = {};
+  all.forEach(x => { if (!son[x.ad]) son[x.ad] = x; });
+  const ozet = el('div', 'ad-box'); ozet.append(el('h3', '', '👥 Kim nereden girdi (son durum)'));
+  const og = el('div', 'hk-ozet');
+  Object.values(son).slice(0, 30).forEach(x => { const c = HK_CIHAZ[x.cihaz] || HK_CIHAZ.pc; const s = el('span', 'hk-chip', c[0] + ' ' + x.ad + (x.uye ? ' ✓' : '')); s.title = c[1] + ' · ' + ago(x.ts); og.append(s); });
+  if (!og.children.length) og.append(note('Henüz kayıt yok. Biri odaya girince burada görünür.'));
+  ozet.append(og); list.append(ozet);
+  const box = el('div', 'ad-box'); box.append(el('h3', '', '📋 Son hareketler (' + shown.length + ')'));
+  if (!shown.length) box.append(note('Kayıt yok.'));
+  shown.slice(0, 300).forEach(x => box.append(hareketSatir(x)));
+  box.append(note('Son 500 hareket saklanır. Liste bu sekme açıkken birkaç saniyede bir yenilenir.'));
   list.append(box);
 }
 
