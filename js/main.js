@@ -118,3 +118,15 @@ try {
     $('lobbyErr').textContent = 'Oda sahibi seni odadan çıkardı.';
   }
 } catch(e){}
+
+// telefon uykudan dönüp odada tek kaldıysa sayfa yenilenir ve odaya kendiliğinden geri girilir
+try {
+  const oto = sessionStorage.getItem('oyunodasi-otodon');
+  if (oto){
+    sessionStorage.removeItem('oyunodasi-otodon');
+    const r = lastRoom();
+    if (r && r.code === oto && (store.get('oyunodasi-name') || (typeof account !== 'undefined' && account))){
+      setTimeout(() => { if (!joined && !$('rejoin').hidden && !$('rejoinBtn').disabled) $('rejoinBtn').click(); }, 600);
+    }
+  }
+} catch(e){}

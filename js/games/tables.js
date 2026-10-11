@@ -325,7 +325,14 @@ function notifyTurn(d){
   }
 }
 // yeni gelen birine benim masalarımın özetini gönder
-function gamesOnHello(p){ owned.forEach(o => send(p.conn, { t: 'tb-sum', sum: o.sum })); }
+function gamesOnHello(p){
+  owned.forEach(o => {
+    send(p.conn, { t: 'tb-sum', sum: o.sum });
+    // bağlantısı kopup geri gelen oyuncuya oyunun son hâli hemen gitsin
+    const k = o.sum.seats.findIndex(x => x && !x.bot && x.id === p.id);
+    if (o.state && (k >= 0 || o.watchers.has(p.id))) setTimeout(() => { try { sendViews(o); } catch(e){} }, 400);
+  });
+}
 // biri ayrıldı: sahibi olduğu masalar kapanır; oturduğu koltuğa bot geçer
 function gamesPeerLeft(id){
   tables.forEach((s, tid) => {
@@ -399,6 +406,7 @@ function renderGameDeck(d){
   Object.keys(TABLE_GAMES).forEach(id => {
     const g = TABLE_GAMES[id];
     if (g.makeCard) card(g.icon, g.name, g.makeCard.desc, g.makeCard.opts, c => createTable(id, g.makeCard.read(c)));
+    if (g.yeni && make.lastChild){ make.lastChild.classList.add('yeni-oyun'); make.prepend(make.lastChild); }
   });
   d.append(make);
   const vsel = make.querySelector('[data-o=variant]');

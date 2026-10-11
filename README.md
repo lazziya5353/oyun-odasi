@@ -105,6 +105,21 @@ Netlify'da `ADMIN_SIFRE` ortam değişkeni tanımlıysa şifre oradan gelir ve p
 `netlify/functions/skor.mjs` tekli oyunların sonuçlarını Netlify Blobs'ta saklar (her isim için en iyi sonuç, ilk 100).
 Giriş sistemi olmadığı için isimler yazılan ada göre tutulur.
 
+## Bağlantı kopmaları (telefon)
+- Odadayken telefonun ekranı kararmaz (Wake Lock); ekran kararınca tarayıcı sayfayı uyutup bağlantıyı koparıyordu.
+- Geçici kopmalarda ("disconnected") 30 sn beklenir; kopan kişiyle 2 dk boyunca arka planda yeniden bağlanılır, oyundaki yeri 75 sn korunur.
+- Bilerek çıkan "hoşça kal" (bye) gönderir; o zaman beklenmez.
+- Telefon uykudan dönüp odada tek kaldıysa sayfa yenilenir ve odaya kendiliğinden girilir.
+
+## 🧛 Vampir Köy (Among Us tarzı)
+Oyun Salonu → Vampir Köy → "Masa aç". 3-10 kişi; masa sahibi "Oyunu başlat"a basınca roller gizlice dağıtılır.
+- **Köylüler** haritada dolaşıp görev yapar (kuyu, odun, inek, fener kabloları, ekmek, kılıç, tohum, şifre). Görev çubuğu dolarsa köylüler kazanır.
+- **Vampir** yanındakini 🩸 ısırır (Q), mezarlardan 🪦 gizlice geçer (V), fenerleri 🌑 söndürür (F; meydandaki 🔌 şalterden onarılır).
+- Ceset görünce 📢 **Bildir** (R) ya da meydandaki 🔔 **çan** (E) → toplantı: konuşma + oylama, en çok oy alan köyden kovulur.
+- Hareket: WASD / ok tuşları, telefonda joystick. Ölenler hayalet olur (duvarlardan geçer, görev yapabilir, yaşayanlar onları duymaz).
+- Ayarlar: vampir sayısı, görev sayısı, ısırma bekleme süresi, vampir başı en fazla kurban, oyun süresi, konuşma/oylama süresi, acil çan hakkı, hız, görüş, ses modu (herkes / yakınlık / sadece toplantı), rol açıklama, sabotaj.
+- Dosyalar: `js/games/vampir.js` (harita + kurallar, hakem masa sahibi), `js/games/vampir-ui.js` (ekran, görevler), `css/g-vampir.css`.
+
 ## Kişisel stil, ses değiştirici, etiketler
 - **✨ Kartım** (Görünüm penceresi): kart rengi (fosforlu renkler veya özel renk), hareketli renk (gökkuşağı, cyberpunk, LED, nabız) ve isim efekti (gökkuşağı, neon, ateş, altın, glitch, buz). Ücretsiz; odadaki herkes öyle görür.
 - **🎤 Ses değiştirici**: Şaka paneli → "🎤 Sesim" ya da Mikrofon testi penceresi. Robot, sincap, helyum, dev, uzaylı, mağara, stadyum, telefon, telsiz, megafon, keçi, sarhoş, kedi…

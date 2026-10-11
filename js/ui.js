@@ -326,7 +326,9 @@ function refreshHostUI(){
 
 // ---------- ses ayarları ----------
 function applyVolume(p){
-  if (p.audio){ p.audio.volume = Math.min(1, p.vol * masterVol); p.audio.muted = deafened || p.localMuted || !sameChan(p); }
+  // oyun kuralı (Vampir Köy: yaşayanlar ölüleri duymaz, yakınlık sesi…)
+  const oc = typeof oyunSesCarpani === 'function' ? oyunSesCarpani(p.id) : 1;
+  if (p.audio){ p.audio.volume = Math.min(1, p.vol * masterVol * oc); p.audio.muted = deafened || p.localMuted || !sameChan(p) || oc <= 0; }
   if (p.tile){ const v = p.tile.querySelector('video'); if (v){ v.volume = Math.min(1, p.screenVol * masterVol); v.muted = deafened; } }
 }
 const applyAll = () => { peers.forEach(applyVolume); applyMusicVolume(); };

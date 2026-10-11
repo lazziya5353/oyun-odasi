@@ -123,9 +123,43 @@ function sakaOnData(id, d){
   return true;
 }
 let sakaLast = 0;
-const sakaBekleyen = [];
+const sakaBekleyen = [], kacirilan = [];
+// sekme arka plandayken: bildirim + sekme başlığı yanıp söner
+let baslikT = null, eskiBaslik = '';
+function arkaHaber(baslik, govde, ikon){
+  try {
+    if ('Notification' in window && Notification.permission === 'granted'){
+      const o = { body: govde, icon: 'icons/icon-192.png', badge: 'icons/badge-96.png', tag: 'oyunodasi-saka', renotify: true, data: { url: '/?oda=' + (typeof roomCode !== 'undefined' ? roomCode : '') } };
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r => r.showNotification(baslik, o)).catch(() => {});
+      else new Notification(baslik, o);
+    }
+  } catch(e){}
+  if (!baslikT){
+    eskiBaslik = document.title; let k = 0;
+    baslikT = setInterval(() => { document.title = (k++ % 2) ? eskiBaslik : (ikon || '🎭') + ' ' + (ikon === '🎬' ? 'Replik geldi!' : 'Sana şaka yapıldı!'); }, 1000);
+  }
+}
+function kacirilanGoster(){
+  const x = kacirilan.splice(0).slice(-3); if (!x.length) return;
+  let k = document.getElementById('sakaKacan');
+  if (k) k.remove();
+  k = document.createElement('div'); k.id = 'sakaKacan'; k.className = 'saka-kacan';
+  x.forEach(it => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn small';
+    b.textContent = '▶ ' + replikAd(it.r) + ' · ' + it.kimden;
+    b.onclick = () => { b.remove(); if (!k.querySelector('button.btn.small:not(.kapat)')) k.remove(); playSaka('replik', '', it.r, it.kimden); };
+    k.append(b);
+  });
+  const t = document.createElement('span'); t.textContent = '🎬 Sen yokken gelen replik:'; k.prepend(t);
+  const c = document.createElement('button'); c.type = 'button'; c.className = 'btn small kapat'; c.textContent = '✕'; c.onclick = () => k.remove(); k.append(c);
+  document.body.append(k);
+  setTimeout(() => { if (k.isConnected) k.remove(); }, 20000);
+}
 document.addEventListener('visibilitychange', async () => {
-  if (document.hidden || !sakaBekleyen.length) return;
+  if (document.hidden) return;
+  if (baslikT){ clearInterval(baslikT); baslikT = null; document.title = eskiBaslik; }
+  setTimeout(kacirilanGoster, 300);
+  if (!sakaBekleyen.length) return;
   const list = sakaBekleyen.splice(0).filter(x => Date.now() - x.at < 10 * 60e3);
   if (!list.length) return;
   await new Promise(r => setTimeout(r, 400));
@@ -152,8 +186,19 @@ function sakaShow(d, kimden, fromId){
   if (now - sakaLast < 600) return;
   sakaLast = now;
   if (!sakaAcik()){ toast(s.ikon + ' ' + (kimden || 'Yönetici') + ' sana ' + s.fiil + (d.m ? ': “' + d.m + '”' : '') + ' (şaka efektlerin kapalı)'); return; }
-  // sekme arka plandaysa tarayıcı animasyonları dondurur: şakayı beklet, sekmeye dönünce oynat
-  if (document.hidden){ if (sakaBekleyen.length < 3) sakaBekleyen.push({ e: d.e, m: d.m, r: d.r, kimden: kimden || 'Yönetici', at: now }); return; }
+  if (document.hidden){
+    const kim = kimden || 'Yönetici';
+    arkaHaber(s.ikon + ' ' + kim + ' sana ' + (d.e === 'replik' ? '“' + replikAd(d.r) + '” repliğini attı' : s.fiil),
+      d.e === 'mesaj' && d.m ? '“' + d.m + '”' : d.e === 'replik' ? 'Sesi geliyor, görmek için sekmeye dön.' : 'Görmek için sekmeye dön.', s.ikon);
+    // replik ve komik sesler arka planda da hemen çalar (ses duyulur); bittiyse dönünce "tekrar izle" çıkar
+    if (d.e === 'replik' || s.tur === 'ses'){
+      Promise.resolve(playSaka(d.e, d.m, d.r, kim)).then(() => { if (d.e === 'replik' && document.hidden) kacirilan.push({ r: d.r, kimden: kim }); });
+      return;
+    }
+    // görsel şakalar: tarayıcı arka plandaki animasyonları dondurur, sekmeye dönünce oynar
+    if (sakaBekleyen.length < 3) sakaBekleyen.push({ e: d.e, m: d.m, r: d.r, kimden: kim, at: now });
+    return;
+  }
   playSaka(d.e, d.m, d.r, kimden || 'Yönetici');
 }
 
@@ -577,7 +622,10 @@ function replikOynat(dosya, kimden){
     cap.append(Object.assign(document.createElement('b'), { textContent: '🎬 ' + replikAd(dosya) }), Object.assign(document.createElement('span'), { textContent: kimden ? kimden + ' gönderdi' : '' }));
     box.append(v, cap);
     let done = false;
-    const bitir = () => { if (done) return; done = true; clearTimeout(maxT); clearTimeout(loadT); box.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(.85)', opacity: 0 }], { duration: 300, fill: 'forwards' }).onfinish = () => { v.removeAttribute('src'); v.load(); box.remove(); res(); }; };
+    const bitir = () => { if (done) return; done = true; clearTimeout(maxT); clearTimeout(loadT);
+      // arka plandaki sekmede animasyon bitişi gelmeyebilir: hemen kaldır
+      if (document.hidden){ v.removeAttribute('src'); v.load(); box.remove(); res(); return; }
+      box.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(.85)', opacity: 0 }], { duration: 300, fill: 'forwards' }).onfinish = () => { v.removeAttribute('src'); v.load(); box.remove(); res(); }; };
     const maxT = setTimeout(bitir, 45000);
     const loadT = setTimeout(() => { if (v.readyState < 3) bitir(); }, 12000);     // yüklenemezse takılı kalmasın
     v.addEventListener('ended', bitir); v.addEventListener('error', bitir);

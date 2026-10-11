@@ -71,3 +71,7 @@
 .vfx-sec.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,var(--panel-2));box-shadow:0 0 0 1px var(--accent)}
 .vfx-dinle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
 .pill.vfx{background:color-mix(in srgb,#b18cff 22%,transparent);color:#d9c8ff}
+.saka-kacan{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:9500;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:center;
+  background:var(--panel,#1b1f2a);border:1px solid var(--line,#333);border-radius:14px;padding:8px 12px;box-shadow:0 10px 30px rgba(0,0,0,.45);max-width:92vw;animation:sakaKacan .35s ease}
+.saka-kacan span{font-weight:700;font-size:13px}
+@keyframes sakaKacan{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}

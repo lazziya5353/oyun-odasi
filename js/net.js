@@ -329,6 +329,7 @@ function enterRoom(){
   playRadio(); renderRadioChip();   // girerken çalan bir radyo varsa hemen başlasın
   startMeters();
   addSys('Odaya girdin. Kod: ' + roomCode);
+  ekranAcikTut();
 }
 
 // ---------- kişiler ----------
@@ -360,7 +361,15 @@ function handleConn(conn){
   if (conn.metadata && conn.metadata.saka){ if (typeof sakaAdminConn === 'function') sakaAdminConn(conn); else try { conn.close(); } catch(e){} return; }
   if (blocked.has(conn.peer)){ try { conn.close(); } catch(e){} return; }
   const p = getPeer(conn.peer);
+  if (p.conn && p.conn !== conn){
+    // telefon uykudan döndü / ağ değişti: eski bağlantı ölü, sesi yeniden kur
+    const eski = p.conn; eski._eskidi = true;
+    try { eski.close(); } catch(e){}
+    ['micCall', 'screenCall', 'musicCall'].forEach(k => { try { p[k] && p[k].close(); } catch(e){} p[k] = null; });
+    p.micStream = null; p.linked = false;
+  }
   p.conn = conn;
+  if (typeof kayiplar !== 'undefined' && kayiplar.has(conn.peer)){ p._geri = true; kayiplar.delete(conn.peer); }
   // gelen bağlantıda karşı tarafın adı hemen bellidir; giden bağlantıda adı "hello" ile öğreniriz
   if (!p.outgoing && conn.metadata && conn.metadata.name) p.name = clip(conn.metadata.name, 20);
   if (!p.outgoing) renderPeer(p);
@@ -397,7 +406,7 @@ function handleConn(conn){
     renderPeer(p);
   });
   conn.on('data', d => onData(conn.peer, d));
-  conn.on('close', () => removePeer(conn.peer));
+  conn.on('close', () => { if (conn._eskidi) return; const cur = peers.get(conn.peer); if (cur && cur.conn && cur.conn !== conn) return; removePeer(conn.peer); });
   conn.on('error', () => {});
 }
 
@@ -414,9 +423,11 @@ setInterval(() => {
     if (!p.linked) return;
     const pc = p.conn && p.conn.peerConnection;
     const st = pc ? (pc.connectionState || pc.iceConnectionState) : '';
-    if (st === 'disconnected' || st === 'failed' || st === 'closed'){ p.badSince = p.badSince || now; }
-    else p.badSince = 0;
-    const dead = (p.badSince && now - p.badSince > 8000) || (p.lastSeen && now - p.lastSeen > 90000);
+    if (st === 'disconnected' || st === 'failed' || st === 'closed'){ p.badSince = p.badSince || now; p.badKind = st; }
+    else { p.badSince = 0; p.badKind = ''; }
+    // "disconnected" çoğu zaman geçicidir (telefon ekranı kararması, wifi→4G): 30 sn bekle; "failed/closed" 12 sn
+    const sabir = p.badKind === 'disconnected' ? 30000 : 12000;
+    const dead = (p.badSince && now - p.badSince > sabir) || (p.lastSeen && now - p.lastSeen > 90000);
     if (dead){ try { p.conn && p.conn.close(); } catch(e){} removePeer(p.id); }
   });
 }, 2000);
@@ -427,6 +438,7 @@ function onData(id, d){
   p.lastSeen = Date.now();
   switch (d.t){
     case 'ping': return;
+    case 'bye': p.bye = true; return;
     case 'hello': {
       p.name = clip(d.name || 'Oyuncu', 20) || 'Oyuncu';
       p.muted = !!d.muted; p.noMic = !!d.noMic; p.sharing = !!d.sharing;
@@ -437,9 +449,10 @@ function onData(id, d){
       if (p.stil) p.color = colorFor(p.id);
       if (!p.helloed){
         p.helloed = true;
+        const geri = kayipGeriDondu(p.id) || !!p._geri; p._geri = false;
         gamesOnHello(p);
-        toast(p.name + ' odaya katıldı'); chime(true);
-        addSys(p.name + ' odaya katıldı');
+        if (geri){ toast('🔄 ' + p.name + ' geri bağlandı'); chime(true); addSys(p.name + ' geri bağlandı'); }
+        else { toast(p.name + ' odaya katıldı'); chime(true); addSys(p.name + ' odaya katıldı'); }
       }
       afterPeerStateChange(p);
       return;
@@ -610,6 +623,8 @@ function updateRouting(){
 // ---------- ayrılma ----------
 function removePeer(id, opts = {}){
   const p = peers.get(id); if (!p) return;
+  // istemeden kopma (sayfa uyudu, ağ gitti): oyundaki yeri ve masası bir süre korunur, arka planda yeniden bağlanılır
+  const kayip = joined && !opts.silent && !opts.deneme && p.helloed && !p.bye && !p.kicked && !p.lobby;
   clearTimeout(p.linkTimer);
   ['micCall', 'screenCall', 'musicCall'].forEach(k => { try { p[k] && p[k].close(); } catch(e){} });
   if (outScreen.has(id)){ try { outScreen.get(id).close(); } catch(e){} outScreen.delete(id); }
@@ -622,16 +637,75 @@ function removePeer(id, opts = {}){
   if (isHost) delete colorMap[id];
   leaveTile(card);
   const wasHost = id === currentHostId && !p.lobby;
-  if (!opts.silent && p.helloed){
+  if (opts.deneme){ updateCount(); renderMixer(); renderChannels(); return; }
+  if (kayip){
+    kayiplar.set(id, { name: p.name, ts: Date.now() });
+    toast('📶 ' + p.name + '’in bağlantısı koptu, tekrar bağlanılıyor…');
+    addSys(p.name + '’in bağlantısı koptu');
+  } else if (!opts.silent && p.helloed){
     toast(p.name + (p.kicked ? ' odadan çıkarıldı' : ' ayrıldı')); chime(false);
     addSys(p.name + (p.kicked ? ' odadan çıkarıldı' : ' ayrıldı'));
   }
   musicPeerLeft(id);
   chatPeerLeft(id);
-  gamesPeerLeft(id);
+  if (kayip){
+    // oyundaki yer 75 sn korunur; geri dönmezse masadan kalkar
+    setTimeout(() => { const q = peers.get(id); if (!q || !q.linked){ gamesPeerLeft(id); if (kayiplar.has(id)) addSys(p.name + ' geri dönmedi'); } }, 75000);
+  } else gamesPeerLeft(id);
   updateCount(); renderMixer(); renderChannels();
-  if (wasHost && joined && !p.kicked) migrateHost(p.name);
+  if (wasHost && joined && !p.kicked){
+    if (kayip) setTimeout(() => { const q = peers.get(id); if ((!q || !q.linked) && currentHostId === id) migrateHost(p.name); }, 20000);
+    else migrateHost(p.name);
+  }
 }
+
+// ---------- kopanlara yeniden bağlanma ----------
+// Kopan kişiyle 2 dk boyunca bağlantı yeniden denenir. Çift arama olmasın diye kimliği küçük olan arar,
+// diğeri bekler (gelen bağlantıyı kabul eder).
+const kayiplar = new Map();   // id → { name, ts }
+function kayipGeriDondu(id){ const v = kayiplar.has(id); kayiplar.delete(id); return v; }
+setInterval(() => {
+  if (!joined || !peer || peer.destroyed || peer.disconnected) return;
+  const now = Date.now();
+  kayiplar.forEach((k, id) => {
+    if (now - k.ts > 120000){ kayiplar.delete(id); return; }
+    const q = peers.get(id);
+    if (q && q.linked) { kayiplar.delete(id); return; }
+    if (q && !q.linked && q._deneme && now - q._deneme > 10000){ removePeer(id, { deneme: true }); return; }
+    if (!q && peer.id < id){ connectTo(id); const n = peers.get(id); if (n) n._deneme = now; }
+  });
+}, 4000);
+// sayfayı kapatan/odadan çıkan "hoşça kal" der: onu kopmuş sanıp beklemesinler
+function hoscaKal(){ try { if (joined) broadcast({ t: 'bye' }); } catch(e){} }
+window.addEventListener('pagehide', e => { if (!e.persisted) hoscaKal(); });
+
+// ---------- telefonda ekran açık kalsın (ekran kararınca tarayıcı sayfayı uyutur, bağlantı kopar) ----------
+let ekranKilidi = null;
+async function ekranAcikTut(){
+  try {
+    if (!joined || !('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+    if (!matchMedia('(pointer:coarse)').matches) return;
+    if (ekranKilidi && !ekranKilidi.released) return;
+    ekranKilidi = await navigator.wakeLock.request('screen');
+  } catch(e){}
+}
+// telefon uykudan dönünce: odada kimse kalmadıysa (herkes bizi düşürdüyse) odaya kendiliğinden yeniden gir
+let gizlendi = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden'){ gizlendi = Date.now(); return; }
+  ekranAcikTut();
+  if (!joined || !gizlendi || Date.now() - gizlendi < 8000) return;
+  gizlendi = 0;
+  setTimeout(() => {
+    if (!joined) return;
+    const bagli = [...peers.values()].some(o => o.linked && !o.lobby);
+    if (!bagli && (kayiplar.size || peers.size)){
+      try { sessionStorage.setItem('oyunodasi-otodon', roomCode); } catch(e){}
+      toast('🔄 Bağlantı koptu, odaya yeniden giriliyor…');
+      setTimeout(() => location.reload(), 900);
+    }
+  }, 15000);
+});
 
 // ---------- oda sahibi devri ----------
 // Oda sahibi çıkınca kalanlar arasında kimliği en küçük olan yeni oda sahibi olur (herkes aynı sonucu bulur).
@@ -719,6 +793,7 @@ function closeIfAlone(){
   try { localStorage.removeItem('oyunodasi-chat-' + roomCode); localStorage.removeItem('oyunodasi-chatclr-' + roomCode); } catch(e){}
 }
 function leaveRoom(){
+  hoscaKal();
   if (typeof hareket === 'function' && joined){ hareket('cikis', roomCode + ' odasından çıktı'); hareketGonder(true); }
   closeIfAlone();
   try { lobbyPeer && lobbyPeer.destroy(); } catch(e){}
@@ -726,6 +801,7 @@ function leaveRoom(){
   location.reload();
 }
 window.addEventListener('beforeunload', () => {
+  hoscaKal();
   if (typeof hareket === 'function' && joined){ hareket('cikis', roomCode + ' odasından çıktı (sayfa kapandı)'); hareketGonder(true); }
   closeIfAlone();
   try { lobbyPeer && lobbyPeer.destroy(); } catch(e){}
