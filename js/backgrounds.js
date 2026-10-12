@@ -2988,10 +2988,10 @@ const VIDEO_LISTE = (location.protocol === 'file:' ? Promise.resolve(null) : fet
   const ek = [];
   if (d && Array.isArray(d.kategoriler)) for (const k of d.kategoriler) for (const x of (k.videolar || [])){
     const id = 'v:' + x.dosya, item = { url: yolUrl(x.dosya), poster: x.poster ? yolUrl(x.poster) : null };
-    SCENES[id] = { grup: '🎬 ' + k.ad, name: x.ad, icon: '🎬', desc: 'Video duvar kağıdı (' + k.ad + ')', make: sceneVideo(item), hd: true, video: true };
+    SCENES[id] = { grup: '🎬 ' + k.ad, name: x.ad, icon: x.muzik ? '🎵' : '🎬', desc: 'Video duvar kağıdı (' + k.ad + ')' + (x.muzik ? ' · müziği var' : ''), make: sceneVideo(item), hd: true, video: true, muzik: x.muzik ? yolUrl(x.muzik) : null };
     ek.push(id);
   }
-  if (ek.length) try { window.dispatchEvent(new Event('oyunbg-liste')); } catch(e){}
+  if (ek.length) try { window.dispatchEvent(new Event('oyunbg-liste')); degisti(); } catch(e){}
   return ek;
 });
 
@@ -3067,6 +3067,9 @@ function off(){
   if (st.cv){ st.cv.width = st.cv.height = 1; st.cv.remove(); st.dimEl.remove(); st.cv = st.g = st.dimEl = null; }
   delete document.documentElement.dataset.bg;
 }
+// arka plan değişince haber ver (ör. arka plan müziği düğmesi)
+let sonBildirilen;
+function degisti(){ const id = st.id || null; if (id === sonBildirilen) return; sonBildirilen = id; try { window.dispatchEvent(new CustomEvent('oyunbg-degisti', { detail: { id, muzik: id && SCENES[id] ? SCENES[id].muzik || null : null, ad: id && SCENES[id] ? SCENES[id].name : '' } })); } catch(e){} }
 function save(){ try { localStorage.setItem(LS_KEY, JSON.stringify({ id: st.id, animate: st.animate, dim: st.dim, efekt: st.efekt })); } catch(e){} }
 function saved(){ try { const p = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); return p && typeof p === 'object' ? p : null; } catch(e){ return null; } }
 
@@ -3076,7 +3079,7 @@ function set(id, opts){
   if (opts.efekt && ['kenburns', 'parilti', 'sabit'].includes(opts.efekt) && opts.efekt !== st.efekt){ st.efekt = opts.efekt; if (st.id === 'ozel') st.id = null; }
   if (!id || id === 'yok' || !SCENES[id]){
     if (opts.animate !== undefined) st.animate = !!opts.animate;
-    off(); if (opts.save !== false) save(); return false;
+    off(); if (opts.save !== false) save(); degisti(); return false;
   }
   // animate verilmezse: önceki seçim, yoksa sistemin "hareketi azalt" ayarı (yalnız varsayılan öneri)
   st.animate = opts.animate !== undefined ? !!opts.animate : (st.id ? st.animate : !reduced());
@@ -3086,7 +3089,7 @@ function set(id, opts){
   if (id !== st.id || !st.scene){ if (st.scene && st.scene.kapat) st.scene.kapat(); st.id = id; build(); }
   if (opts.save !== false) save();
   st.drawn = st.drawn && st.animate;
-  schedule();
+  schedule(); degisti();
   return true;
 }
 function thumb(id, cv){
@@ -3121,6 +3124,7 @@ window.OyunBG = {
   hasCustom(){ return loadCustom().then(c => !!c); },
   get efekt(){ return st.efekt; },
   get current(){ return st.id; },
+  get muzik(){ return st.id && SCENES[st.id] ? SCENES[st.id].muzik || null : null; },
   pause(v){ st.paused = !!v; schedule(); },
   restore(){ const p = saved(); if (p && p.efekt) st.efekt = p.efekt; if (p && p.id && SCENES[p.id]) set(p.id, { animate: p.animate, dim: p.dim, save: false }); else if (p){ if (p.dim !== undefined) st.dim = clamp(+p.dim || 0, 0, .8); if (p.animate !== undefined) st.animate = !!p.animate;
     // video duvar kağıdı: liste gelince aç

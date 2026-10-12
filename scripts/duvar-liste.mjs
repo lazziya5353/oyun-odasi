@@ -1,26 +1,28 @@
 // Netlify her yayında bunu çalıştırır: "duvar-kagitlari" klasöründeki videoları bulup duvar-liste.json yazar (site kökünde; önbelleğe alınmaz).
 // Her alt klasör bir kategoridir ("duvar-kagitlari/Manzara/Göl.mp4" → Görünüm'de "🎬 Manzara" altında "Göl").
 // Videoyla aynı adlı bir resim varsa (Göl.jpg) önizleme olarak o kullanılır; yoksa videodan bir kare alınır.
+// Aynı adlı bir müzik varsa (Göl.mp3) o arka plan seçiliyken "🎵 Müziği çal" düğmesi çıkar (sadece basan kişide çalar).
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dir = path.join(root, 'duvar-kagitlari');
-const VIDEO = /\.(mp4|webm|m4v|mov)$/i, RESIM = /\.(jpe?g|png|webp)$/i;
+const VIDEO = /\.(mp4|webm|m4v|mov)$/i, RESIM = /\.(jpe?g|png|webp)$/i, SES = /\.(mp3|m4a|aac|ogg|opus|wav)$/i;
 const MAX = 100 * 1024 * 1024;
 const nfc = s => s.normalize('NFC');
 const adYap = f => nfc(f).replace(VIDEO, '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
 
 function klasor(rel){
   const abs = path.join(dir, rel), dosyalar = fs.readdirSync(abs).filter(f => !f.startsWith('.'));
-  const resimler = dosyalar.filter(f => RESIM.test(f));
+  const resimler = dosyalar.filter(f => RESIM.test(f)), sesler = dosyalar.filter(f => SES.test(f));
   return dosyalar.filter(f => VIDEO.test(f)).map(f => {
     const st = fs.statSync(path.join(abs, f));
     if (!st.isFile() || st.size <= 0 || st.size > MAX) return null;
     const kok = nfc(f).replace(VIDEO, '');
-    const poster = resimler.find(r => nfc(r).replace(RESIM, '') === kok);
-    return { dosya: (rel ? rel + '/' : '') + f, ad: adYap(f), boyut: st.size, poster: poster ? (rel ? rel + '/' : '') + poster : null };
+    const poster = resimler.find(r => nfc(r).replace(RESIM, '') === kok), muzik = sesler.find(r => nfc(r).replace(SES, '') === kok);
+    const yol = x => x ? (rel ? rel + '/' : '') + x : null;
+    return { dosya: yol(f), ad: adYap(f), boyut: st.size, poster: yol(poster), muzik: yol(muzik) };
   }).filter(Boolean).sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
 }
 

@@ -127,6 +127,7 @@
     <span class="top-saat only-mobile" aria-hidden="true"><b></b><small></small></span>
     <div class="top-mid">
       <span class="count-pill" id="peopleTitle">👥 1 kişi</span>
+      <button type="button" class="btn small bg-muzik-m only-mobile" id="bgMuzikBtnM" data-k="Müzik" hidden>🎵 <span class="lbl">Müziği çal</span></button>
       <span class="sig-pill" id="sigStatus" hidden title="Eşleştirme sunucusuna yeniden bağlanılıyor. Odadakilerle konuşma devam ediyor; bu sırada yeni gelenler katılamayabilir.">⟳ <span class="lbl">Sunucuya bağlanıyor</span></span>
       <button class="btn small" id="mixerBtn2" data-k="Ses ayarı">🎚 <span class="lbl">Sesleri ayarla</span></button>
       <button class="btn small" id="profilBtn2" data-k="Profil" title="Profilim">👤 <span class="lbl">Profil</span></button>
@@ -150,7 +151,7 @@
       <span class="tag hide-mobile">Oda kodu</span>
       <b id="roomCode">-----</b>
       <span class="gizli-rozet" id="gizliRozet" hidden title="Gizli oda: kimseye bildirim gitmedi, açık odalarda görünmüyor. Bunu sadece sen görüyorsun.">🔒</span>
-      <button class="btn small" id="copyBtn">Daveti kopyala</button>
+      <span class="davet-kutu"><button class="btn small" id="copyBtn">Daveti kopyala</button><button type="button" class="btn small bg-muzik-btn hide-mobile" id="bgMuzikBtn" hidden>🎵 Müziği çal</button></span>
     </div>
   </header>
 
@@ -352,6 +353,10 @@
       <div class="mix-top"><span class="pname">📻 Radyo</span><span class="mix-sub">odadaki herkes dinler</span></div>
       <div class="vol"><input type="range" id="radioVol2" min="0" max="100" value="50" aria-label="Radyo sesi"><output id="radioOut2">50%</output></div>
     </div>
+    <div class="mix-row" id="bgMuzikMix" hidden>
+      <div class="mix-top"><span class="pname">🎬 Arka plan müziği</span><span class="mix-sub">sadece sen duyarsın</span></div>
+      <div class="vol"><input type="range" id="bgMuzikVol" min="0" max="100" value="50" aria-label="Arka plan müziği sesi"><output id="bgMuzikOut">50%</output></div>
+    </div>
     <div class="mix-row">
       <div class="mix-top"><span class="pname">🎵 Yüklenen müzik</span><span class="mix-sub">Müzik Odası'nda çalar</span></div>
       <div class="vol"><input type="range" id="musicVol2" min="0" max="100" value="70" aria-label="Müzik sesi"><output id="musicOut2">70%</output></div>
@@ -488,5 +493,6 @@
 <script src="js/push.js"></script>
 <script src="js/main.js"></script>
 <script src="js/varlik.js"></script>
+<script src="js/bgmuzik.js"></script>
 </body>
 </html>

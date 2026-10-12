@@ -13,6 +13,9 @@ Bu klasöre attığın videolar sitede **Görünüm → Arka plan** bölümünde
 - Videonun adı listede görünen addır (`Gece göl.mp4` → **Gece göl**).
 - Alt klasöre konmayan videolar **🎬 Diğer** altında çıkar.
 - İstersen videoyla **aynı adlı** bir resim de koy (`Gece göl.jpg`): önizleme o resimden yapılır, Görünüm daha hızlı açılır.
+- **Müzik:** videoyla **aynı adlı** bir müzik koyarsan (`Tek Yüzük.mp3` — .mp3, .m4a, .ogg da olur) o arka plan seçiliyken
+  "Daveti kopyala"nın altında **🎵 Müziği çal** düğmesi çıkar (telefonda üst sırada). Müzik sadece basan kişide çalar, döngüde çalar;
+  ses düzeyi **Sesleri ayarla → 🎬 Arka plan müziği**'nden. Müzik dosyası da 25 MB'tan küçük olmalı (3–4 dk'lık bir mp3 genelde 4–8 MB).
 
 ## Video önerileri
 

@@ -118,7 +118,7 @@ Giriş sistemi olmadığı için isimler yazılan ada göre tutulur.
 
 ## 🎬 Hareketli (video) duvar kağıtları
 - `duvar-kagitlari/` klasörüne kategori klasörleri aç (`Manzara`, `Anime`…) ve videoları içine at (.mp4 / .webm, dosya başına 25 MB altı). Netlify yayınlarken `scripts/duvar-liste.mjs` listeyi (`duvar-liste.json`) çıkarır; videolar Görünüm → Arka plan'da **🎬 Kategori** başlığı altında çıkar.
-- Videoyla aynı adlı resim (`Göl.jpg`) varsa önizleme o olur. Ayrıntılar: `duvar-kagitlari/OKU-BENI.md`.
+- Videoyla aynı adlı resim (`Göl.jpg`) varsa önizleme o olur. Aynı adlı müzik (`Göl.mp3`) varsa o arka plan seçiliyken "Daveti kopyala"nın altında **🎵 Müziği çal** çıkar; sadece basan kişide çalar (`js/bgmuzik.js`). Ayrıntılar: `duvar-kagitlari/OKU-BENI.md`.
 - Video sessiz ve döngüde oynar, tuvale çizilir: karartma, Sabit/Hareketli, dinlenme modu aynen çalışır; arka plan değişince video bırakılır.
 
 ## 🖼 Gerçekçi HD arka planlar
