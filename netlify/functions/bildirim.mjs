@@ -163,6 +163,10 @@ export default async (req, context) => {
     if (islem === 'oda'){
       const code = String(b.code || '');
       if (!/^[A-Z0-9]{3,12}$/.test(code)) return json({ hata: 'kod' }, 400);
+      if (b.gizli) return json({ ok: true, sent: 0, gizli: true });
+      // gizli oda (son 24 saatte gizli açılmış kod): kimseye bildirim gitmez
+      try { const dr = await store('oyunodasi-varlik').get('durum', { type: 'json' }); const o = dr && dr.odalar && dr.odalar[code];
+        if (o && o.gizli && Date.now() - (o.son || 0) < 864e5) return json({ ok: true, sent: 0, gizli: true }); } catch(e){}
       const lim = await allowed(code);
       if (lim) return json({ ok: true, sent: 0, sinir: lim });
       const v = await vapidKeys();

@@ -25,7 +25,7 @@ const DEFAULT_ADMIN = 'c884240bc2367d1eaae80e94dbc4486b663184137bed5899d0a53e610
 
 function pub(u){
   return { id: u.id, kadi: u.kadi, adSoyad: u.adSoyad, name: u.name, durum: u.durum, created: u.created, approvedAt: u.approvedAt || null,
-    foto: u.foto ? '/api/uye/foto?id=' + u.id + '&v=' + u.foto : null, lastSeen: u.lastSeen || null };
+    foto: u.foto ? '/api/uye/foto?id=' + u.id + '&v=' + u.foto : null, lastSeen: u.lastSeen || null, gizliOda: !!u.gizliOda };
 }
 async function getUser(id){ return id ? store().get('u/' + id, { type: 'json' }) : null; }
 async function putUser(u){ await store().setJSON('u/' + u.id, u); }
@@ -320,6 +320,13 @@ export default async (req, context) => {
       const n = clip(b.name, 20); if (n.length < 2) return json({ hata: 'ad kısa' }, 400);
       const old = u.name; u.name = n; await putUser(u);
       await logAdmin('Ad değişti: ' + old + ' → ' + n + ' (@' + u.kadi + ')');
+      return json({ ok: true, uye: pub(u) });
+    }
+    if (islem === 'admin-gizli'){
+      // gizli oda açma yetkisi: açtığı oda bildirim göndermez, açık odalar listesinde görünmez
+      if (u.durum !== 'onayli') return json({ hata: 'sadece üyelere verilebilir' }, 400);
+      u.gizliOda = !!b.acik; await putUser(u);
+      await logAdmin((b.acik ? 'Gizli oda yetkisi verildi: ' : 'Gizli oda yetkisi kaldırıldı: ') + u.adSoyad + ' (@' + u.kadi + ')');
       return json({ ok: true, uye: pub(u) });
     }
     if (islem === 'admin-askiya'){

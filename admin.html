@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="css/style.css">
 <style>
   body{overflow:auto}
-  .adm{max-width:900px;margin:0 auto;padding:24px 16px 60px;display:grid;gap:18px}
+  .adm{max-width:1320px;margin:0 auto;padding:24px 16px 60px;display:grid;gap:18px}
   .adm-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .adm-head h1{margin:0;font-family:var(--display);font-size:24px;display:flex;align-items:center;gap:10px;flex:1}
   .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:14px}
@@ -79,6 +79,46 @@
   .replik-ad{flex:1;min-width:160px;font-weight:600;overflow-wrap:anywhere}
   .replik-onizle{flex-basis:100%;max-width:420px;max-height:260px;border-radius:10px;background:#000}
   @media (max-width:600px){ .u{grid-template-columns:auto 1fr} .u-acts{grid-column:1/-1;justify-content:flex-start} }
+  /* sol sütun: açık odalar + kişiler */
+  .adm-govde{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
+  .adm-ana{min-width:0}
+  .adm-yan{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;display:grid;gap:12px;align-content:start;scrollbar-width:thin}
+  .yan-kutu{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:10px}
+  .yan-kutu h3{margin:0;font-size:15px}
+  .yan-oda{display:grid;gap:6px;padding:10px 12px;border-radius:12px;background:var(--bg);border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line))}
+  .pill.gizli{background:color-mix(in srgb,#a78bfa 22%,transparent);color:#c4b5fd;letter-spacing:0;font-family:inherit}
+  .yan-oda.gizli{border-color:color-mix(in srgb,#a78bfa 55%,var(--line))}
+  .btn.gizli-ver{border-color:color-mix(in srgb,#a78bfa 60%,var(--line))}
+  .yan-oda-ust{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .yan-kod{font-family:var(--display);font-size:20px;letter-spacing:.14em;color:var(--accent)}
+  .yan-sure{font-size:13px;font-weight:600;white-space:nowrap}
+  .yan-chips{display:flex;flex-wrap:wrap;gap:5px}
+  .yan-chips .hk-chip{padding:3px 9px;font-size:12px}
+  .yan-seg{display:flex}
+  .yan-seg button{flex:1;padding:7px 8px;font-size:13px}
+  .yan-kisiler{display:grid;gap:4px}
+  .yan-kisi{border-radius:12px;border:1px solid transparent}
+  .yan-kisi.acik{background:var(--bg);border-color:var(--line)}
+  .yan-kisi-bas{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;padding:7px 8px;border:0;border-radius:12px;background:none;color:var(--fg);font:inherit;text-align:left;cursor:pointer}
+  .yan-kisi-bas:hover{background:var(--panel-2)}
+  .yan-av{position:relative;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;color:#0f1218;background:var(--muted)}
+  .yan-kisi.on .yan-av{background:var(--accent)}
+  .yan-durum{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:#6b7280;border:2px solid var(--panel)}
+  .yan-kisi.on .yan-durum{background:#22c55e}
+  .yan-bilgi{display:grid;min-width:0}
+  .yan-bilgi b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .yan-bilgi small{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+  .yan-kisi.on .yan-bilgi small{color:var(--fg)}
+  .yan-ok{color:var(--muted);transition:transform .15s}
+  .yan-kisi.acik .yan-ok{transform:rotate(180deg)}
+  .yan-gecmis{display:grid;gap:2px;padding:0 12px 10px 54px;font-size:13px}
+  .yan-olay{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid var(--line)}
+  .yan-olay .ad-muted{white-space:nowrap;font-size:12px}
+  @media (max-width:960px){
+    .adm-govde{grid-template-columns:1fr}
+    .adm-yan{position:static;max-height:none;overflow:visible}
+    .yan-kisiler{max-height:360px;overflow:auto}
+  }
 </style>
 </head>
 <body>
@@ -100,10 +140,13 @@
       <a class="btn small" href="./" style="text-decoration:none;color:inherit">↩ Siteye dön</a>
       <button class="btn small" id="outBtn">Çıkış</button>
     </div>
-    <div class="adm-card">
-      <div class="seg adm-tabs" id="tabs"></div>
-      <input type="text" id="q" class="inp" placeholder="🔎 İsim ya da kullanıcı adı ara" hidden>
-      <div class="u-list" id="list"></div>
+    <div class="adm-govde">
+      <aside class="adm-yan" id="yan" aria-label="Açık odalar ve kişiler"></aside>
+      <div class="adm-card adm-ana">
+        <div class="seg adm-tabs" id="tabs"></div>
+        <input type="text" id="q" class="inp" placeholder="🔎 İsim ya da kullanıcı adı ara" hidden>
+        <div class="u-list" id="list"></div>
+      </div>
     </div>
   </section>
 </main>
@@ -112,5 +155,6 @@
 <script src="js/config.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/admin-saka.js"></script>
+<script src="js/admin-yan.js"></script>
 </body>
 </html>

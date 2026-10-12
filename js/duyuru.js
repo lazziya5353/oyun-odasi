@@ -26,7 +26,7 @@
     try { dlg.showModal(); } catch(e){ dlg.setAttribute('open', ''); }
   }
   async function kontrol(zorla){
-    if (!window.isSecureContext && location.hostname !== 'localhost') return;
+    if (location.protocol === 'file:' || (!window.isSecureContext && location.hostname !== 'localhost')) return;
     try {
       const r = await fetch('/api/bildirim/duyuru', { cache: 'no-store' });
       if (!r.ok) return;

@@ -308,7 +308,10 @@ function setupPeer(pr){
 function enterRoom(){
   if (joined) return;
   joined = true;
-  if (typeof hareket === 'function') setTimeout(() => hareket(isHost ? 'oda' : 'giris', roomCode + (isHost ? ' odasını açtı' : ' odasına girdi'), true), 300);
+  if (typeof hareket === 'function') setTimeout(() => hareket(isHost ? 'oda' : 'giris', roomCode + (isHost ? ' odasını açtı' : ' odasına girdi') + (typeof gizliOdaMi === 'function' && gizliOdaMi() ? ' 🔒 (gizli)' : ''), true), 300);
+  if (typeof varlikNabiz === 'function') varlikNabiz();
+  if (typeof gizliRozet === 'function') gizliRozet();
+  { const ao = document.getElementById('acikOdalar'); if (ao) ao.hidden = true; }
   $('lobby').hidden = true; $('room').hidden = false;
   $('roomCode').textContent = roomCode;
   $('micDlgBody').append($('micPanel'));

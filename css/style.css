@@ -608,3 +608,24 @@ html.dinlen:has(#dinlenUI.gizli), html.dinlen:has(#dinlenUI.gizli) body{cursor:n
 .duyuru-dlg .dlg-foot{display:flex;justify-content:flex-end;padding:0 16px 16px}
 .dinlen-top{white-space:nowrap}
 @media (max-width:860px){ .btn.icon-btn.dinlen-top{width:36px;height:36px;padding:0;font-size:17px;flex:none} }
+/* lobi: şu an açık odalar */
+.acik-odalar{display:grid;gap:8px;padding:12px;border-radius:14px;background:color-mix(in srgb,var(--accent) 8%,transparent);border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line))}
+.ao-baslik{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
+.ao-nokta{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 var(--accent);animation:ao-nabiz 1.8s infinite}
+@keyframes ao-nabiz{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.ao-kart{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.ao-bilgi{flex:1;min-width:160px;display:grid;gap:1px}
+.ao-bilgi b{font-size:14px}
+.ao-adlar{font-size:13px;overflow-wrap:anywhere}
+.ao-bilgi small{font-size:12px;color:var(--muted)}
+.ao-form{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ao-form input{width:130px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;color:var(--fg);letter-spacing:.12em;text-transform:uppercase}
+.ao-hata{flex-basis:100%;color:var(--danger);font-size:12px}
+.ao-hata:empty{display:none}
+/* gizli oda */
+.gizli-sec{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;border:1px dashed color-mix(in srgb,var(--accent) 50%,var(--line));cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px;color:var(--fg)}
+.gizli-sec input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:none}
+.gizli-sec span{display:grid;gap:2px}
+.gizli-sec small{font-size:12px;color:var(--muted)}
+.gizli-sec:has(input:checked){background:color-mix(in srgb,var(--accent) 10%,transparent);border-style:solid}
+.gizli-rozet{font-size:14px;cursor:help}

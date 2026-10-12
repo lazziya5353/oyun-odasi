@@ -63,6 +63,7 @@ async function subscribePush(){
 // Oda kurulunca diğerlerine haber ver (kendine gelmez)
 async function notifyRoomOpened(){
   if (!window.isSecureContext || location.protocol === 'file:') return;
+  if (typeof gizliOdaMi === 'function' && gizliOdaMi()){ toast('🔒 Gizli oda: kimseye bildirim gitmedi, açık odalarda görünmüyor'); return; }
   try {
     let endpoint = '';
     try { const sub = swReg && await swReg.pushManager.getSubscription(); endpoint = sub ? sub.endpoint : ''; } catch(e){}

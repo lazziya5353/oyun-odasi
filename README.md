@@ -105,6 +105,17 @@ Netlify'da `ADMIN_SIFRE` ortam değişkeni tanımlıysa şifre oradan gelir ve p
 `netlify/functions/skor.mjs` tekli oyunların sonuçlarını Netlify Blobs'ta saklar (her isim için en iyi sonuç, ilk 100).
 Giriş sistemi olmadığı için isimler yazılan ada göre tutulur.
 
+## 🟢 Açık odalar ve kişiler (canlı durum)
+- **Girişte**: şu an açık oda varsa en üstte görünür (kaç kişi, kimler, kaç dakikadır açık). Oda kodu gösterilmez; “🔑 Kodu yazıp gir” ile kodu yazan girer (yanlış kodda uyarı).
+- **Yönetim paneli sol sütun**: açık odalar (kod, kaç dakikadır açık, açan, içindekiler) ve kişiler (çevrimiçi mi, hangi odada, son görülme). Kişiye tıklayınca geçmişi açılır: siteyi ne zaman açtı (telefon/bilgisayar), hangi odaya ne zaman girdi/çıktı.
+- Tarayıcı ~60 sn'de bir “buradayım” der (odaya girince/çıkınca hemen). 2,5 dk ses gelmeyen çevrimdışı sayılır. (`netlify/functions/oda.mjs`, `js/varlik.js`, `js/admin-yan.js`)
+
+## 🔒 Gizli oda
+- Yönetim paneli → Üyeler → kişinin satırında **“🔒 Gizli oda yetkisi ver”** (geri almak için “yetkisini kaldır”). Sadece üyelere verilir.
+- Yetkili üye girişte **“🔒 Gizli oda aç”** kutusunu işaretleyip oda oluşturur: kimseye “oda açtı” bildirimi gitmez, girişteki açık odalar listesinde görünmez.
+- Kodu verdiği kişi kodu yazıp normal girer; odanın gizli olduğunu görmez (🔒 işaretini sadece açan görür). Odada her şey normal odadaki gibidir.
+- Yönetici gizli odaları sol sütunda 🔒 ile görür. Aynı kod 24 saat gizli kalır (biri aynı kodla yeniden açsa da bildirim gitmez). Yetki sunucuda üye oturumuyla doğrulanır.
+
 ## 🌸 Sakura arka planları ve 🌙 dinlenme modu
 - Görünüm → Arka plan → **Japonya**: "Sakura (gerçekçi)" (siyah fonda saplı çiçek salkımları, tek tek çizilmiş gerçekçi çiçekler), "Gece sakurası" (siyah fonda sarkan dallar), "Sakura (güneşli)", "Sakura (yağmurlu)". Hepsi canvas ile çizilir (özgün), ekran çözünürlüğünde (HD).
 - **Dinlenme modu**: üst çubukta saatin hemen solundaki 🌙 Dinlen (telefonda saatin solundaki 🌙 düğmesi; Görünüm penceresinde de var). Ekranda sadece arka plan kalır, sesli sohbet devam eder. ESC (ya da telefonda dokunup ✕ Çık) ile aynı yere dönülür. Tema seçili değilse geçici olarak gece sakurası açılır. (`js/dinlen.js`)

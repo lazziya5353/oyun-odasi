@@ -57,6 +57,7 @@
       </div>
       <button class="btn primary" id="rejoinBtn">↩ Odaya dön</button>
     </div>
+    <div class="acik-odalar" id="acikOdalar" hidden aria-live="polite"></div>
     <div class="notif-card" id="notifCard" hidden>
       <div class="notif-info">
         <b id="notifTitle">🔔 Oda açılınca haber al</b>
@@ -106,6 +107,7 @@
       <input type="text" id="codeInput" name="oda-kodu" class="code" maxlength="12" placeholder="Oda kodunu giriniz" autocomplete="off" autocapitalize="characters" spellcheck="false" data-lpignore="true" data-1p-ignore>
     </label>
     <p class="note" style="margin-top:-10px">Oda kurarken boş bırakırsan kod otomatik verilir. Katılmak için arkadaşının kodunu yaz.</p>
+    <label class="gizli-sec" id="gizliSec" hidden><input type="checkbox" id="gizliCb"> <span>🔒 <b>Gizli oda aç</b><small>Kimseye bildirim gitmez, açık odalarda görünmez. Kodu verdiğin kişi girer.</small></span></label>
     <div class="row">
       <button class="btn primary" id="createBtn">Oda oluştur</button>
       <button class="btn" id="joinBtn">Odaya katıl</button>
@@ -147,6 +149,7 @@
       <span class="top-saat hide-mobile" title="Saat ve tarih"><b></b><small></small></span>
       <span class="tag hide-mobile">Oda kodu</span>
       <b id="roomCode">-----</b>
+      <span class="gizli-rozet" id="gizliRozet" hidden title="Gizli oda: kimseye bildirim gitmedi, açık odalarda görünmüyor. Bunu sadece sen görüyorsun.">🔒</span>
       <button class="btn small" id="copyBtn">Daveti kopyala</button>
     </div>
   </header>
@@ -419,6 +422,7 @@
 <script src="js/sesdegis.js"></script>
 <script src="js/net.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/gizli.js"></script>
 <script src="js/account.js"></script>
 <script src="js/stil.js"></script>
 <script src="js/baglanti.js"></script>
@@ -458,5 +462,6 @@
 <script src="js/games/saka.js"></script>
 <script src="js/push.js"></script>
 <script src="js/main.js"></script>
+<script src="js/varlik.js"></script>
 </body>
 </html>

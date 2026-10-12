@@ -52,6 +52,7 @@ function renderAccountBox(){
     $('acctUser').textContent = '@' + account.uye.kadi;
   }
   $('acctOut').hidden = on || !uyeOK();
+  if (typeof gizliSecGuncelle === 'function') gizliSecGuncelle();
 }
 async function refreshAccount(){
   if (!account || !uyeOK()) return;

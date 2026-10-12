@@ -207,6 +207,7 @@ function userRow(u){
   const b = el('b', '', u.adSoyad);
   const P = { onayli: ['ok', 'üye'], bekliyor: ['wait', 'onay bekliyor'], red: ['no', 'reddedildi'], askida: ['no', 'durduruldu'] }[u.durum] || ['', u.durum];
   b.append(el('span', 'pill ' + P[0], P[1]));
+  if (u.gizliOda) b.append(el('span', 'pill gizli', '🔒 gizli oda yetkisi'));
   const s1 = el('span', '', '@' + u.kadi + ' · görünen ad: ' + u.name);
   const s2 = el('span', '', 'Başvuru: ' + fmt(u.created) + (u.approvedAt ? ' · Onay: ' + fmt(u.approvedAt) : '') + (u.durum !== 'bekliyor' ? ' · Son giriş: ' + ago(u.lastSeen) : '') + (u.bildirim ? ' · 🔔' : ''));
   info.append(b, s1, s2);
@@ -231,6 +232,8 @@ function userRow(u){
       try { const d = await api('admin-sifre', { id: u.id }); tmpPw[u.id] = d.yeni; renderList(); }
       catch(e){ toast(e.message); }
     });
+    A(u.gizliOda ? '🔒 Gizli oda yetkisini kaldır' : '🔒 Gizli oda yetkisi ver', u.gizliOda ? '' : 'gizli-ver',
+      () => act('admin-gizli', { id: u.id, acik: !u.gizliOda }, u.gizliOda ? u.name + ' artık gizli oda açamaz' : u.name + ' artık gizli oda açabilir (lobide “🔒 Gizli oda aç” seçeneği çıkar)'));
     acts.append(dangerBtn('🚪 Çıkış yaptır', () => act('admin-oturum-kapat', { id: u.id }, u.name + ' tüm cihazlardan çıkarıldı')));
     acts.append(dangerBtn('⏸ Durdur', () => act('admin-askiya', { id: u.id, askida: true }, u.name + ' durduruldu, giriş yapamaz')));
   }

@@ -29,7 +29,9 @@ $('createBtn').onclick = async () => {
   const c = cleanCode($('codeInput').value);
   if (c && c.length < 3){ lobbyError('Kendi kodunu yazacaksan en az 3 karakter olmalı.'); return; }
   customCode = !!c;
-  myName = n; await start(c || genCode(), true);
+  const kod = c || genCode();
+  if (typeof gizliYetkim === 'function' && gizliYetkim() && $('gizliCb').checked) gizliIsaretle(kod);
+  myName = n; await start(kod, true);
 };
 $('joinBtn').onclick = async () => {
   ensureCtx();
