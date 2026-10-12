@@ -128,6 +128,7 @@
       <button class="btn small" id="mixerBtn2" data-k="Ses ayarı">🎚 <span class="lbl">Sesleri ayarla</span></button>
       <button class="btn small" id="profilBtn2" data-k="Profil" title="Profilim">👤 <span class="lbl">Profil</span></button>
       <button class="btn small" id="temaBtn2" data-k="Görünüm" title="Görünüm: Standart / Cyberpunk / LED">🎨 <span class="lbl">Görünüm</span></button>
+      <button class="btn small hide-mobile" id="dinlenBtn" data-k="Dinlen" title="Dinlenme modu: ekranda sadece arka plan kalır, sesli sohbet devam eder (ESC ile çık)">🌙 <span class="lbl">Dinlen</span></button>
       <button class="btn small notif-top" id="notifBtn2" data-k="Bildirim" hidden>🔕 <span class="lbl">Bildirim</span></button>
       <button class="btn small" id="radioOpenBtn" data-k="Radyo" title="Odadaki herkes için radyo aç">📻 <span class="lbl">Radyo</span></button>
       <button class="btn small" id="radioFavBtn" data-k="Favori" title="Favori radyoların" hidden>⭐ <span class="lbl">Favorilerim</span></button>
@@ -272,6 +273,7 @@
 <dialog id="temaDlg" aria-labelledby="temaTitle" class="wide">
   <div class="dlg-head"><h3 id="temaTitle">🎨 Görünüm</h3><button class="btn small" data-close>Kapat</button></div>
   <div class="dlg-body" id="temaBody">
+    <button type="button" class="btn dinlen-ac" id="dinlenBtn2">🌙 Dinlenme modunu aç <small>Ekranda sadece arka plan kalır, sesli sohbet devam eder</small></button>
     <div class="tema-modes">
       <button type="button" class="tema-mode" data-mode="standart"><span class="tema-prev p-std"><i></i></span><b>Standart</b><small>Sade ve göz yormayan</small></button>
       <button type="button" class="tema-mode" data-mode="cyber"><span class="tema-prev p-cyber"><i></i></span><b>Cyberpunk</b><small>Neon sarı-mavi-pembe, kesik köşeler, kayan ışıklar</small></button>
@@ -409,6 +411,7 @@
 <script src="js/hareket.js"></script>
 <script src="js/backgrounds.js"></script>
 <script src="js/hava.js"></script>
+<script src="js/dinlen.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/sesdegis.js"></script>

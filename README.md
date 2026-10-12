@@ -105,6 +105,10 @@ Netlify'da `ADMIN_SIFRE` ortam değişkeni tanımlıysa şifre oradan gelir ve p
 `netlify/functions/skor.mjs` tekli oyunların sonuçlarını Netlify Blobs'ta saklar (her isim için en iyi sonuç, ilk 100).
 Giriş sistemi olmadığı için isimler yazılan ada göre tutulur.
 
+## 🌸 Sakura arka planları ve 🌙 dinlenme modu
+- Görünüm → Arka plan → **Japonya**: "Sakura (gerçekçi)" (siyah fonda saplı çiçek salkımları, tek tek çizilmiş gerçekçi çiçekler), "Gece sakurası" (siyah fonda sarkan dallar), "Sakura (güneşli)", "Sakura (yağmurlu)". Hepsi canvas ile çizilir (özgün), ekran çözünürlüğünde (HD).
+- **Dinlenme modu**: üst çubukta 🌙 Dinlen (telefonda Görünüm penceresinde). Ekranda sadece arka plan kalır, sesli sohbet devam eder. ESC (ya da telefonda dokunup ✕ Çık) ile aynı yere dönülür. Tema seçili değilse geçici olarak gece sakurası açılır. (`js/dinlen.js`)
+
 ## Bağlantı kopmaları (telefon)
 - Odadayken telefonun ekranı kararmaz (Wake Lock); ekran kararınca tarayıcı sayfayı uyutup bağlantıyı koparıyordu.
 - Geçici kopmalarda ("disconnected") 30 sn beklenir; kopan kişiyle 2 dk boyunca arka planda yeniden bağlanılır, oyundaki yeri 75 sn korunur.
