@@ -109,7 +109,9 @@ function renderBgPicker(){
       if (item.yeni || item.video){ const e = document.createElement('i'); e.className = 'bg-etiket' + (item.video ? ' vid' : ''); e.textContent = item.video ? '▶ VİDEO' : 'YENİ'; b.append(e); }
       b.onclick = async () => {
         if (item.id === 'ozel' && OyunBG.hasCustom && !(await OyunBG.hasCustom())){ $('bgOzelFile').click(); return; }
-        const s2 = bgState(); OyunBG.set(item.id, { animate: s2.animate, dim: s2.dim }); renderBgPicker();
+        const s2 = bgState(), onceki = OyunBG.current; OyunBG.set(item.id, { animate: s2.animate, dim: s2.dim }); renderBgPicker();
+        // müzikli arka plan seçilince müziği bir kez kendiliğinden çal
+        if (item.id !== onceki && OyunBG.muzik && window.bgMuzik) bgMuzik.cal(true);
       };
       box.append(b);
     });

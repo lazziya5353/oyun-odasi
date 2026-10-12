@@ -637,3 +637,5 @@ html.dinlen:has(#dinlenUI.gizli), html.dinlen:has(#dinlenUI.gizli) body{cursor:n
 .bg-muzik-btn.on::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px;animation:ao-nabiz 1.4s infinite}
 .bg-muzik-m[hidden],.bg-muzik-btn[hidden]{display:none!important}
 .bg-muzik-m.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+/* LED/Cyberpunk temaları düğmelere position:relative veriyor: müzik düğmesi yine de "Daveti kopyala"nın ALTINDA kalsın */
+:root .davet-kutu>.bg-muzik-btn{position:absolute!important;top:calc(100% + 6px);right:0;left:auto}
