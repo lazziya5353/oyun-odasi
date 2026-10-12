@@ -59,7 +59,16 @@ function renderThemeDlg(){
   $('temaSpeed').value = theme.speed; $('temaGlow').value = theme.glow;
   if (/^#[0-9a-f]{6}$/i.test(theme.color)) $('temaCustom').value = theme.color;
 }
-let openThemeDlg = function(){ renderThemeDlg(); $('temaDlg').showModal(); };
+let openThemeDlg = function(){ renderThemeDlg(); temaSekme(); $('temaDlg').showModal(); };
+// Görünüm penceresi sekmeleri (son açılan hatırlanır)
+function temaSekme(k){
+  try { if (k) localStorage.setItem('oyunodasi-tema-sekme', k); else k = localStorage.getItem('oyunodasi-tema-sekme') || 'arka'; } catch(e){ k = k || 'arka'; }
+  if (!document.querySelector('.tema-sekme[data-sekme="' + k + '"]')) k = 'arka';
+  document.querySelectorAll('#temaSekme [data-sekme]').forEach(b => { const on = b.dataset.sekme === k; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+  document.querySelectorAll('.tema-sekme').forEach(s => { s.hidden = s.dataset.sekme !== k; });
+  const body = $('temaBody'); if (body) body.scrollTop = 0;
+}
+document.querySelectorAll('#temaSekme [data-sekme]').forEach(b => { b.onclick = () => temaSekme(b.dataset.sekme); });
 (function initThemeDlg(){
   const cols = $('temaColors');
   LED_COLORS.forEach(([c, name]) => {
@@ -85,12 +94,19 @@ function renderBgPicker(){
   const st = bgState();
   if (!box.children.length){
     let lastGrup = null;
-    OyunBG.list.forEach(item => {
-      if (item.grup && item.grup !== lastGrup && item.grup !== 'Genel'){ lastGrup = item.grup; const h = document.createElement('div'); h.className = 'bg-grup'; h.textContent = item.grup; box.append(h); }
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'bg-pick'; b.dataset.bg = item.id; b.title = item.desc || item.name;
+    const liste = OyunBG.list, say = {}; liste.forEach(x => { say[x.grup] = (say[x.grup] || 0) + 1; });
+    const GRUP_ACIKLAMA = { 'Gerçekçi': 'HD, fotoğraf gibi', 'Kişisel': 'sadece bu cihazda' };
+    liste.forEach(item => {
+      if (item.id === 'yok') return;   // "Kapalı" araç çubuğunda
+      if (item.grup && item.grup !== lastGrup && item.grup !== 'Genel'){
+        lastGrup = item.grup; const h = document.createElement('div'); h.className = 'bg-grup';
+        h.textContent = item.grup; const n = document.createElement('small'); n.textContent = (GRUP_ACIKLAMA[item.grup] ? GRUP_ACIKLAMA[item.grup] + ' · ' : '') + say[item.grup]; h.append(n); box.append(h);
+      }
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'bg-pick' + (item.video ? ' video' : ''); b.dataset.bg = item.id; b.title = item.desc || item.name;
       const cv = document.createElement('canvas'); cv.width = 320; cv.height = 200;
       const t = document.createElement('span'); t.textContent = (item.icon ? item.icon + ' ' : '') + item.name;
       b.append(cv, t);
+      if (item.yeni || item.video){ const e = document.createElement('i'); e.className = 'bg-etiket' + (item.video ? ' vid' : ''); e.textContent = item.video ? '▶ VİDEO' : 'YENİ'; b.append(e); }
       b.onclick = async () => {
         if (item.id === 'ozel' && OyunBG.hasCustom && !(await OyunBG.hasCustom())){ $('bgOzelFile').click(); return; }
         const s2 = bgState(); OyunBG.set(item.id, { animate: s2.animate, dim: s2.dim }); renderBgPicker();
@@ -101,6 +117,7 @@ function renderBgPicker(){
     [...box.querySelectorAll('.bg-pick')].forEach((b, i) => setTimeout(() => { try { OyunBG.thumb(b.dataset.bg, b.querySelector('canvas')); } catch(e){} }, 60 + i * 40));
   }
   box.querySelectorAll('.bg-pick').forEach(b => b.classList.toggle('on', b.dataset.bg === st.id));
+  $('bgKapat').classList.toggle('on', st.id === 'yok');
   document.querySelectorAll('[data-bganim]').forEach(b => b.classList.toggle('on', (b.dataset.bganim === '1') === st.animate));
   $('bgDim').value = Math.round(st.dim * 100);
   if (OyunBG.hasCustom) OyunBG.hasCustom().then(has => {
@@ -112,7 +129,10 @@ function renderBgPicker(){
 }
 (function initBg(){
   if (typeof OyunBG === 'undefined' || !$('bgPicks')) return;
+  // video duvar kağıtları sonradan gelir: seçici yeniden kurulsun
+  addEventListener('oyunbg-liste', () => { const box = $('bgPicks'); box.innerHTML = ''; if ($('temaDlg').open) renderBgPicker(); });
   document.querySelectorAll('[data-bganim]').forEach(b => { b.onclick = () => { const s = bgState(); OyunBG.set(s.id === 'yok' ? null : s.id, { animate: b.dataset.bganim === '1', dim: s.dim }); renderBgPicker(); }; });
+  $('bgKapat').onclick = () => { const s = bgState(); OyunBG.set(null, { animate: s.animate, dim: s.dim }); renderBgPicker(); };
   $('bgOzelSec').onclick = () => $('bgOzelFile').click();
   $('bgOzelFile').onchange = async e => {
     const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;

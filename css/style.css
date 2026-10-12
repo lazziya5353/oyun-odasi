@@ -629,3 +629,4 @@ html.dinlen:has(#dinlenUI.gizli), html.dinlen:has(#dinlenUI.gizli) body{cursor:n
 .gizli-sec small{font-size:12px;color:var(--muted)}
 .gizli-sec:has(input:checked){background:color-mix(in srgb,var(--accent) 10%,transparent);border-style:solid}
 .gizli-rozet{font-size:14px;cursor:help}
+.btn.dinlen-ac small{white-space:normal}

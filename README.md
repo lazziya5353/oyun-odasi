@@ -116,6 +116,15 @@ Giriş sistemi olmadığı için isimler yazılan ada göre tutulur.
 - Kodu verdiği kişi kodu yazıp normal girer; odanın gizli olduğunu görmez (🔒 işaretini sadece açan görür). Odada her şey normal odadaki gibidir.
 - Yönetici gizli odaları sol sütunda 🔒 ile görür. Aynı kod 24 saat gizli kalır (biri aynı kodla yeniden açsa da bildirim gitmez). Yetki sunucuda üye oturumuyla doğrulanır.
 
+## 🎬 Hareketli (video) duvar kağıtları
+- `duvar-kagitlari/` klasörüne kategori klasörleri aç (`Manzara`, `Anime`…) ve videoları içine at (.mp4 / .webm, dosya başına 25 MB altı). Netlify yayınlarken `scripts/duvar-liste.mjs` listeyi (`duvar-liste.json`) çıkarır; videolar Görünüm → Arka plan'da **🎬 Kategori** başlığı altında çıkar.
+- Videoyla aynı adlı resim (`Göl.jpg`) varsa önizleme o olur. Ayrıntılar: `duvar-kagitlari/OKU-BENI.md`.
+- Video sessiz ve döngüde oynar, tuvale çizilir: karartma, Sabit/Hareketli, dinlenme modu aynen çalışır; arka plan değişince video bırakılır.
+
+## 🖼 Gerçekçi HD arka planlar
+- Sakura (gerçekçi), Ay ışığında sakura, Japon akçaağacı (momiji).
+- Görünüm penceresi sekmelere ayrıldı: 🖼 Arka plan · 🎨 Tema · 🌦 Hava · ✨ Kartım · ⚙️ Diğer.
+
 ## 🌸 Sakura arka planları ve 🌙 dinlenme modu
 - Görünüm → Arka plan → **Japonya**: "Sakura (gerçekçi)" (siyah fonda saplı çiçek salkımları, tek tek çizilmiş gerçekçi çiçekler), "Gece sakurası" (siyah fonda sarkan dallar), "Sakura (güneşli)", "Sakura (yağmurlu)". Hepsi canvas ile çizilir (özgün), ekran çözünürlüğünde (HD).
 - **Dinlenme modu**: üst çubukta saatin hemen solundaki 🌙 Dinlen (telefonda saatin solundaki 🌙 düğmesi; Görünüm penceresinde de var). Ekranda sadece arka plan kalır, sesli sohbet devam eder. ESC (ya da telefonda dokunup ✕ Çık) ile aynı yere dönülür. Tema seçili değilse geçici olarak gece sakurası açılır. (`js/dinlen.js`)

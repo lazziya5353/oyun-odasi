@@ -278,40 +278,65 @@
   <div class="dlg-head"><h3 id="temaTitle">🎨 Görünüm</h3><button class="btn small" data-close>Kapat</button></div>
   <div class="dlg-body" id="temaBody">
     <button type="button" class="btn dinlen-ac" id="dinlenBtn2">🌙 Dinlenme modunu aç <small>Ekranda sadece arka plan kalır, sesli sohbet devam eder</small></button>
-    <div class="tema-modes">
-      <button type="button" class="tema-mode" data-mode="standart"><span class="tema-prev p-std"><i></i></span><b>Standart</b><small>Sade ve göz yormayan</small></button>
-      <button type="button" class="tema-mode" data-mode="cyber"><span class="tema-prev p-cyber"><i></i></span><b>Cyberpunk</b><small>Neon sarı-mavi-pembe, kesik köşeler, kayan ışıklar</small></button>
-      <button type="button" class="tema-mode" data-mode="led"><span class="tema-prev p-led"><i></i></span><b>LED</b><small>Çerçevelerde kayan LED; rengini ve stilini sen seç</small></button>
+    <div class="tema-sekmeler" id="temaSekme" role="tablist">
+      <button type="button" role="tab" data-sekme="arka">🖼 Arka plan</button>
+      <button type="button" role="tab" data-sekme="tema">🎨 Tema</button>
+      <button type="button" role="tab" data-sekme="hava">🌦 Hava</button>
+      <button type="button" role="tab" data-sekme="kart">✨ Kartım</button>
+      <button type="button" role="tab" data-sekme="diger">⚙️ Diğer</button>
     </div>
-    <div class="tema-led" id="temaLed">
-      <div class="tema-row" id="temaColorsRow"><span>Renk</span><div class="tema-colors" id="temaColors"></div>
-        <label class="tema-custom">Özel <input type="color" id="temaCustom" value="#00e5ff"></label></div>
-      <div class="tema-row" id="temaStyleRow"><span>Işık</span><div class="seg"><button type="button" data-style="kayan">✨ Kayan</button><button type="button" data-style="nabiz">💓 Nabız</button><button type="button" data-style="sabit">▬ Sabit</button></div></div>
-      <div class="tema-row"><span>Hız</span><input type="range" id="temaSpeed" min="1" max="5" step="1" aria-label="Işık hızı"></div>
-      <div class="tema-row"><span>Parlama</span><input type="range" id="temaGlow" min="0" max="3" step="1" aria-label="Parlama"></div>
-    </div>
-    <div class="tema-led tema-bg">
-      <div class="tema-row"><span>Arka plan</span><small class="note">Hareketli manzaralar; sadece senin ekranında</small></div>
+
+    <section class="tema-sekme" data-sekme="arka">
+      <div class="bg-arac">
+        <button type="button" class="btn small" id="bgKapat">⬛ Kapalı</button>
+        <div class="seg"><button type="button" data-bganim="1">▶ Hareketli</button><button type="button" data-bganim="0">⏸ Sabit</button></div>
+        <label class="bg-dim">🌗 Karartma <input type="range" id="bgDim" min="0" max="80" step="5" aria-label="Arka planı karart"></label>
+      </div>
       <div class="bg-picks" id="bgPicks"></div>
-      <div class="tema-row" id="bgOzelRow"><span>Kendi görselin</span><button type="button" class="btn small" id="bgOzelSec">📷 Görsel seç</button><button type="button" class="btn small" id="bgOzelSil" hidden>Kaldır</button>
-        <div class="seg" id="bgEfekt" hidden><button type="button" data-efekt="kenburns">🎞 Yakınlaşma</button><button type="button" data-efekt="parilti">✨ Parıltı</button><button type="button" data-efekt="sabit">▬ Sabit</button></div>
-        <input type="file" id="bgOzelFile" accept="image/*" hidden></div>
-      <div class="tema-row"><span>Hareket</span><div class="seg"><button type="button" data-bganim="1">▶ Hareketli</button><button type="button" data-bganim="0">⏸ Sabit</button></div></div>
-      <div class="tema-row"><span>Karartma</span><input type="range" id="bgDim" min="0" max="80" step="5" aria-label="Arka planı karart"></div>
-    </div>
-    <div class="tema-led tema-hava">
-      <div class="tema-row"><span>Hava durumu</span><small class="note">Kar yağınca ekranda birikir, yağmurda damlalar camdan süzülür</small></div>
-      <div class="hava-picks" id="havaPicks"></div>
-      <div class="tema-row" id="havaAyar"><span>Yoğunluk</span><input type="range" id="havaYog" min="0.2" max="1" step="0.1" aria-label="Hava yoğunluğu"><button type="button" class="btn small" id="havaTemizle">🧹 Temizle</button></div>
-    </div>
-    <div class="tema-led">
-      <div class="tema-row"><span>✨ Kartım</span><small class="note">Odadaki herkes seni böyle görür</small></div>
-      <div id="stilPicker" class="stil-picker"></div>
-    </div>
-    <div class="tema-led">
-      <div class="tema-row"><span>🎭 Şakalar</span><label class="saka-ayar"><input type="checkbox" id="sakaAcik" checked> Yöneticinin şakaları (domates, korku…) ekranımda çıksın</label></div>
-    </div>
-    <div class="row"><button class="btn small" id="temaReset" style="flex:0 0 auto">Varsayılana dön</button><p class="note" style="flex:1 1 200px;align-self:center">Görünüm sadece senin ekranını değiştirir.</p></div>
+      <div class="tema-led tema-bg">
+        <div class="tema-row" id="bgOzelRow"><span>📷 Kendi görselin</span><button type="button" class="btn small" id="bgOzelSec">📷 Görsel seç</button><button type="button" class="btn small" id="bgOzelSil" hidden>Kaldır</button>
+          <div class="seg" id="bgEfekt" hidden><button type="button" data-efekt="kenburns">🎞 Yakınlaşma</button><button type="button" data-efekt="parilti">✨ Parıltı</button><button type="button" data-efekt="sabit">▬ Sabit</button></div>
+          <input type="file" id="bgOzelFile" accept="image/*" hidden></div>
+        <p class="note">Arka plan sadece senin ekranında değişir.</p>
+      </div>
+    </section>
+
+    <section class="tema-sekme" data-sekme="tema" hidden>
+      <div class="tema-modes">
+        <button type="button" class="tema-mode" data-mode="standart"><span class="tema-prev p-std"><i></i></span><b>Standart</b><small>Sade ve göz yormayan</small></button>
+        <button type="button" class="tema-mode" data-mode="cyber"><span class="tema-prev p-cyber"><i></i></span><b>Cyberpunk</b><small>Neon sarı-mavi-pembe, kesik köşeler, kayan ışıklar</small></button>
+        <button type="button" class="tema-mode" data-mode="led"><span class="tema-prev p-led"><i></i></span><b>LED</b><small>Çerçevelerde kayan LED; rengini ve stilini sen seç</small></button>
+      </div>
+      <div class="tema-led" id="temaLed">
+        <div class="tema-row" id="temaColorsRow"><span>Renk</span><div class="tema-colors" id="temaColors"></div>
+          <label class="tema-custom">Özel <input type="color" id="temaCustom" value="#00e5ff"></label></div>
+        <div class="tema-row" id="temaStyleRow"><span>Işık</span><div class="seg"><button type="button" data-style="kayan">✨ Kayan</button><button type="button" data-style="nabiz">💓 Nabız</button><button type="button" data-style="sabit">▬ Sabit</button></div></div>
+        <div class="tema-row"><span>Hız</span><input type="range" id="temaSpeed" min="1" max="5" step="1" aria-label="Işık hızı"></div>
+        <div class="tema-row"><span>Parlama</span><input type="range" id="temaGlow" min="0" max="3" step="1" aria-label="Parlama"></div>
+      </div>
+    </section>
+
+    <section class="tema-sekme" data-sekme="hava" hidden>
+      <div class="tema-led tema-hava">
+        <div class="tema-row"><span>Hava durumu</span><small class="note">Kar yağınca ekranda birikir, yağmurda damlalar camdan süzülür</small></div>
+        <div class="hava-picks" id="havaPicks"></div>
+        <div class="tema-row" id="havaAyar"><span>Yoğunluk</span><input type="range" id="havaYog" min="0.2" max="1" step="0.1" aria-label="Hava yoğunluğu"><button type="button" class="btn small" id="havaTemizle">🧹 Temizle</button></div>
+      </div>
+    </section>
+
+    <section class="tema-sekme" data-sekme="kart" hidden>
+      <div class="tema-led">
+        <div class="tema-row"><span>✨ Kartım</span><small class="note">Odadaki herkes seni böyle görür</small></div>
+        <div id="stilPicker" class="stil-picker"></div>
+      </div>
+    </section>
+
+    <section class="tema-sekme" data-sekme="diger" hidden>
+      <div class="tema-led">
+        <div class="tema-row"><span>🎭 Şakalar</span><label class="saka-ayar"><input type="checkbox" id="sakaAcik" checked> Yöneticinin şakaları (domates, korku…) ekranımda çıksın</label></div>
+      </div>
+      <div class="row"><button class="btn small" id="temaReset" style="flex:0 0 auto">Varsayılana dön</button><p class="note" style="flex:1 1 200px;align-self:center">Görünüm sadece senin ekranını değiştirir.</p></div>
+    </section>
   </div>
 </dialog>
 

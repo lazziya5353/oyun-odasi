@@ -1,7 +1,7 @@
-# Netlify ayarları: klasör olduğu gibi yayınlanır. Tek derleme adımı: replikler klasöründeki videoların listesini çıkarmak.
+# Netlify ayarları: klasör olduğu gibi yayınlanır. Derleme adımı: replikler ve duvar-kagitlari klasörlerindeki videoların listesini çıkarmak.
 [build]
   publish = "."
-  command = "node scripts/replik-liste.mjs"
+  command = "node scripts/replik-liste.mjs && node scripts/duvar-liste.mjs"
   # Bildirim gönderen sunucu fonksiyonu (ek kurulum gerektirmez)
   functions = "netlify/functions"
 
@@ -24,3 +24,9 @@
   for = "/replikler/*"
   [headers.values]
     Cache-Control = "public, max-age=86400"
+
+# video duvar kağıtları büyük dosyalar: tarayıcı bir hafta saklasın (her açılışta yeniden inmesin)
+[[headers]]
+  for = "/duvar-kagitlari/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

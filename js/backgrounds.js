@@ -2545,13 +2545,19 @@ function sceneGeceSakura(W, H, o){
 /* ---------- Sakura (gerçekçi): her çiçek ayrı çizilir, saplı salkımlar, kabuklu dallar, alan derinliği ---------- */
 const GS = { cic: null, yap: null, tom: null };
 // tek bir gerçekçi çiçek (rastgele yaprak biçimleri) — 160 px
-function gercekCicek(koyu){
+const CICEK_PAL = {
+  sakura: { s: [[214, 70, 120], [236, 130, 168], [250, 210, 224], [255, 244, 248], [252, 222, 234]], m: '150,30,70', m2: '200,60,105', fil: '250,215,225' },
+  beyaz: { s: [[226, 170, 190], [244, 214, 224], [253, 245, 248], [255, 255, 255], [246, 246, 252]], m: '170,90,110', m2: '210,150,165', fil: '255,240,240' },
+  akcaagac: { akca: true, s: [[0, 0, 0]], m: '0,0,0', m2: '0,0,0', fil: '0,0,0' },
+};
+function gercekCicek(koyu, palAd){
+  const P = CICEK_PAL[palAd || 'sakura'];
   const S = 160, c = mk(S, S), g = c2(c), m = S / 2;
   const a0 = R() * TAU, ton = [rnd(-8, 6), rnd(-.06, .05)];        // renk oynaması
   const pembe = (r, gg, b, a) => 'rgba(' + Math.round(clamp(r + ton[0], 0, 255)) + ',' + Math.round(clamp(gg + ton[0] * 1.6, 0, 255)) + ',' + Math.round(clamp(b + ton[0], 0, 255)) + ',' + a + ')';
   const yaprak = [];
   for (let i = 0; i < 5; i++){
-    const an = a0 + i / 5 * TAU + rnd(-.12, .12), L = S * rnd(.36, .44), w = L * rnd(.78, .95), cn = rnd(.06, .14);
+    const an = a0 + i / 5 * TAU + rnd(-.12, .12), L = S * rnd(.36, .44) * (P.yuvarlak ? .9 : 1), w = L * (P.yuvarlak ? rnd(1.02, 1.15) : rnd(.78, .95)), cn = P.yuvarlak ? rnd(-.03, .02) : rnd(.06, .14);
     yaprak.push({ an, L, w, cn });
   }
   // arkadan öne: bitişik yaprakların üst üste binmesi için
@@ -2563,8 +2569,9 @@ function gercekCicek(koyu){
       g.quadraticCurveTo(y.w * .14, -y.L * 1.02, y.w * .38, -y.L * .97);
       g.bezierCurveTo(y.w * .62, -y.L * .7, y.w * .35, -y.L * .2, 0, 0); g.closePath(); };
     const gr = g.createLinearGradient(0, 0, 0, -y.L);
-    gr.addColorStop(0, pembe(214, 70, 120, .98)); gr.addColorStop(.14, pembe(236, 130, 168, .97)); gr.addColorStop(.36, pembe(250, 210, 224, .95));
-    gr.addColorStop(.75, pembe(255, 244, 248, .94)); gr.addColorStop(1, pembe(252, 222, 234, .92));
+    const ps = P.s;
+    gr.addColorStop(0, pembe(...ps[0], .98)); gr.addColorStop(.14, pembe(...ps[1], .97)); gr.addColorStop(.36, pembe(...ps[2], .95));
+    gr.addColorStop(.75, pembe(...ps[3], .94)); gr.addColorStop(1, pembe(...ps[4], .92));
     g.fillStyle = gr; yol(); g.fill();
     // kenar gölgesi (yaprak kıvrımı) ve parlak kenar
     g.save(); yol(); g.clip();
@@ -2581,13 +2588,13 @@ function gercekCicek(koyu){
   }
   // orta: koyu çanak
   const og = g.createRadialGradient(m, m, 0, m, m, S * .12);
-  og.addColorStop(0, 'rgba(150,30,70,1)'); og.addColorStop(.6, 'rgba(200,60,105,.75)'); og.addColorStop(1, 'rgba(220,100,140,0)');
+  og.addColorStop(0, 'rgba(' + P.m + ',1)'); og.addColorStop(.6, 'rgba(' + P.m2 + ',.75)'); og.addColorStop(1, 'rgba(' + P.m2 + ',0)');
   g.fillStyle = og; g.beginPath(); g.arc(m, m, S * .12, 0, TAU); g.fill();
   // erkek organlar: ince saplar + sarı başçıklar
   const n = (25 + R() * 10) | 0;
   for (let i = 0; i < n; i++){
     const an = R() * TAU, L = S * rnd(.12, .22), cx = m + Math.cos(an) * L, cy = m + Math.sin(an) * L, bk = rnd(-.3, .3);
-    g.strokeStyle = 'rgba(250,215,225,.95)'; g.lineWidth = 1.1;
+    g.strokeStyle = 'rgba(' + P.fil + ',.95)'; g.lineWidth = 1.1;
     g.beginPath(); g.moveTo(m + Math.cos(an) * 3, m + Math.sin(an) * 3); g.quadraticCurveTo(m + Math.cos(an + bk) * L * .55, m + Math.sin(an + bk) * L * .55, cx, cy); g.stroke();
     g.fillStyle = 'rgba(120,60,20,.6)'; g.beginPath(); g.ellipse(cx + .4, cy + .4, 2.4, 1.9, an, 0, TAU); g.fill();
     g.fillStyle = 'rgba(255,214,90,1)'; g.beginPath(); g.ellipse(cx, cy, 2.1, 1.6, an, 0, TAU); g.fill();
@@ -2595,10 +2602,63 @@ function gercekCicek(koyu){
   g.fillStyle = 'rgba(235,240,180,.9)'; g.beginPath(); g.arc(m, m, 2.2, 0, TAU); g.fill();   // dişi organ
   return c;
 }
-function gercekYaprak(){
-  const S = 64, c = mk(S, S), g = c2(c), L = S * rnd(.82, .9), w = L * rnd(.55, .7), cn = rnd(.06, .14);
+// Japon akçaağacı (momiji) yaprağı: 7 derin, tırtıklı dilim; arkadan ışık alan saydam görünüm. Merkez = sapın bağlandığı yer.
+const MOMIJI_TON = [
+  ['250,196,70', '236,118,30', '196,44,22'], ['255,170,60', '226,70,28', '160,22,18'], ['246,120,50', '206,40,30', '128,14,16'],
+  ['255,214,96', '244,150,40', '210,80,24'], ['236,96,60', '190,30,40', '110,10,20'], ['220,200,80', '224,130,40', '186,56,24']
+];
+function momijiYaprak(S, koyu, ton){
+  S = S || 160; ton = ton || pick(MOMIJI_TON);
+  const c = mk(S, S), g = c2(c), cx = S / 2, cy = S * .58, Lm = S * rnd(.38, .42);
+  const n = 7, yay = rnd(2.2, 2.45), dilim = [];
+  for (let i = 0; i < n; i++){
+    const f = i / (n - 1) * 2 - 1, a = -Math.PI / 2 + f * yay + rnd(-.06, .06);
+    const L = Lm * (1 - Math.pow(Math.abs(f), 1.7) * .52) * rnd(.92, 1.06), w = L * rnd(.2, .26);
+    dilim.push({ a, L, w });
+  }
+  const yol = () => {
+    g.beginPath();
+    for (const d of dilim){
+      const ca = Math.cos(d.a), sa = Math.sin(d.a), P = (t, y) => [cx + ca * t * d.L - sa * y, cy + sa * t * d.L + ca * y];
+      const N = 14, gen = (k, t) => d.w * Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.08)), .85) * (1 - t * .25) + (k % 2 ? d.w * .1 * (1 - t) : 0);
+      let p = P(0, -d.w * .15); g.moveTo(p[0], p[1]);
+      for (let k = 1; k <= N; k++){ const t = k / N; p = P(t, -gen(k, t)); g.lineTo(p[0], p[1]); }
+      p = P(1.04, 0); g.lineTo(p[0], p[1]);
+      for (let k = N; k >= 1; k--){ const t = k / N; p = P(t, gen(k, t)); g.lineTo(p[0], p[1]); }
+      p = P(0, d.w * .15); g.lineTo(p[0], p[1]); g.closePath();
+    }
+  };
+  const gr = g.createRadialGradient(cx, cy, 0, cx, cy, Lm * 1.05);
+  gr.addColorStop(0, 'rgb(' + ton[0] + ')'); gr.addColorStop(.35, 'rgb(' + ton[1] + ')'); gr.addColorStop(1, 'rgb(' + ton[2] + ')');
+  g.fillStyle = gr; yol(); g.fill();
+  g.save(); yol(); g.clip();
+  // ışık geçirgenliği: lekeler ve parlak alanlar
+  for (let i = 0; i < 8; i++){ const a = R() * TAU, d = R() * Lm * .8; sprite(g, glow(pick(['255,230,150', '120,20,10', '255,190,90']), 's'), cx + Math.cos(a) * d, cy + Math.sin(a) * d, Lm * rnd(.15, .35), Lm * rnd(.15, .35), rnd(.12, .3)); }
+  g.globalAlpha = 1;
+  // damarlar: merkezden her dilimin ucuna + yan damarlar
+  for (const d of dilim){
+    const ca = Math.cos(d.a), sa = Math.sin(d.a);
+    g.strokeStyle = 'rgba(255,225,160,.55)'; g.lineWidth = S * .008;
+    g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + ca * d.L * .97, cy + sa * d.L * .97); g.stroke();
+    g.strokeStyle = 'rgba(255,215,150,.25)'; g.lineWidth = S * .004;
+    for (let k = 1; k < 5; k++){ const t = k / 5.5, bx = cx + ca * d.L * t, by = cy + sa * d.L * t;
+      for (const sg of [-1, 1]){ const a2 = d.a + sg * .9; g.beginPath(); g.moveTo(bx, by); g.lineTo(bx + Math.cos(a2) * d.w * .8, by + Math.sin(a2) * d.w * .8); g.stroke(); } }
+  }
+  // kenarlar biraz koyu (yaprak kalınlığı), arkadakiler daha koyu
+  const kg = g.createRadialGradient(cx, cy, Lm * .5, cx, cy, Lm * 1.1); kg.addColorStop(0, 'rgba(60,0,0,0)'); kg.addColorStop(1, 'rgba(60,0,0,.35)');
+  g.fillStyle = kg; g.fillRect(0, 0, S, S);
+  if (koyu){ g.fillStyle = 'rgba(25,5,10,.35)'; g.fillRect(0, 0, S, S); }
+  g.restore();
+  g.strokeStyle = 'rgba(90,10,10,.35)'; g.lineWidth = S * .005; yol(); g.stroke();
+  // sap
+  g.strokeStyle = 'rgba(120,30,20,.95)'; g.lineWidth = S * .014; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(cx, cy); g.quadraticCurveTo(cx + S * .02, cy + S * .12, cx - S * .01, cy + S * .2); g.stroke();
+  return c;
+}
+function gercekYaprak(palAd){
+  const P = CICEK_PAL[palAd || 'sakura'], S = 64, c = mk(S, S), g = c2(c), L = S * rnd(.82, .9), w = L * (P.yuvarlak ? rnd(.85, 1) : rnd(.55, .7)), cn = P.yuvarlak ? 0 : rnd(.06, .14);
   g.translate(S / 2, S * .95);
-  const gr = g.createLinearGradient(0, 0, 0, -L); gr.addColorStop(0, 'rgba(232,130,166,.95)'); gr.addColorStop(.4, 'rgba(250,206,222,.93)'); gr.addColorStop(1, 'rgba(255,244,248,.9)');
+  const gr = g.createLinearGradient(0, 0, 0, -L); gr.addColorStop(0, 'rgba(' + P.s[1].join(',') + ',.95)'); gr.addColorStop(.4, 'rgba(' + P.s[2].join(',') + ',.93)'); gr.addColorStop(1, 'rgba(' + P.s[3].join(',') + ',.9)');
   g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0);
   g.bezierCurveTo(-w * .5, -L * .2, -w * .66, -L * .75, -w * .36, -L * .98); g.quadraticCurveTo(-w * .12, -L, 0, -L * (1 - cn));
   g.quadraticCurveTo(w * .12, -L, w * .36, -L * .98); g.bezierCurveTo(w * .66, -L * .75, w * .5, -L * .2, 0, 0); g.fill();
@@ -2613,28 +2673,38 @@ function gercekTomurcuk(){
   g.fillStyle = '#6b3a2c'; for (const sx of [-1, 0, 1]){ g.beginPath(); g.ellipse(sx * S * .07, -S * .07, S * .07, S * .12, sx * .5, 0, TAU); g.fill(); }
   return c;
 }
-function gsHazirla(){
-  if (GS.cic) return;
-  GS.cic = Array.from({ length: 22 }, () => gercekCicek(false));
-  GS.koyu = Array.from({ length: 8 }, () => gercekCicek(true));
-  GS.yap = Array.from({ length: 10 }, gercekYaprak);
-  GS.tom = Array.from({ length: 4 }, gercekTomurcuk);
+function gsHazirla(pal){
+  if (!GS.cic){
+    GS.cic = Array.from({ length: 22 }, () => gercekCicek(false));
+    GS.koyu = Array.from({ length: 8 }, () => gercekCicek(true));
+    GS.yap = Array.from({ length: 10 }, gercekYaprak);
+    GS.tom = Array.from({ length: 4 }, gercekTomurcuk);
+    GS.p = { sakura: { cic: GS.cic, koyu: GS.koyu } };
+  }
+  if (pal && !GS.p[pal]) GS.p[pal] = CICEK_PAL[pal].akca
+    ? { cic: Array.from({ length: 22 }, () => momijiYaprak(160, false)), koyu: Array.from({ length: 8 }, () => momijiYaprak(160, true)), akca: true }
+    : { cic: Array.from({ length: 18 }, () => gercekCicek(false, pal)), koyu: Array.from({ length: 6 }, () => gercekCicek(true, pal)) };
+  return GS.p[pal || 'sakura'];
 }
 // gerçekçi dal: kabuk, sürgünler, saplı çiçek salkımları
 function gercekDal(L, U, ang, opt){
-  opt = opt || {}; gsHazirla();
+  opt = opt || {}; const PS = gsHazirla(opt.pal);
   const pad = L * .4, cw = Math.round(L * 1.6 + pad * 2), ch = cw, c = mk(cw, ch), g = c2(c);
   const ax = cw / 2 - Math.cos(ang) * L * .62, ay = ch / 2 - Math.sin(ang) * L * .62;
   const segs = [], uclar = [];
   const yer = (x, y) => x > 8 && y > 8 && x < cw - 8 && y < ch - 8;
   function dal(x, y, a, l, w, d){
-    const bend = rnd(-.28, .28), gx = (Math.PI / 2 - a) * .1;
+    const bend = rnd(-.28, .28) * (opt.zikzak ? 2.2 : 1), gx = (Math.PI / 2 - a) * (opt.zikzak ? .03 : .1);
     const ex = x + Math.cos(a + bend + gx) * l, ey = y + Math.sin(a + bend + gx) * l;
-    const mx = x + Math.cos(a + bend * .35) * l * .5 + rnd(-1, 1) * l * .04, my = y + Math.sin(a + bend * .35) * l * .5 + rnd(-1, 1) * l * .04;
+    const mx = opt.zikzak ? x + Math.cos(a - bend) * l * .55 : x + Math.cos(a + bend * .35) * l * .5 + rnd(-1, 1) * l * .04, my = opt.zikzak ? y + Math.sin(a - bend) * l * .55 : y + Math.sin(a + bend * .35) * l * .5 + rnd(-1, 1) * l * .04;
     if (!yer(ex, ey)) return;
     segs.push({ x, y, mx, my, ex, ey, w, w2: Math.max(1.2 * U, w * .7), d });
+    if (opt.sapsiz && d <= 3){ // erik: çiçekler doğrudan dalın üstünde
+      const nf = Math.round(l / (16 * U));
+      for (let i = 0; i < nf; i++){ const t = R(), q = 1 - t; uclar.push([q * q * x + 2 * q * t * mx + t * t * ex + rnd(-3, 3) * U, q * q * y + 2 * q * t * my + t * t * ey + rnd(-3, 3) * U, a, R(), true]); }
+    }
     // kısa sürgünler (her birinin ucunda salkım)
-    const ns = d <= 3 ? Math.round(l / (34 * U)) : 0;
+    const ns = d <= 3 && !opt.sapsiz ? Math.round(l / (34 * U)) : 0;
     for (let i = 0; i < ns; i++){
       const t = rnd(.15, .95), q = 1 - t, px = q * q * x + 2 * q * t * mx + t * t * ex, py = q * q * y + 2 * q * t * my + t * t * ey;
       const sa = a + (R() < .5 ? -1 : 1) * rnd(.5, 1.3) + (Math.PI / 2 - a) * .2, sl = rnd(8, 22) * U;
@@ -2673,32 +2743,39 @@ function gercekDal(L, U, ang, opt){
   }
   // salkımlar: sapların ucunda çiçekler (arkadakiler koyu, öndekiler parlak)
   const boy = (opt.cicek || 1) * U, cicekler = [];
-  for (const [x, y, a, z] of uclar){
-    if (R() < .25) continue;
-    const n = R() < .3 ? 1 : Math.round(rnd(2, 4));
+  for (const [x, y, a, z, dogrudan] of uclar){
+    if (dogrudan){ if (R() < .15) continue; cicekler.push({ x, y, fx: x, fy: y, z: R(), tom: R() < .18, sapyok: true }); continue; }
+    if (R() < (PS.akca ? .4 : .25)) continue;
+    const n = R() < .3 ? 1 : Math.round(rnd(2, PS.akca ? 3 : 4));
     for (let i = 0; i < n; i++){
       const sa = a + rnd(-1.2, 1.2) + (Math.PI / 2 - a) * .25, sl = rnd(14, 34) * boy;
       const fx = x + Math.cos(sa) * sl, fy = y + Math.sin(sa) * sl;
       if (!yer(fx, fy)) continue;
       cicekler.push({ x, y, fx, fy, z: R(), tom: R() < .1 });
     }
-    if (R() < .12) cicekler.push({ x, y, fx: x + rnd(-10, 10) * boy, fy: y + rnd(-6, 10) * boy, z: R(), yaprakK: true });
+    if (R() < .12 && !PS.akca) cicekler.push({ x, y, fx: x + rnd(-10, 10) * boy, fy: y + rnd(-6, 10) * boy, z: R(), yaprakK: true });
   }
   cicekler.sort((p, q) => p.z - q.z);
   g.lineCap = 'round';
   for (const f of cicekler){
     // sap
-    g.strokeStyle = f.z < .4 ? 'rgba(80,60,40,.8)' : 'rgba(118,100,60,.9)'; g.lineWidth = Math.max(.8, 1.1 * boy);
-    g.beginPath(); g.moveTo(f.x, f.y); g.quadraticCurveTo((f.x + f.fx) / 2 + rnd(-3, 3) * boy, (f.y + f.fy) / 2, f.fx, f.fy); g.stroke();
+    if (!f.sapyok){ g.strokeStyle = f.z < .4 ? 'rgba(80,60,40,.8)' : 'rgba(118,100,60,.9)'; g.lineWidth = Math.max(.8, 1.1 * boy);
+      g.beginPath(); g.moveTo(f.x, f.y); g.quadraticCurveTo((f.x + f.fx) / 2 + rnd(-3, 3) * boy, (f.y + f.fy) / 2, f.fx, f.fy); g.stroke(); }
     if (f.yaprakK){ // genç yaprak (kırmızımsı yeşil)
       g.save(); g.translate(f.fx, f.fy); g.rotate(rnd(-1, 1) + Math.atan2(f.fy - f.y, f.fx - f.x) + Math.PI / 2);
       const L2 = rnd(16, 26) * boy, gr = g.createLinearGradient(0, 0, 0, -L2); gr.addColorStop(0, '#7a3a2e'); gr.addColorStop(1, '#8e8a3c');
       g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(-L2 * .35, -L2 * .5, 0, -L2); g.quadraticCurveTo(L2 * .35, -L2 * .5, 0, 0); g.fill(); g.restore();
       continue;
     }
+    if (PS.akca){ // akçaağaç: yaprak sapın yönünde, hafif sarkık; boyu çiçekten iri
+      const r = (30 + f.z * 22) * boy * rnd(.85, 1.15), dx = f.fx - f.x, dy = f.fy - f.y, l = Math.hypot(dx, dy) || 1;
+      g.save(); g.translate(f.fx, f.fy); g.rotate(Math.atan2(dy / l + .55, dx / l) + Math.PI / 2 + rnd(-.35, .35));
+      g.scale(rnd(.7, 1), 1); g.globalAlpha = .85 + f.z * .15;
+      g.drawImage(f.z < .3 ? pick(PS.koyu) : pick(PS.cic), -r, -r * 1.16, r * 2, r * 2); g.restore(); continue;
+    }
     if (f.tom){ const r = rnd(9, 13) * boy; g.save(); g.translate(f.fx, f.fy); g.rotate(Math.atan2(f.fy - f.y, f.fx - f.x) + Math.PI / 2); g.globalAlpha = .95; g.drawImage(pick(GS.tom), -r / 2, -r * .8, r, r); g.restore(); g.globalAlpha = 1; continue; }
-    const r = (19 + f.z * 13) * boy * rnd(.85, 1.15);
-    const spr = f.z < .3 ? pick(GS.koyu) : pick(GS.cic);
+    const r = (19 + f.z * 13) * boy * rnd(.85, 1.15) * (f.sapyok ? .8 : 1);
+    const spr = f.z < .3 ? pick(PS.koyu) : pick(PS.cic);
     g.save(); g.translate(f.fx, f.fy); g.rotate(R() * TAU);
     const egik = rnd(.55, 1); g.scale(1, egik);                 // çiçeğin yüzü farklı yönlere bakar
     g.globalAlpha = .8 + f.z * .2; g.drawImage(spr, -r, -r, r * 2, r * 2); g.restore();
@@ -2713,16 +2790,20 @@ function gercekDal(L, U, ang, opt){
   const k = mk(x1 - x0, y1 - y0); c2(k).drawImage(c, -x0, -y0); c.width = c.height = 1;
   return { c: k, ax: ax - x0, ay: ay - y0, ph: R() * TAU, amp: opt.amp || 1 };
 }
-function sceneSakuraGercek(W, H, o){
-  gsHazirla();
+function sceneSakuraGercek(W, H, o){ return sceneDalGercek(W, H, o, {}); }
+function sceneDalGercek(W, H, o, cfg){
+  const pal = cfg.pal || 'sakura'; gsHazirla(pal);
   const u = o.u, U = Math.max(.35, u), A = W * H / 1.04e6 * o.q, dik = H > W * 1.1, M = Math.min(W, H);
   const bg = mk(W, H), g = c2(bg);
-  g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
-  sprite(g, glow('90,30,55', 's'), W * .3, H * .15, W * .5, H * .4, .25);
-  sprite(g, glow('90,30,55', 's'), W * .85, H * .45, W * .35, H * .5, .2);
+  if (cfg.fon) cfg.fon(g, W, H, U);
+  else {
+    g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+    sprite(g, glow(cfg.pus || '90,30,55', 's'), W * .3, H * .15, W * .5, H * .4, .25);
+    sprite(g, glow(cfg.pus || '90,30,55', 's'), W * .85, H * .45, W * .35, H * .5, .2);
+  }
   g.globalAlpha = 1;
   const kur = (tanim, bulan, karart) => tanim.map(([x, y, a, l, op]) => {
-    const d = gercekDal(M * l, U, a, op);
+    const d = gercekDal(M * l, U, a, Object.assign({ pal, zikzak: cfg.zikzak, sapsiz: cfg.sapsiz }, op));
     if (bulan){ d.c = yumusat(d.c, bulan); }
     if (karart){ const q = c2(d.c); q.globalCompositeOperation = 'source-atop'; q.fillStyle = 'rgba(0,0,0,' + karart + ')'; q.fillRect(0, 0, d.c.width, d.c.height); }
     return { d, x, y };
@@ -2730,7 +2811,7 @@ function sceneSakuraGercek(W, H, o){
   const arka = kur(dik
     ? [[W * .45, -10 * U, 1.7, .5, { kalin: 7, derinlik: 4, cicek: .65, koyu: true, amp: .5 }], [W * 1.02, H * .45, Math.PI * .82, .45, { kalin: 7, derinlik: 4, cicek: .65, koyu: true, amp: .5 }]]
     : [[W * .42, -10 * U, 1.75, .48, { kalin: 7, derinlik: 4, cicek: .65, koyu: true, amp: .5 }], [W * .72, -10 * U, 1.5, .42, { kalin: 7, derinlik: 4, cicek: .65, koyu: true, amp: .5 }],
-       [-10 * U, H * .55, .2, .4, { kalin: 7, derinlik: 4, cicek: .65, koyu: true, amp: .5 }]], 4, .5);
+       [-10 * U, H * .55, .2, .4, { kalin: 7, derinlik: 4, cicek: .65, koyu: true, amp: .5 }]], 4, cfg.arkaKarart !== undefined ? cfg.arkaKarart : .5);
   const on = kur(dik
     ? [[-14 * U, H * .02, .7, .66, { kalin: 15, derinlik: 5, cicek: 1.05 }], [W * .55, -14 * U, 1.75, .48, { kalin: 11, derinlik: 4 }],
        [W + 14 * U, H * .2, Math.PI * .72, .66, { kalin: 15, derinlik: 5, cicek: 1.05 }], [W + 14 * U, H * .62, Math.PI * .68, .52, { kalin: 12, derinlik: 5 }]]
@@ -2741,27 +2822,29 @@ function sceneSakuraGercek(W, H, o){
   const onBulanik = [];
   for (let i = 0; i < (dik ? 3 : 4); i++){
     const r = rnd(45, 80) * U, cc = mk(r * 2.6, r * 2.6), q = c2(cc);
-    q.translate(r * 1.3, r * 1.3); q.rotate(R() * TAU); q.drawImage(pick(GS.cic), -r, -r, r * 2, r * 2);
+    q.translate(r * 1.3, r * 1.3); q.rotate(R() * TAU); q.drawImage(pick(GS.p[pal].cic), -r, -r, r * 2, r * 2);
     onBulanik.push({ c: yumusat(cc, 10), x: pick([rnd(-.02, .12), rnd(.88, 1.02)]) * W, y: rnd(.05, .95) * H, r, ph: R() * TAU });
   }
   // yapraklar
   const say = Math.round(150 * clamp(A, .35, 1.3));
   const yeni = ilk => {
     const z = .3 + Math.pow(R(), 1.8) * 1.15, b = z > 1.2, src = R() < .55 ? pick(on) : null;
-    return { x: src ? clamp(src.x + rnd(-.2, .35) * M, 0, W) : rnd(-.05, 1.05) * W, y: ilk ? R() * H : (src ? rnd(0, .4) * H : -24), z, b, s: pick(GS.yap),
+    return { x: src ? clamp(src.x + rnd(-.2, .35) * M, 0, W) : rnd(-.05, 1.05) * W, y: ilk ? R() * H : (src ? rnd(0, .4) * H : -24), z, b, s: pick(yapSet),
       vx: rnd(8, 38) * z * U, vy: rnd(24, 58) * z * U, rot: R() * TAU, vr: rnd(-1.5, 1.5), fl: R() * TAU, vf: rnd(2, 4.5), sal: rnd(.5, 1.4), a: ilk ? 1 : 0 };
   };
+  const yapSet = pal === 'sakura' ? GS.yap : CICEK_PAL[pal].akca ? Array.from({ length: 10 }, () => momijiYaprak(72)) : Array.from({ length: 8 }, () => gercekYaprak(pal));
   const yap = Array.from({ length: say }, () => yeni(true));
-  const bulanikYaprak = GS.yap.map(c => yumusat(c, 3));
+  const bulanikYaprak = yapSet.map(c => yumusat(c, 3));
   return { draw(c, t, dt, still){
     c.drawImage(bg, 0, 0);
+    if (cfg.fonAnim) cfg.fonAnim(c, t, W, H, U);
     for (const b of arka) dalCiz(c, b.d, b.x, b.y, t, .6);
     const ruz = 1 + .5 * Math.sin(t * .22);
     const ciz = p => {
-      const sz = (p.b ? 13 : 5.5) * U * p.z, sx = Math.cos(p.fl);
+      const sz = (p.b ? 13 : 5.5) * (cfg.dusenBoy || 1) * U * p.z, sx = Math.cos(p.fl);
       c.globalAlpha = p.a * (p.b ? .65 : clamp(.4 + p.z * .55, .4, 1));
       c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.scale(.2 + Math.abs(sx) * .8, 1);
-      c.drawImage(p.b ? bulanikYaprak[GS.yap.indexOf(p.s)] : p.s, -sz, -sz, sz * 2, sz * 2); c.restore();
+      c.drawImage(p.b ? bulanikYaprak[yapSet.indexOf(p.s)] : p.s, -sz, -sz, sz * 2, sz * 2); c.restore();
     };
     for (const p of yap){
       if (!still){
@@ -2779,7 +2862,45 @@ function sceneSakuraGercek(W, H, o){
   } };
 }
 
+/* ---------- Erik çiçeği (ume) ve ay ışığında beyaz sakura ---------- */
+function sceneAkcaagac(W, H, o){
+  return sceneDalGercek(W, H, o, { pal: 'akcaagac', arkaKarart: .3, dusenBoy: 2.6,
+    fon(g, W, H, U){
+      // arkada odak dışı güneşli sonbahar ormanı: sıcak degrade + iri bokeh lekeleri
+      g.fillStyle = vgrad(g, 0, H, [[0, '#3a1f0c'], [.45, '#5a3412'], [1, '#1c0f07']]); g.fillRect(0, 0, W, H);
+      const M = Math.min(W, H);
+      for (let i = 0; i < 70; i++) sprite(g, glow(pick(['230,120,30', '200,70,20', '250,190,80', '120,90,30', '170,50,20']), 's'), R() * W, R() * H, M * rnd(.08, .3), M * rnd(.08, .3), rnd(.15, .4));
+      g.globalCompositeOperation = 'lighter';
+      sprite(g, glow('255,220,150', 's'), W * .62, H * .18, W * .5, H * .45, .35);
+      for (let i = 0; i < 26; i++){ const r = M * rnd(.012, .04); sprite(g, glow(pick(['255,230,170', '255,200,120', '255,240,200']), 's'), W * rnd(.2, 1), H * rnd(0, .6), r, r, rnd(.25, .6)); }
+      g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+    },
+    fonAnim(c, t, W, H, U){ c.globalCompositeOperation = 'lighter'; sprite(c, glow('255,210,140', 's'), W * (.62 + .02 * Math.sin(t * .2)), H * .18, W * .4, H * .35, .07 + .04 * Math.sin(t * .35)); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; }
+  });
+}
+function sceneAySakura(W, H, o){
+  const ay = { x: .7, y: .2 };
+  return sceneDalGercek(W, H, o, { pal: 'beyaz',
+    fon(g, W, H, U){
+      g.fillStyle = vgrad(g, 0, H, [[0, '#050a1c'], [.5, '#0b1530'], [1, '#03060f']]); g.fillRect(0, 0, W, H);
+      photoStars(g, Math.round(500 * W * H / 2e6), 0, 0, W, H * .8, U, null, .8);
+      const ax = W * ay.x, ayy = H * ay.y, r = Math.min(W, H) * .085;
+      sprite(g, glow('180,200,255', 's'), ax, ayy, r * 7, r * 7, .35);
+      sprite(g, glow('220,230,255', 's'), ax, ayy, r * 3, r * 3, .5);
+      moon(g, ax, ayy, r);
+      // ince bulut şeritleri
+      for (let i = 0; i < 6; i++) sprite(g, glow('120,135,170', 's'), W * rnd(.4, 1), H * rnd(.1, .35), W * rnd(.15, .3), H * .02, .25);
+      g.globalAlpha = 1;
+    },
+    fonAnim(c, t, W, H, U){ c.globalCompositeOperation = 'lighter'; sprite(c, glow('200,215,255', 's'), W * ay.x, H * ay.y, Math.min(W, H) * .5, Math.min(W, H) * .5, .06 + .03 * Math.sin(t * .5)); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; }
+  });
+}
+
+/* ---------- Japon morsalkımı (wisteria): yukarıdan sarkan salkımlar ---------- */
 const SCENES = {
+  sakuragercek: { grup: 'Gerçekçi', name: 'Sakura (gerçekçi)', icon: '💮', desc: 'Siyah fonda gerçekçi sakura dalları: saplı çiçek salkımları, tomurcuklar, kabuklu dallar, odak dışı yapraklar.', make: sceneSakuraGercek, hd: true },
+  aysakura: { grup: 'Gerçekçi', name: 'Ay ışığında sakura', icon: '🌕', desc: 'Lacivert gecede dolunay, yıldızlar ve beyaz sakura dalları.', make: sceneAySakura, hd: true, yeni: true },
+  akcaagac: { grup: 'Gerçekçi', name: 'Japon akçaağacı', icon: '🍁', desc: 'Kızıl-turuncu momiji yaprakları, arkada güneşli sonbahar, süzülerek düşen yapraklar.', make: sceneAkcaagac, hd: true, yeni: true },
   galaksi: { grup: 'Uzay', name: 'Galaksi', icon: '🌌', desc: 'Fotoğraf gibi sarmal galaksi: parlak çekirdek, toz şeritleri, pembe bulutsular.', make: sceneGalaksi },
   samanyolu: { grup: 'Uzay', name: 'Samanyolu', icon: '✨', desc: 'Altın çekirdekli Samanyolu, karanlık toz yarıkları, ufukta hava ışıması.', make: sceneSamanyolu },
   kayanyildiz: { grup: 'Uzay', name: 'Kayan yıldızlar', icon: '🌠', desc: 'Lacivert gece, ay ışığı ve sık sık kayan yıldızlar.', make: sceneKayan },
@@ -2800,12 +2921,83 @@ const SCENES = {
   gecesato: { grup: 'Fantastik', name: 'Gece Şatosu', icon: '🏰', desc: 'Deniz kıyısında uçurumdaki şato, dolunay, yarasalar ve bulutlar.', make: sceneGeceSato },
   buyucukule: { grup: 'Fantastik', name: 'Büyücü Kulesi', icon: '🔮', desc: 'Kitap rafları, fokurdayan iksirler, dönen rün halkası.', make: sceneBuyucuKule },
   kristal: { grup: 'Fantastik', name: 'Kristal Mağara', icon: '💎', desc: 'Işıldayan kristaller, damlalarla halkalanan yeraltı gölü.', make: sceneKristal },
-  sakuragercek: { grup: 'Japonya', name: 'Sakura (gerçekçi)', icon: '💮', desc: 'Siyah fonda gerçekçi sakura dalları: saplı çiçek salkımları, tomurcuklar, kabuklu dallar, odak dışı yapraklar.', make: sceneSakuraGercek, hd: true },
   gecesakura: { grup: 'Japonya', name: 'Gece sakurası', icon: '🌸', desc: 'Siyah fonda kenarlardan sarkan çiçekli sakura dalları ve savrulan yapraklar.', make: sceneGeceSakura, hd: true },
   sakura: { grup: 'Japonya', name: 'Sakura (güneşli)', icon: '🌞', desc: 'Göl kıyısında çiçek açmış Japon kiraz ağacı, savrulan yapraklar, torii ve Fuji; ışık huzmeleri.', make: (W, H, o) => sceneSakura(W, H, o, false), hd: true },
   sakurayagmur: { grup: 'Japonya', name: 'Sakura (yağmurlu)', icon: '🌧️', desc: 'Yağmur altında sakura: ıslak dallar, göle düşen damlalar, sis ve uzakta şimşek.', make: (W, H, o) => sceneSakura(W, H, o, true), hd: true },
   ozel: { grup: 'Kişisel', name: 'Kendi görselin', icon: '📷', desc: 'İstediğin resmi arka plan yap. Resim sadece bu cihazda saklanır, kimseye gönderilmez.', make: sceneOzel }
 };
+/* ---------- Video duvar kağıtları: duvar-kagitlari/<Kategori>/*.mp4 (liste: duvar-liste.json, Netlify yayında üretir) ---------- */
+const VID = { el: new Map(), kare: new Map(), hazir: new Map() };
+function videoEl(src){
+  let v = VID.el.get(src); if (v) return v;
+  v = document.createElement('video');
+  v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.preload = 'auto';
+  v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
+  v.src = src; VID.el.set(src, v); return v;
+}
+// önizleme karesi: varsa aynı adlı resim, yoksa videonun ~1. saniyesi (küçük tuvale)
+function videoKare(item){
+  if (VID.kare.has(item.url)) return VID.kare.get(item.url);
+  const p = new Promise(res => {
+    let bitti = false;
+    const bit = c => { if (bitti) return; bitti = true; VID.hazir.set(item.url, c); res(c); };
+    const kucuk = (im, w, h) => { const W = 480, c = mk(W, Math.max(1, Math.round(W * h / w))); c2(c).drawImage(im, 0, 0, c.width, c.height); return c; };
+    if (item.poster){
+      const im = new Image(); im.onload = () => bit(kucuk(im, im.naturalWidth, im.naturalHeight)); im.onerror = () => bit(null); im.src = item.poster;
+    } else {
+      const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto';
+      const birak = () => { try { v.removeAttribute('src'); v.load(); } catch(e){} };
+      v.onloadeddata = () => { try { v.currentTime = Math.min(1, (v.duration || 3) / 3); } catch(e){ birak(); bit(null); } };
+      v.onseeked = () => { let c = null; try { c = kucuk(v, v.videoWidth, v.videoHeight); } catch(e){} birak(); bit(c); };
+      v.onerror = () => { birak(); bit(null); };
+      setTimeout(() => { birak(); bit(null); }, 20000);
+      v.src = item.url;
+    }
+  });
+  VID.kare.set(item.url, p); return p;
+}
+function kaplaCiz(c, im, iw, ih, W, H){ const k = Math.max(W / iw, H / ih), w = iw * k, h = ih * k; c.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
+function sceneVideo(item){
+  return (W, H, o) => {
+    if (o.thumb){
+      const k = VID.hazir.get(item.url);
+      return { draw(c){ if (k) kaplaCiz(c, k, k.width, k.height, W, H); else { c.fillStyle = vgrad(c, 0, H, [[0, '#1a1f2b'], [1, '#0d1016']]); c.fillRect(0, 0, W, H); } },
+        thumbAsync: VID.hazir.has(item.url) ? null : videoKare(item) };
+    }
+    const v = videoEl(item.url);
+    let calisiyor = false;
+    const yeniden = () => o.redraw && o.redraw();
+    if (v.readyState < 2) v.addEventListener('loadeddata', yeniden, { once: true });
+    if (!VID.hazir.has(item.url)) videoKare(item).then(yeniden);
+    // iPhone düşük güç modu gibi otomatik oynatmayı engelleyen durumlarda ilk dokunuşta başlat
+    const dokun = () => { if (calisiyor) v.play().catch(() => {}); };
+    document.addEventListener('pointerdown', dokun, { once: true, passive: true });
+    return {
+      draw(c, t, dt, still){
+        if (v.readyState >= 2 && v.videoWidth) kaplaCiz(c, v, v.videoWidth, v.videoHeight, W, H);
+        else { const k = VID.hazir.get(item.url); if (k) kaplaCiz(c, k, k.width, k.height, W, H); else { c.fillStyle = '#05070b'; c.fillRect(0, 0, W, H); } }
+        if (!still && calisiyor && v.paused) v.play().catch(() => {});
+      },
+      calis(on){ calisiyor = on; if (on) v.play().catch(() => {}); else if (!v.paused) v.pause(); },
+      kapat(){ calisiyor = false; v.pause(); document.removeEventListener('pointerdown', dokun); try { v.removeAttribute('src'); v.load(); } catch(e){} VID.el.delete(item.url); }
+    };
+  };
+}
+const yolUrl = rel => 'duvar-kagitlari/' + rel.split('/').map(encodeURIComponent).join('/');
+const VIDEO_LISTE = (location.protocol === 'file:' ? Promise.resolve(null) : fetch('duvar-liste.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).catch(() => null)).then(d => {
+  const ek = [];
+  if (d && Array.isArray(d.kategoriler)) for (const k of d.kategoriler) for (const x of (k.videolar || [])){
+    const id = 'v:' + x.dosya, item = { url: yolUrl(x.dosya), poster: x.poster ? yolUrl(x.poster) : null };
+    SCENES[id] = { grup: '🎬 ' + k.ad, name: x.ad, icon: '🎬', desc: 'Video duvar kağıdı (' + k.ad + ')', make: sceneVideo(item), hd: true, video: true };
+    ek.push(id);
+  }
+  if (ek.length) try { window.dispatchEvent(new Event('oyunbg-liste')); } catch(e){}
+  return ek;
+});
+
+// Görünüm penceresindeki sıra: önce gerçekçi HD sahneler, sonra temalar, en sonda videolar ve kişisel görsel
+const GRUP_SIRA = ['Genel', 'Gerçekçi', 'Japonya', 'Doğa', 'Huzur', 'Uzay', 'Şehir', 'Cyberpunk', 'Fantastik', 'Soyut'];
+const grupSira = g => { const i = GRUP_SIRA.indexOf(g); return i >= 0 ? i : String(g).startsWith('🎬') ? 1.5 : g === 'Kişisel' ? 90 : 60; };
 const LS_KEY = 'oyunodasi-bg';
 const st = { id: null, efekt: 'kenburns', animate: true, dim: .25, cv: null, g: null, dimEl: null, scene: null, raf: 0, last: 0, time: 40, paused: false,
   cssW: 0, cssH: 0, s: 1, fps: 30, ms: [], frames: 0, buildMs: 0, drawn: false, q: 1, slow: 0, win: { t0: 0, n: 0 } };
@@ -2866,9 +3058,11 @@ function schedule(){
   st.win.t0 = 0; st.slow = 0;
   if (st.animate && !st.paused && !document.hidden){ st.last = 0; st.raf = requestAnimationFrame(frame); }
   else if (!st.drawn || !st.animate) { if (!document.hidden || !st.drawn) render(0, true); }
+  if (st.scene.calis) st.scene.calis(!!st.raf);   // video: sadece arka plan çalışırken oynasın
 }
 function off(){
   if (st.raf){ cancelAnimationFrame(st.raf); st.raf = 0; }
+  if (st.scene && st.scene.kapat) st.scene.kapat();
   st.scene = null; st.id = null;
   if (st.cv){ st.cv.width = st.cv.height = 1; st.cv.remove(); st.dimEl.remove(); st.cv = st.g = st.dimEl = null; }
   delete document.documentElement.dataset.bg;
@@ -2889,7 +3083,7 @@ function set(id, opts){
   ensureDom();
   document.documentElement.dataset.bg = id;
   st.dimEl.style.opacity = st.dim; st.dimEl.hidden = st.dim <= 0;
-  if (id !== st.id || !st.scene){ st.id = id; build(); }
+  if (id !== st.id || !st.scene){ if (st.scene && st.scene.kapat) st.scene.kapat(); st.id = id; build(); }
   if (opts.save !== false) save();
   st.drawn = st.drawn && st.animate;
   schedule();
@@ -2919,14 +3113,18 @@ addEventListener('resize', () => {
 document.addEventListener('visibilitychange', schedule);
 
 window.OyunBG = {
-  list: [{ id: 'yok', grup: 'Genel', name: 'Yok', icon: '⬛', desc: 'Hareketli arka plan kapalı.' }]
-    .concat(Object.keys(SCENES).map(id => ({ id, grup: SCENES[id].grup, name: SCENES[id].name, icon: SCENES[id].icon, desc: SCENES[id].desc }))),
+  get list(){ return [{ id: 'yok', grup: 'Genel', name: 'Yok', icon: '⬛', desc: 'Hareketli arka plan kapalı.' }]
+    .concat(Object.keys(SCENES).map(id => ({ id, grup: SCENES[id].grup, name: SCENES[id].name, icon: SCENES[id].icon, desc: SCENES[id].desc, hd: !!SCENES[id].hd, video: !!SCENES[id].video, yeni: !!SCENES[id].yeni })))
+    .sort((a, b) => grupSira(a.grup) - grupSira(b.grup)); },
+  videolar: VIDEO_LISTE,
   set, thumb, saved, setCustomImage, removeCustom,
   hasCustom(){ return loadCustom().then(c => !!c); },
   get efekt(){ return st.efekt; },
   get current(){ return st.id; },
   pause(v){ st.paused = !!v; schedule(); },
-  restore(){ const p = saved(); if (p && p.efekt) st.efekt = p.efekt; if (p && p.id && SCENES[p.id]) set(p.id, { animate: p.animate, dim: p.dim, save: false }); else if (p){ if (p.dim !== undefined) st.dim = clamp(+p.dim || 0, 0, .8); if (p.animate !== undefined) st.animate = !!p.animate; } },
+  restore(){ const p = saved(); if (p && p.efekt) st.efekt = p.efekt; if (p && p.id && SCENES[p.id]) set(p.id, { animate: p.animate, dim: p.dim, save: false }); else if (p){ if (p.dim !== undefined) st.dim = clamp(+p.dim || 0, 0, .8); if (p.animate !== undefined) st.animate = !!p.animate;
+    // video duvar kağıdı: liste gelince aç
+    if (p.id && String(p.id).startsWith('v:')) VIDEO_LISTE.then(() => { const q = saved(); if (SCENES[p.id] && !st.id && q && q.id === p.id) set(p.id, { animate: p.animate, dim: p.dim, save: false }); }); } },
   info(){
     const a = st.ms, avg = a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
     return { id: st.id, animate: st.animate, paused: st.paused, running: !!st.raf, fps: st.fps, scale: +st.s.toFixed(3), quality: +st.q.toFixed(2),

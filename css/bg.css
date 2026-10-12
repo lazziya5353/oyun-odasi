@@ -66,4 +66,25 @@ html:root[data-bg] body{background:transparent}
 .bg-pick.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .bg-pick canvas{width:100%;aspect-ratio:16/10;height:auto;border-radius:8px;display:block;background:#0b0d14}
 
-.bg-grup{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:6px 0 -2px}
+.bg-grup{grid-column:1/-1;display:flex;align-items:baseline;gap:8px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--fg);margin:12px 0 0;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.bg-grup small{font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted);font-size:12px}
+
+.bg-pick{position:relative}
+.bg-etiket{position:absolute;top:10px;left:10px;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.08em;padding:2px 7px;border-radius:99px;background:var(--accent);color:var(--accent-ink,#0b0d14);box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.bg-etiket.vid{background:rgba(0,0,0,.65);color:#fff;border:1px solid rgba(255,255,255,.35)}
+.bg-pick.on::after{content:'✓';position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink,#0b0d14);font-size:13px;font-weight:800}
+.bg-pick span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Görünüm penceresi: sekmeler ve arka plan araç çubuğu */
+.tema-sekmeler{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 4px;position:sticky;top:-1px;z-index:2;background:var(--panel)}
+.tema-sekmeler::-webkit-scrollbar{display:none}
+.tema-sekmeler button{flex:none;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:99px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.tema-sekmeler button.on{background:var(--accent);color:var(--accent-ink,#0b0d14);border-color:var(--accent);font-weight:700}
+.tema-sekme{display:grid;gap:12px}
+.tema-sekme[hidden]{display:none}
+.bg-arac{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.bg-dim{display:flex;align-items:center;gap:10px;flex:1 1 220px;font-size:14px;color:var(--muted);text-transform:none;letter-spacing:0;margin:0}
+.bg-dim input{flex:1}
+@media (min-width:900px){ .bg-picks{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))} }
+@media (max-width:560px){ .bg-picks{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px} .tema-sekmeler button{padding:7px 12px;font-size:13px} }
+#temaBody>*{min-width:0;max-width:100%}
+.tema-sekme>*{min-width:0}
