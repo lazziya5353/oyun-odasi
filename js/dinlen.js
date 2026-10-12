@@ -58,4 +58,5 @@
   window.dinlenmeModu = { ac, kapat, get acik(){ return acik; } };
   const b1 = document.getElementById('dinlenBtn'); if (b1) b1.onclick = ac;
   const b2 = document.getElementById('dinlenBtn2'); if (b2) b2.onclick = ac;
+  const b3 = document.getElementById('dinlenBtn3'); if (b3) b3.onclick = ac;
 })();

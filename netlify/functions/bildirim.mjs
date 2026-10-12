@@ -80,6 +80,11 @@ async function logSend(entry){
 export default async (req, context) => {
   const islem = (context && context.params && context.params.islem) || new URL(req.url).pathname.split('/').pop();
   try {
+    if (req.method === 'GET' && islem === 'duyuru'){
+      // son duyuru (herkese açık): siteye girenler tam metni görür
+      const d = await store('oyunodasi-ayar').get('duyuru-son', { type: 'json' });
+      return json(d && Date.now() - d.at < 14 * 864e5 ? d : null);
+    }
     if (req.method === 'GET' && islem === 'anahtar'){
       const v = await vapidKeys();
       return json({ key: v.publicKey });
@@ -101,14 +106,18 @@ export default async (req, context) => {
       // yöneticiden herkese duyuru bildirimi
       if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
       const b = await req.json().catch(() => ({}));
-      const title = clip(b.title, 60), body = clip(b.body, 200);
+      // uzunluk sınırı yok (pratikte 20.000 karakter); bildirime baştan bir parça sığar, tamamı sitede açılır
+      const title = clip(b.title, 300), body = String(b.body || '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim().slice(0, 20000);
       if (!title && !body) return json({ hata: 'Duyuru metnini yaz.' }, 400);
       const v = await vapidKeys(), origin = new URL(req.url).origin;
       const list = await allSubs();
-      const payload = { title: '📢 ' + (title || 'Oyun Odası'), body: body || title, url: '/', tag: 'duyuru-' + Date.now() };
+      const id = Date.now().toString(36);
+      await store('oyunodasi-ayar').setJSON('duyuru-son', { id, at: Date.now(), title, body });
+      const kisa = body.length > 600 ? body.slice(0, 600).replace(/\s+\S*$/, '') + '… (devamı için dokun)' : (body || title);
+      const payload = { title: '📢 ' + (title || 'Oyun Odası').slice(0, 120), body: kisa, url: '/?duyuru=' + id, tag: 'duyuru-' + id };
       const res = await Promise.all(list.map(s => sendAndRecord(s, payload, v, origin, { ttl: 86400 })));
       const sent = res.filter(r => r.st >= 200 && r.st < 300).length, gone = res.filter(r => r.gone).length;
-      await logSend({ at: Date.now(), duyuru: true, code: '', by: 'Yönetici', text: (title ? title + ' — ' : '') + body, total: list.length, sent, gone, fails: [] });
+      await logSend({ at: Date.now(), duyuru: true, code: '', by: 'Yönetici', text: clip((title ? title + ' — ' : '') + body, 300), total: list.length, sent, gone, fails: [] });
       try { const us = store('oyunodasi-uye'); const l = (await us.get('log', { type: 'json' })) || []; l.unshift({ at: Date.now(), t: clip('Duyuru gönderildi: ' + (title || body), 160) }); await us.setJSON('log', l.slice(0, 150)); } catch(e){}
       return json({ ok: true, total: list.length, sent, gone });
     }

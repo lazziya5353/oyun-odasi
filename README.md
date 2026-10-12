@@ -92,7 +92,7 @@ dinleyenler ayrıca indirmez. Netlify'ın ücretsiz planı aylık kredi ile çal
 - **📊 Genel:** üye / bekleyen başvuru / son 24 saatte giren / bildirimi açık cihaz / son 7 günde açılan oda / şarkı sayısı, son girenler ve son açılan odalar.
 - **⏳ Onay bekleyen:** onayla, reddet, hepsini birden onayla. Yeni başvuru sayfa yenilemeden düşer (ses + bildirim).
 - **✅ Üyeler:** ad değiştir, şifre sıfırla, tüm cihazlardan çıkış yaptır, hesabı durdur / yeniden aç, sil. Her üyenin son giriş zamanı görünür.
-- **🔔 Bildirimler:** herkese duyuru gönder, deneme bildirimi, cihazların durumu, eski cihazı kaldır, gönderim geçmişi.
+- **🔔 Bildirimler:** herkese duyuru gönder (uzunluk sınırı yok: bildirimde ilk ~600 karakter görünür, tam metin siteye girince/bildirime dokununca bir pencerede açılır — `GET /api/bildirim/duyuru`, `js/duyuru.js`), deneme bildirimi, cihazların durumu, eski cihazı kaldır, gönderim geçmişi.
 - **🏆 Skorlar:** her oyunun tablosu; hileli/hatalı skoru sil ya da tabloyu sıfırla.
 - **🎵 Müzik:** şarkıların adını düzelt, şarkı ya da playlist sil (kullanıcılar silemez).
 - **⚙️ Ayarlar:** yönetici şifresini değiştir (diğer yönetici oturumları kapanır), işlem geçmişi, yanlış şifre denemeleri.
@@ -107,7 +107,7 @@ Giriş sistemi olmadığı için isimler yazılan ada göre tutulur.
 
 ## 🌸 Sakura arka planları ve 🌙 dinlenme modu
 - Görünüm → Arka plan → **Japonya**: "Sakura (gerçekçi)" (siyah fonda saplı çiçek salkımları, tek tek çizilmiş gerçekçi çiçekler), "Gece sakurası" (siyah fonda sarkan dallar), "Sakura (güneşli)", "Sakura (yağmurlu)". Hepsi canvas ile çizilir (özgün), ekran çözünürlüğünde (HD).
-- **Dinlenme modu**: üst çubukta 🌙 Dinlen (telefonda Görünüm penceresinde). Ekranda sadece arka plan kalır, sesli sohbet devam eder. ESC (ya da telefonda dokunup ✕ Çık) ile aynı yere dönülür. Tema seçili değilse geçici olarak gece sakurası açılır. (`js/dinlen.js`)
+- **Dinlenme modu**: üst çubukta saatin hemen solundaki 🌙 Dinlen (telefonda saatin solundaki 🌙 düğmesi; Görünüm penceresinde de var). Ekranda sadece arka plan kalır, sesli sohbet devam eder. ESC (ya da telefonda dokunup ✕ Çık) ile aynı yere dönülür. Tema seçili değilse geçici olarak gece sakurası açılır. (`js/dinlen.js`)
 
 ## Bağlantı kopmaları (telefon)
 - Odadayken telefonun ekranı kararmaz (Wake Lock); ekran kararınca tarayıcı sayfayı uyutup bağlantıyı koparıyordu.

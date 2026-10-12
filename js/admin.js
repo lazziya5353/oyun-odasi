@@ -250,15 +250,17 @@ function renderPush(list){
   // duyuru
   const box = el('div', 'ad-box');
   box.append(el('h3', '', '📢 Herkese duyuru gönder'), note('Bildirimi açık olan ' + push.cihazlar.length + ' cihaza gider (ör. “Bu akşam 21:00’de turnuva var”).'));
-  const t = el('input'); t.className = 'inp'; t.maxLength = 60; t.placeholder = 'Başlık (ör. Turnuva akşamı)';
-  const m = el('textarea'); m.className = 'inp'; m.maxLength = 200; m.rows = 2; m.placeholder = 'Mesaj';
+  const t = el('input'); t.className = 'inp'; t.placeholder = 'Başlık (ör. Turnuva akşamı)';
+  const m = el('textarea'); m.className = 'inp'; m.rows = 6; m.placeholder = 'Mesaj (uzunluk sınırı yok; bildirimde başı görünür, tamamı sitede açılır)';
+  const sayac = note(''); const say = () => { sayac.textContent = m.value.length + ' karakter' + (m.value.length > 600 ? ' · bildirimde ilk ~600 karakter görünür, tamamı siteye girince açılır' : ''); };
+  m.oninput = say; say();
   const send = button('📢 Gönder', 'primary', async () => {
     if (!t.value.trim() && !m.value.trim()){ toast('Duyuru metnini yaz.'); return; }
     send.disabled = true;
     try { const d = await req('/api/bildirim/admin-duyuru', { title: t.value, body: m.value }); toast('Duyuru ' + d.sent + '/' + d.total + ' cihaza ulaştı'); t.value = ''; m.value = ''; await loadPush(); renderList(); }
     catch(e){ toast(e.message); send.disabled = false; }
   });
-  box.append(t, m, send);
+  box.append(t, m, sayac, send);
   list.append(box);
   const head = el('div', 'u-acts start');
   const tb = button('🧪 Hepsine deneme bildirimi gönder', '', async () => {
