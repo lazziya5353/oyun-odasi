@@ -178,3 +178,8 @@
   .vmp-mico{font-size:34px}
 }
 .vg-bas .btn{background:#5a4630;color:#fff;border-color:#3d2f20;min-width:34px}
+
+/* tuş etiketi (bilgisayarda; dokunmatikte gizli) */
+.vmp-tus{position:absolute;top:-4px;right:-4px;min-width:22px;padding:1px 5px;border-radius:7px;background:#fff;color:#111;font:800 11px system-ui,sans-serif;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.vmp-tus:empty{display:none}
+@media (pointer:coarse){ .vmp-tus{display:none} }

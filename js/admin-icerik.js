@@ -33,7 +33,7 @@ async function parcaYukle(id, tur, file, ilerle){
   }
   return { parca: n, boyut: file.size, tip: tipTahmin(file, tur) };
 }
-// videodan önizleme resmi (1. saniye, 640 px JPEG) — sitede Görünüm penceresi hızlı açılsın
+// videodan önizleme resmi (1. saniye, 1280 px JPEG; video yüklenirken sitede bu görünür) — sitede Görünüm penceresi hızlı açılsın
 function videoKapak(file){
   return new Promise(res => {
     const v = document.createElement('video'), u = URL.createObjectURL(file);
@@ -41,8 +41,8 @@ function videoKapak(file){
     const bit = b => { URL.revokeObjectURL(u); res(b); };
     v.onloadeddata = () => { try { v.currentTime = Math.min(1, (v.duration || 2) / 3); } catch(e){ bit(null); } };
     v.onseeked = () => {
-      try { const W = 640, c = document.createElement('canvas'); c.width = W; c.height = Math.round(W * v.videoHeight / v.videoWidth) || 360;
-        c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); c.toBlob(b => bit(b), 'image/jpeg', .82);
+      try { const W = Math.min(1280, v.videoWidth || 1280), c = document.createElement('canvas'); c.width = W; c.height = Math.round(W * v.videoHeight / v.videoWidth) || 360;
+        c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); c.toBlob(b => { if (b){ b.vw = v.videoWidth; b.vh = v.videoHeight; } bit(b); }, 'image/jpeg', .82);
       } catch(e){ bit(null); }
     };
     v.onerror = () => bit(null); setTimeout(() => bit(null), 15000);
@@ -87,6 +87,9 @@ function renderDuvarTab(list){
     try {
       durumY.textContent = 'Önizleme hazırlanıyor…';
       const kapak = await videoKapak(f);
+      // 4K ya da çok büyük video: sitede ilk açılışta takılır (önce tamamı inmeli, telefon 4K çözerken zorlanır)
+      if ((kapak && Math.min(kapak.vw, kapak.vh) > 1200) || f.size > 25 * 1048576)
+        toast('⚠️ Bu video ' + (kapak && Math.min(kapak.vw, kapak.vh) > 1200 ? kapak.vw + '×' + kapak.vh + ' (4K)' : 'büyük') + ': sitede ilk açılışta takılabilir. 1080p ve 25 MB altı önerilir.');
       let poster = null;
       if (kapak){ poster = await parcaYukle(id, 'p', new File([kapak], 'kapak.jpg', { type: 'image/jpeg' })); }
       durumY.textContent = 'Video yükleniyor…';

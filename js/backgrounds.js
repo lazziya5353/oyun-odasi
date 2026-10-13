@@ -2953,7 +2953,7 @@ function videoKare(item){
   const p = new Promise(res => {
     let bitti = false;
     const bit = c => { if (bitti) return; bitti = true; VID.hazir.set(item.key, c); res(c); };
-    const kucuk = (im, w, h) => { const W = 480, c = mk(W, Math.max(1, Math.round(W * h / w))); c2(c).drawImage(im, 0, 0, c.width, c.height); return c; };
+    const kucuk = (im, w, h) => { const W = Math.min(960, w || 960), c = mk(W, Math.max(1, Math.round(W * h / w))); c2(c).drawImage(im, 0, 0, c.width, c.height); return c; };
     const videodan = () => item.kaynak('v').then(u => {
       if (!u) return bit(null);
       const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto';
@@ -2987,10 +2987,26 @@ function sceneVideo(item){
     // iPhone düşük güç modu gibi otomatik oynatmayı engelleyen durumlarda ilk dokunuşta başlat
     const dokun = () => { if (calisiyor) v.play().catch(() => {}); };
     document.addEventListener('pointerdown', dokun, { once: true, passive: true });
+    // video hazır olana kadar önizleme karesi YUMUŞAK (bulanık) görünür, sonra video yavaşça belirir:
+    // küçük kare tam ekrana büyütülünce piksel piksel görünmesin, geçişte sıçrama olmasın
+    let ilk = 0;
+    const bekleme = c => {
+      const k = VID.hazir.get(item.key);
+      if (!k){ c.fillStyle = '#05070b'; c.fillRect(0, 0, W, H); return; }
+      c.save();
+      try { c.filter = 'blur(' + Math.max(4, Math.round(Math.max(W, H) / 260)) + 'px)'; } catch(e){}
+      const p = Math.max(W, H) * .03;                                  // bulanıklık kenarda koyu şerit bırakmasın
+      c.translate(-p, -p); kaplaCiz(c, k, k.width, k.height, W + p * 2, H + p * 2); c.restore();
+    };
     return {
       draw(c, t, dt, still){
-        if (v.readyState >= 2 && v.videoWidth) kaplaCiz(c, v, v.videoWidth, v.videoHeight, W, H);
-        else { const k = VID.hazir.get(item.key); if (k) kaplaCiz(c, k, k.width, k.height, W, H); else { c.fillStyle = '#05070b'; c.fillRect(0, 0, W, H); } }
+        const hazir = v.readyState >= 2 && v.videoWidth && (!v.paused || still || !calisiyor || v.currentTime > 0);
+        if (hazir){
+          if (!ilk) ilk = performance.now();
+          const a = still ? 1 : Math.min(1, (performance.now() - ilk) / 700);
+          if (a < 1){ bekleme(c); c.save(); c.globalAlpha = a; kaplaCiz(c, v, v.videoWidth, v.videoHeight, W, H); c.restore(); }
+          else kaplaCiz(c, v, v.videoWidth, v.videoHeight, W, H);
+        } else bekleme(c);
         if (!still && calisiyor && v.paused && v.src) v.play().catch(() => {});
       },
       calis(on){ calisiyor = on; if (on){ if (v.src) v.play().catch(() => {}); } else if (!v.paused) v.pause(); },

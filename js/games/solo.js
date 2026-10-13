@@ -110,11 +110,16 @@ function renderSoloShell(d){
   d.innerHTML = '';
   const sh = document.createElement('div'); sh.className = 'game-shell solo-shell solo-' + def.id; sh.dataset.sid = soloOpen.id + '/' + soloOpen.level;
   sh.innerHTML = '<div class="gs-bar"><button class="btn small" data-back>← Salona dön</button><b class="gs-title"></b><span class="gs-space"></span>' +
-    '<div class="seg solo-lv"></div><button class="btn small" data-restart title="Baştan başla">↻</button><button class="btn small solo-lbbtn" data-lb>🏆 <span class="lbl">Tablo</span></button></div>' +
+    '<div class="seg solo-lv"></div><button class="btn small nasil-btn" data-nasil title="Nasıl oynanır?">❓</button><button type="button" class="btn small tus-btn hide-mobile" data-tus title="Tuşları değiştir" hidden>⌨️</button><button type="button" class="btn small tam-btn" data-tam title="Oyunu tam ekran yap">⛶ <span class="lbl">Tam ekran</span></button><button class="btn small" data-restart title="Baştan başla">↻</button><button class="btn small solo-lbbtn" data-lb>🏆 <span class="lbl">Tablo</span></button></div>' +
     '<div class="solo-body"><div class="solo-game"></div><aside class="lb"></aside></div>';
   sh.querySelector('.gs-title').textContent = (def.icon || '') + ' ' + def.name;
   sh.querySelector('[data-back]').onclick = () => closeSolo();
   sh.querySelector('[data-restart]').onclick = () => mountSolo();
+  sh.querySelector('[data-nasil]').onclick = e => { e.currentTarget.blur(); if (typeof nasilAc === 'function') nasilAc(def.id); };
+  const tb = sh.querySelector('[data-tus]');
+  if (typeof TUS !== 'undefined' && TUS.var(def.id)){ tb.hidden = false; tb.onclick = e => { e.currentTarget.blur(); TUS.ac(def.id); }; }
+  sh.querySelector('[data-tam]').onclick = e => { e.currentTarget.blur(); if (typeof oyunTamDegistir === 'function') oyunTamDegistir(); };
+  if (typeof oyunTamEtiket === 'function') oyunTamEtiket();
   sh.querySelector('[data-lb]').onclick = () => sh.classList.toggle('lb-open');
   const seg = sh.querySelector('.solo-lv');
   if (def.levels.length > 1){

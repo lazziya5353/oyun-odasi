@@ -113,9 +113,12 @@ function mount(root, ctx){
     '<div class="yilan-area"><div class="yilan-stage"><canvas class="yilan-cv" aria-label="Yılan oyun alanı"></canvas><div class="yilan-ov"></div></div></div>' +
     '<div class="yilan-pad" aria-label="Yön tuşları"><button type="button" data-d="up" aria-label="Yukarı">▲</button><button type="button" data-d="left" aria-label="Sola">◀</button>' +
     '<button type="button" data-d="right" aria-label="Sağa">▶</button><button type="button" data-d="down" aria-label="Aşağı">▼</button></div>' +
-    '<div class="yilan-help"><span><kbd>←↑↓→</kbd> / <kbd>WASD</kbd>: yön</span><span>Duvara ve kendine çarpma</span><span>⭐ süreli bonus: 50 puan</span><span><kbd>P</kbd>: duraklat</span></div>';
+    '<div class="yilan-help"></div>';
   root.append(wrap);
   const q = sel => wrap.querySelector(sel);
+  const tk = id => (typeof TUS !== 'undefined' ? TUS.etiket('yilan', id) : { up: '↑', down: '↓', left: '←', right: '→', dur: 'P' }[id]).replace(/[<>&]/g, '');
+  const yardim = () => { q('.yilan-help').innerHTML = '<span><kbd>' + ['up', 'left', 'down', 'right'].map(tk).join(' ') + '</kbd>: yön</span><span>Duvara ve kendine çarpma</span><span>⭐ süreli bonus: 50 puan</span><span><kbd>' + tk('dur') + '</kbd>: duraklat</span>'; };
+  yardim(); window.addEventListener('tuslar-degisti', yardim);
   const area = q('.yilan-area'), stage = q('.yilan-stage'), cv = q('.yilan-cv'), ov = q('.yilan-ov'), pad = q('.yilan-pad');
   const scoreEl = q('.yilan-score b'), lenEl = q('.yilan-len b'), spdEl = q('.yilan-spd b');
   const g = cv.getContext('2d');
@@ -376,7 +379,7 @@ function mount(root, ctx){
   function pause(){
     if (state !== 'run') return;
     state = 'pause'; wrap.classList.remove('playing');
-    showOv('<div class="yilan-card"><b>Duraklatıldı</b><small>Devam için <kbd>P</kbd> / boşluk ya da dokun</small></div>');
+    showOv('<div class="yilan-card"><b>Duraklatıldı</b><small>Devam için <kbd>' + tk('dur') + '</kbd> / boşluk ya da dokun</small></div>');
   }
   function resume(){ if (state !== 'pause') return; state = 'run'; last = performance.now(); showOv(''); wrap.classList.add('playing'); }
   function ready(){
@@ -396,9 +399,11 @@ function mount(root, ctx){
   const visible = () => wrap.isConnected && wrap.offsetParent !== null;
   function onKey(e){
     if (typing(e) || !visible()) return;
-    const c = e.code, d = KEYS[c];
+    if (typeof TUS !== 'undefined' && TUS.acikMi()) return;
+    const c = e.code, ey = typeof TUS !== 'undefined' ? TUS.eylem('yilan', c) : (KEYS[c] || (c === 'KeyP' ? 'dur' : null));
+    const d = ey && ey !== 'dur' ? ey : null;
     if (d){ e.preventDefault(); if (!e.repeat || state === 'run') dirInput(d); return; }
-    if (c === 'KeyP' || c === 'Escape'){ if (state === 'run'){ e.preventDefault(); pause(); } else if (state === 'pause' && c === 'KeyP') resume(); return; }
+    if (ey === 'dur' || c === 'Escape'){ if (state === 'run'){ e.preventDefault(); pause(); } else if (state === 'pause' && ey === 'dur') resume(); return; }
     if (c === 'Space' || c === 'Enter'){
       if (state === 'pause'){ e.preventDefault(); resume(); } else if (state === 'over'){ e.preventDefault(); again(); } else if (state === 'ready'){ e.preventDefault(); start(null); }
     }
@@ -452,6 +457,7 @@ function mount(root, ctx){
       if (destroyed) return; destroyed = true;
       cancelAnimationFrame(raf);
       window.removeEventListener('keydown', onKey);
+      window.removeEventListener('tuslar-degisti', yardim);
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('blur', onBlur);
       if (ro) ro.disconnect(); else window.removeEventListener('resize', resize);

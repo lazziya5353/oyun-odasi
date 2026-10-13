@@ -376,7 +376,8 @@ function renderGameDeck(d){
   $('room').classList.remove('gaming');
   d.innerHTML = '';
   const head = document.createElement('div'); head.className = 'salon-head';
-  head.innerHTML = '<h2 class="deck-title">🎲 Oyun Salonu</h2><p class="note">Masa aç, arkadaşların boş koltuklara otursun; eksik koltuğa bot oturtabilirsin. Tek kişilik oyunlarda skor tablosunda yarışırsınız. Oyun sırasında konuşma ve radyo devam eder.</p>';
+  head.innerHTML = '<div class="salon-ust"><h2 class="deck-title">🎲 Oyun Salonu</h2><button type="button" class="btn small nasil-btn" data-nasil>❓ Nasıl oynanır?</button></div><p class="note">Masa aç, arkadaşların boş koltuklara otursun; eksik koltuğa bot oturtabilirsin. Tek kişilik oyunlarda skor tablosunda yarışırsınız. Oyun sırasında konuşma ve radyo devam eder.</p>';
+  head.querySelector('[data-nasil]').onclick = () => { if (typeof nasilAc === 'function') nasilAc(); };
   d.append(head);
   // sekmeler: masa oyunları / tek kişilik oyunlar
   let tab = store.get('oyunodasi-salon-tab') === 'tek' && typeof renderSoloCards === 'function' ? 'tek' : 'masa';
@@ -395,6 +396,12 @@ function renderGameDeck(d){
     const b = document.createElement('button'); b.className = 'btn primary'; b.textContent = 'Masa aç';
     b.onclick = () => onCreate(c);
     c.append(b); make.append(c);
+    const gid = { 'Tavla': 'tavla', 'Okey': 'okey' }[title] || Object.keys(TABLE_GAMES).find(k => TABLE_GAMES[k].name === title);
+    if (gid && typeof nasilVar === 'function' && nasilVar(gid)){
+      const q = document.createElement('button'); q.type = 'button'; q.className = 'mc-nasil'; q.textContent = '❓ Nasıl oynanır?';
+      q.onclick = () => nasilAc(gid);
+      c.querySelector('.mc-top div').append(q);
+    }
   };
   card('🎲', 'Tavla', '2 kişi, karşılıklı. Klasik (erkek) tavla: kırma, kapı, mars.',
     '<label>Maç kaç puan?<select data-o="target"><option value="3">3 puan</option><option value="5" selected>5 puan</option><option value="7">7 puan</option><option value="1">Tek oyun</option></select></label>',
@@ -425,7 +432,7 @@ function tableCard(s){
   const top = document.createElement('div'); top.className = 'tc-top';
   top.innerHTML = '<span class="mc-ico">' + info.icon + '</span><div><b></b><span></span></div><span class="pill"></span>';
   top.querySelector('b').textContent = info.name + ' masası';
-  top.querySelector('div span').textContent = variantName(s) + ' · açan: ' + s.ownerName;
+  top.querySelector(':scope > div > span').textContent = variantName(s) + ' · açan: ' + s.ownerName;
   top.querySelector('.pill').textContent = s.status === 'playing' ? '▶ Oynanıyor' : '⏳ Oyuncu bekleniyor';
   if (s.status === 'playing') top.querySelector('.pill').classList.add('live');
   c.append(top);
@@ -486,8 +493,13 @@ function renderTableShell(d){
   if (!d.querySelector('.game-shell') || d.querySelector('.game-shell').dataset.tid !== s.id){
     d.innerHTML = '';
     const sh = document.createElement('div'); sh.className = 'game-shell game-' + s.game; sh.dataset.tid = s.id;
-    sh.innerHTML = '<div class="gs-bar"><button class="btn small" data-back>← Salona dön</button><b class="gs-title"></b><span class="gs-sub note"></span><span class="gs-space"></span><div class="gs-acts"></div></div><div class="gs-body"></div>';
+    sh.innerHTML = '<div class="gs-bar"><button class="btn small" data-back>← Salona dön</button><b class="gs-title"></b><span class="gs-sub note"></span><span class="gs-space"></span><button type="button" class="btn small nasil-btn" data-nasil title="Nasıl oynanır?">❓ <span class="lbl">Nasıl oynanır?</span></button><button type="button" class="btn small tus-btn hide-mobile" data-tus hidden>⌨️ <span class="lbl">Tuşlar</span></button><button type="button" class="btn small tam-btn" data-tam title="Oyunu tam ekran yap">⛶ <span class="lbl">Tam ekran</span></button><div class="gs-acts"></div></div><div class="gs-body"></div>';
     sh.querySelector('[data-back]').onclick = () => closeTableView();
+    sh.querySelector('[data-nasil]').onclick = () => { if (typeof nasilAc === 'function') nasilAc(s.game); };
+    const tb = sh.querySelector('[data-tus]');
+    if (typeof TUS !== 'undefined' && TUS.var(s.game)){ tb.hidden = false; tb.onclick = e => { e.currentTarget.blur(); TUS.ac(s.game); }; }
+    sh.querySelector('[data-tam]').onclick = e => { e.currentTarget.blur(); if (typeof oyunTamDegistir === 'function') oyunTamDegistir(); };
+    if (typeof oyunTamEtiket === 'function') oyunTamEtiket();
     d.append(sh);
   }
   renderOpenTable();

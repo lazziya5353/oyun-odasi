@@ -541,7 +541,6 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 @media (max-width:860px){ .emoji-pop{position:fixed;left:3vw;right:3vw;bottom:84px;transform:none;width:auto;max-width:none} .emoji-pop button{font-size:22px;padding:5px} }
 /* orta boy ekranlarda alt şerit tek satıra sığsın */
 @media (min-width:861px) and (max-width:1500px){ #micTestBtn .lbl, #mixerBtn .lbl, #shareBtn .lbl{display:none} }
-@media (min-width:861px) and (max-width:1500px){ #radioFavBtn .lbl{display:none} }
 @media (min-width:861px) and (max-width:1250px){ .bar .btn:not(#micBtn):not(#leaveBtn) .lbl{display:none} }
 /* kaydırma çubukları: ince, temanın rengiyle (Chrome/Edge/Safari) */
 ::-webkit-scrollbar{width:10px;height:10px}

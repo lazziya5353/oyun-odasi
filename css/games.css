@@ -260,3 +260,55 @@
 .mc-detay summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--muted);padding:4px 0}
 .mc-detay[open] summary{margin-bottom:6px}
 .mc-detay label{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+
+/* ---------- ❓ Nasıl oynanır? ---------- */
+.salon-ust{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.salon-ust .deck-title{margin:0}
+.mc-nasil{display:table;margin-top:5px;padding:0;background:none;border:0;color:var(--accent);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.mc-nasil:hover{opacity:.8}
+.nasil-dlg .dlg-head{gap:8px}
+.nasil-dlg .dlg-head h3{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nasil-govde{max-height:min(70vh,640px)}
+.nasil-baslik{margin:6px 0 0;font-size:14px;color:var(--muted);font-weight:600}
+.nasil-izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.nasil-kart{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgb(255 255 255 / .04);color:var(--fg);font:inherit;cursor:pointer;min-width:0}
+.nasil-kart:hover{border-color:var(--accent);background:rgb(255 255 255 / .08)}
+.nk-ikon{font-size:24px;line-height:1;flex:none}
+.nk-yazi{display:grid;min-width:0}
+.nk-yazi b{font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nk-yazi small{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nasil-kisi{margin:0;color:var(--muted);font-size:13px}
+.nasil-kutu{border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:rgb(255 255 255 / .03)}
+.nasil-kutu>b{display:block;margin-bottom:4px}
+.nasil-kutu p{margin:0;line-height:1.5}
+.nasil-kutu.amac{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.nasil-kutu.ipucu{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.nasil-adim{margin:0;padding-left:22px;display:grid;gap:6px;line-height:1.5}
+.nasil-kutu ul{margin:0;padding-left:20px;display:grid;gap:4px;line-height:1.5}
+@media (max-width:560px){
+  .nasil-izgara{grid-template-columns:1fr 1fr}
+  .nk-yazi small{white-space:normal}
+  .gs-bar .nasil-btn .lbl{display:inline!important}
+}
+
+/* ---------- ⌨️ Tuşlar ---------- */
+.tus-dlg{width:min(460px,calc(100% - 32px))}
+.tus-liste{display:grid;gap:6px}
+.tus-satir{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 10px;border:1px solid var(--line);border-radius:10px}
+.tus-kbd{min-width:110px;padding:7px 12px;border-radius:9px;border:1px solid var(--line);border-bottom-width:3px;background:rgb(255 255 255 / .06);color:var(--fg);font:700 13px ui-monospace,monospace;cursor:pointer}
+.tus-kbd:hover{border-color:var(--accent)}
+.tus-kbd.bekliyor{border-color:var(--accent);color:var(--accent);animation:tusYanip 1s ease-in-out infinite}
+@keyframes tusYanip{50%{opacity:.55}}
+
+/* ---------- ⛶ Oyun tam ekran ---------- */
+.tam-btn.on{border-color:var(--accent)}
+.room.oyun-tam .top,.room.oyun-tam .chan-panel,.room.oyun-tam .chat,.room.oyun-tam .people-area{display:none!important}
+.room.oyun-tam{grid-template-rows:minmax(0,1fr) auto}
+.room.oyun-tam .layout{grid-template-columns:minmax(0,1fr)}
+.room.oyun-tam .stage{padding:6px 8px;grid-template-columns:minmax(0,1fr)}
+.room.oyun-tam .deck{max-width:none}
+.room.oyun-tam .vmp{height:calc(100dvh - 150px);max-height:none}
+@media (max-width:860px){
+  .room.oyun-tam .stage{padding:4px}
+  .room.oyun-tam .vmp{flex:none;height:calc(100dvh - 190px);min-height:300px}
+}

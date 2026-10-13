@@ -221,7 +221,9 @@ function mount(root, ctx){
   const duckBtn = document.createElement('button'); duckBtn.className = 'kosu-duck'; duckBtn.type = 'button'; duckBtn.textContent = '⬇'; duckBtn.setAttribute('aria-label', 'Eğil');
   const pauseBtn = document.createElement('button'); pauseBtn.className = 'kosu-pausebtn'; pauseBtn.type = 'button'; pauseBtn.textContent = '⏸'; pauseBtn.setAttribute('aria-label', 'Duraklat');
   const help = document.createElement('div'); help.className = 'kosu-help';
-  help.innerHTML = '<span><kbd>Boşluk</kbd>/<kbd>↑</kbd>/dokun: zıpla · basılı tut: yüksek</span><span>havada tekrar: çift zıplama</span><span><kbd>↓</kbd>/aşağı kaydır: eğil</span><span><kbd>P</kbd>: duraklat</span>';
+  const tk = id => (typeof TUS !== 'undefined' ? TUS.etiket('kosu', id) : { zipla: 'Boşluk / ↑', egil: '↓', dur: 'P' }[id]).replace(/[<>&]/g, '');
+  const yardim = () => { help.innerHTML = '<span><kbd>' + tk('zipla') + '</kbd>/dokun: zıpla · basılı tut: yüksek</span><span>havada tekrar: çift zıplama</span><span><kbd>' + tk('egil') + '</kbd>/aşağı kaydır: eğil</span><span><kbd>' + tk('dur') + '</kbd>: duraklat</span>'; };
+  yardim(); window.addEventListener('tuslar-degisti', yardim);
   wrap.append(cv, ov, duckBtn, pauseBtn);
   root.append(wrap, help);
   const g = cv.getContext('2d');
@@ -596,24 +598,28 @@ function mount(root, ctx){
   function pause(){
     if (state !== 'run') return;
     state = 'pause'; wrap.classList.remove('playing');
-    showOv('<div class="kosu-card"><b>Duraklatıldı</b><small>Devam için <kbd>P</kbd> / boşluk ya da dokun</small></div>');
+    showOv('<div class="kosu-card"><b>Duraklatıldı</b><small>Devam için <kbd>' + tk('dur') + '</kbd> / <kbd>' + tk('zipla') + '</kbd> ya da dokun</small></div>');
   }
   function resume(){ if (state !== 'pause') return; state = 'run'; acc = 0; last = performance.now(); showOv(''); wrap.classList.add('playing'); }
   function ready(){
     state = 'ready';
-    showOv('<div class="kosu-card kosu-start"><b>Engel Koşusu</b><small>Konilerin, zarların, çay bardaklarının üstünden atla; martıların altından eğil. Simitleri topla, çay kalkan verir.</small><span class="kosu-go">Başlamak için <kbd>Boşluk</kbd> / dokun</span></div>');
+    showOv('<div class="kosu-card kosu-start"><b>Engel Koşusu</b><small>Konilerin, zarların, çay bardaklarının üstünden atla; martıların altından eğil. Simitleri topla, çay kalkan verir.</small><span class="kosu-go">Başlamak için <kbd>' + tk('zipla') + '</kbd> / dokun</span></div>');
   }
 
   // ----- girdi -----
   const typing = e => { const t = e.target; return t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)); };
   const visible = () => wrap.isConnected && wrap.offsetParent !== null;
+  // tuşlar oyuncunun ayarından (⌨️ Tuşlar); yoksa Boşluk/↑/W zıpla, ↓/S eğil, P duraklat
+  const tus = c => (typeof TUS !== 'undefined' ? TUS.eylem('kosu', c)
+    : ({ Space: 'zipla', ArrowUp: 'zipla', KeyW: 'zipla', ArrowDown: 'egil', KeyS: 'egil', KeyP: 'dur' })[c] || null);
   function onKey(e){
     if (typing(e) || !visible()) return;
-    const c = e.code, jumpKey = c === 'Space' || c === 'ArrowUp' || c === 'KeyW', downKey = c === 'ArrowDown' || c === 'KeyS';
-    if (!jumpKey && !downKey && c !== 'KeyP' && c !== 'Escape') return;
-    if (jumpKey || downKey) e.preventDefault();
+    if (typeof TUS !== 'undefined' && TUS.acikMi()) return;
+    const c = e.code, ey = tus(c), jumpKey = ey === 'zipla', downKey = ey === 'egil', durKey = ey === 'dur';
+    if (!jumpKey && !downKey && !durKey && c !== 'Escape') return;
+    e.preventDefault();
     if (e.repeat) return;
-    if (c === 'KeyP' || (c === 'Escape' && state === 'run')){ if (state === 'run') pause(); else if (state === 'pause') resume(); return; }
+    if (durKey || (c === 'Escape' && state === 'run')){ if (state === 'run') pause(); else if (state === 'pause') resume(); return; }
     if (state === 'ready' && jumpKey){ startRun(); return; }
     if (state === 'pause' && jumpKey){ resume(); return; }
     if (state === 'over' && jumpKey){ if (canRestart()) startRun(); return; }
@@ -622,9 +628,9 @@ function mount(root, ctx){
     if (downKey) keyDown = true;
   }
   function onKeyUp(e){
-    const c = e.code;
-    if (c === 'Space' || c === 'ArrowUp' || c === 'KeyW') keyHeld = false;
-    if (c === 'ArrowDown' || c === 'KeyS') keyDown = false;
+    const ey = tus(e.code);
+    if (ey === 'zipla') keyHeld = false;
+    if (ey === 'egil') keyDown = false;
   }
   function onPDown(e){
     if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -675,6 +681,7 @@ function mount(root, ctx){
       cancelAnimationFrame(raf);
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('tuslar-degisti', yardim);
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('blur', onBlur);
       if (ro) ro.disconnect(); else window.removeEventListener('resize', resize);

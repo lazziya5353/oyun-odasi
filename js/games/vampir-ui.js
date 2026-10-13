@@ -116,7 +116,8 @@ function renderVampir(body, s, lv){
     body.append(r);
     VM.root = r; VM.cv = r.querySelector('.vmp-cv'); VM.ctx = VM.cv.getContext('2d');
     VM.ovKey = ''; VM.hudKey = ''; VM.others.clear(); VM.gorev = null;
-    r.querySelectorAll('.vmp-b').forEach(b => b.onclick = () => vmEylem(b.dataset.a));
+    r.querySelectorAll('.vmp-b').forEach(b => { b.onclick = () => vmEylem(b.dataset.a); b.append(vmEl('kbd', 'vmp-tus')); });
+    vmTusEtiket();
     r.querySelector('.vmp-lbtn').onclick = () => r.querySelector('.vmp-sol').classList.toggle('acik');
     vmJoystick(r.querySelector('.vmp-joy'));
     vmHarita();
@@ -240,16 +241,32 @@ function vmPos(zorla){
 }
 
 // ---------- klavye ve joystick ----------
-const VM_TUS = { ArrowUp: 'u', KeyW: 'u', ArrowDown: 'd', KeyS: 'd', ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r' };
+// tuşlar oyuncunun kendi ayarından gelir (⌨️ Tuşlar, js/tuslar.js); yoksa ok tuşları/WASD, E/Boşluk, Q, R, F, V
+const VM_YON = { u: 1, d: 1, l: 1, r: 1 };
+const vmTus = kod => (typeof TUS !== 'undefined' ? TUS.eylem('vampir', kod)
+  : ({ ArrowUp: 'u', KeyW: 'u', ArrowDown: 'd', KeyS: 'd', ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r', KeyE: 'kullan', Space: 'kullan', KeyR: 'bildir', KeyQ: 'isir', KeyF: 'sabotaj', KeyV: 'mezar' })[kod] || null);
 window.addEventListener('keydown', e => {
   if (!VM.aktif || !VM.root || !VM.root.isConnected) return;
   if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
-  if (VM_TUS[e.code]){ VM.keys.add(VM_TUS[e.code]); e.preventDefault(); return; }
-  const m = { KeyE: 'kullan', Space: 'kullan', KeyR: 'bildir', KeyQ: 'isir', KeyF: 'sabotaj', KeyV: 'mezar' }[e.code];
-  if (m && !e.repeat){ e.preventDefault(); vmEylem(m); }
-  if (e.code === 'Escape' && VM.gorev) vmGorevKapat();
+  if (typeof TUS !== 'undefined' && TUS.acikMi()) return;
+  if (e.code === 'Escape' && VM.gorev){ vmGorevKapat(); return; }
+  const m = vmTus(e.code); if (!m) return;
+  e.preventDefault();
+  if (VM_YON[m]){ VM.keys.add(m); return; }
+  if (!e.repeat) vmEylem(m);
 });
-window.addEventListener('keyup', e => { if (VM_TUS[e.code]) VM.keys.delete(VM_TUS[e.code]); });
+window.addEventListener('keyup', e => { const m = vmTus(e.code); if (m && VM_YON[m]) VM.keys.delete(m); });
+// ekrandaki düğmelerin köşesinde hangi tuş olduğu yazar (bilgisayarda)
+function vmTusEtiket(){
+  if (!VM.root || typeof TUS === 'undefined') return;
+  VM.root.querySelectorAll('.vmp-b').forEach(b => {
+    const k = b.querySelector('.vmp-tus'); if (!k) return;
+    const kod = TUS.kodlar('vampir', b.dataset.a)[0];
+    k.textContent = kod ? TUS.ad(kod) : '';
+    b.title = b.querySelector('span').textContent + (kod ? ' (' + TUS.ad(kod) + ')' : '');
+  });
+}
+window.addEventListener('tuslar-degisti', () => { VM.keys.clear(); vmTusEtiket(); });
 window.addEventListener('blur', () => VM.keys.clear());
 function vmJoystick(el){
   const knob = el.querySelector('i');
@@ -461,7 +478,7 @@ function vmOverlay(){
     if (vamp){
       const dost = v.vampirler.filter(id => id !== v.me).map(id => (v.players.find(p => p.id === id) || {}).name);
       ov.append(vmEl('p', '', dost.length ? '🦇 Vampir arkadaşın: ' + dost.join(', ') : 'Köylüleri tek tek yakala, ama kimseye yakalanma!'));
-      ov.append(vmEl('p', 'vmp-kucuk', 'Yalnız birini bulunca 🩸 Isır (Q). Mezarlardan 🪦 gizlice geçebilir, fenerleri 🌑 söndürebilirsin.'));
+      ov.append(vmEl('p', 'vmp-kucuk', 'Yalnız birini bulunca 🩸 Isır (' + (typeof TUS !== 'undefined' ? TUS.etiket('vampir', 'isir') : 'Q') + '). Mezarlardan 🪦 gizlice geçebilir, fenerleri 🌑 söndürebilirsin.'));
     } else {
       const nv = v.players.length <= 6 && v.opts.vampir === 'auto' ? 1 : v.opts.vampir === 'auto' ? 2 : +v.opts.vampir;
       ov.append(vmEl('p', '', 'Aranızda ' + (v.opts.vampir === 'auto' ? 'en az ' : '') + nv + ' vampir var 😨'), vmEl('p', 'vmp-kucuk', 'Görevlerini yap (sarı parlayan yerler), ceset görürsen 📢 Bildir. Şüphelenirsen meydandaki 🔔 çanı çal.'));

@@ -612,7 +612,7 @@ function openRadioDialog(tab){
 }
 $('radioTabAra').onclick = () => setRadioTab('ara');
 $('radioTabFav').onclick = () => setRadioTab('fav');
-$('radioFavBtn').onclick = () => openRadioDialog('fav');
+{ const fb = $('radioFavBtn'); if (fb) fb.onclick = () => openRadioDialog('fav'); }
 $('rcFav').onclick = () => { if (radio){ toggleFav(radio); renderFavCount(); } };
 
 // ---------- gelen mesajlar ----------
