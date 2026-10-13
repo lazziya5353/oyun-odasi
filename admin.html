@@ -9,6 +9,7 @@
 <link rel="icon" type="image/svg+xml" href="logo.svg">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Figtree:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/bg.css">
 <style>
   body{overflow:auto}
   .adm{max-width:1320px;margin:0 auto;padding:24px 16px 60px;display:grid;gap:18px}
@@ -79,6 +80,24 @@
   .replik-ad{flex:1;min-width:160px;font-weight:600;overflow-wrap:anywhere}
   .replik-onizle{flex-basis:100%;max-width:420px;max-height:260px;border-radius:10px;background:#000}
   @media (max-width:600px){ .u{grid-template-columns:auto 1fr} .u-acts{grid-column:1/-1;justify-content:flex-start} }
+  /* sol sütun: duvar kağıtları */
+  .yan-ic{display:grid;gap:12px;align-content:start}
+  .yd-bas{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .yd-su{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px}
+  .yd-su b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .yd-kar{display:flex;align-items:center;gap:10px;margin:0;text-transform:none;letter-spacing:0}
+  .yd-kar input{flex:1}
+  .yd-izgara{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:420px;overflow:auto;padding-right:2px;scrollbar-width:thin}
+  .yd-izgara[hidden]{display:none}
+  .yd-grup{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:6px 0 0}
+  .yd-sec{display:grid;gap:4px;padding:4px 4px 6px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:center;min-width:0}
+  .yd-sec canvas{width:100%;aspect-ratio:16/10;height:auto;border-radius:7px;display:block;background:#0b0d14}
+  .yd-sec span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .yd-sec.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .yd-sec:hover{border-color:var(--accent)}
+  /* arka plan açıkken paneller cam gibi */
+  :root[data-bg] :is(.adm-card,.yan-kutu){background:var(--glass);border-color:var(--glass-line);-webkit-backdrop-filter:var(--glass-fx);backdrop-filter:var(--glass-fx)}
+  :root[data-bg] :is(.u,.ad-box,.ad-stat){background:color-mix(in srgb,var(--bg) 70%,transparent)}
   /* sol sütun: açık odalar + kişiler */
   .adm-govde{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}
   .adm-ana{min-width:0}
@@ -141,7 +160,7 @@
       <button class="btn small" id="outBtn">Çıkış</button>
     </div>
     <div class="adm-govde">
-      <aside class="adm-yan" id="yan" aria-label="Açık odalar ve kişiler"></aside>
+      <aside class="adm-yan" aria-label="Duvar kağıtları, açık odalar ve kişiler"><div class="yan-kutu" id="yanDuvar"></div><div class="yan-ic" id="yan"></div></aside>
       <div class="adm-card adm-ana">
         <div class="seg adm-tabs" id="tabs"></div>
         <input type="text" id="q" class="inp" placeholder="🔎 İsim ya da kullanıcı adı ara" hidden>
@@ -156,5 +175,8 @@
 <script src="js/admin.js"></script>
 <script src="js/admin-saka.js"></script>
 <script src="js/admin-yan.js"></script>
+<script src="js/backgrounds.js"></script>
+<script src="js/dinlen.js"></script>
+<script src="js/admin-duvar.js"></script>
 </body>
 </html>
