@@ -18,7 +18,7 @@
   function durdur(){ if (ses0){ ses0.pause(); } durum(); }
   function guncelle(d){
     const yeni = d && d.muzik || null;
-    if (yeni !== url){ if (ses0){ ses0.pause(); ses0.removeAttribute('src'); ses0.load(); ses0 = null; } url = yeni; }
+    if (yeni !== url){ if (ses0){ ses0.pause(); ses0.removeAttribute('src'); ses0.load(); ses0 = null; } url = yeni; if (url && typeof url === 'object') url.al(); }   // panelden yüklenen müzik: önceden indirilsin
     ad = d && d.ad || '';
     hepsi.forEach(b => { b.hidden = !url; });
     const mix = document.getElementById('bgMuzikMix'); if (mix) mix.hidden = !url;
@@ -32,7 +32,14 @@
   // bir kez baştan sona çal (döngü yok)
   function cal(sessizHata){
     if (!url) return;
-    if (!ses0){ ses0 = new Audio(url); ses0.preload = 'auto'; ['pause', 'play', 'ended'].forEach(e => ses0.addEventListener(e, durum)); }
+    const u0 = url;
+    // panelden yüklenen müzik parça parça gelir: önce birleştir
+    if (!ses0 && typeof url === 'object'){ url.al().then(src => { if (url !== u0) return; if (!src){ if (!sessizHata && typeof toast === 'function') toast('Müzik yüklenemedi'); return; } yeniSes(src); calHazir(sessizHata); }); return; }
+    if (!ses0) yeniSes(url);
+    calHazir(sessizHata);
+  }
+  function yeniSes(src){ ses0 = new Audio(src); ses0.preload = 'auto'; ['pause', 'play', 'ended'].forEach(e => ses0.addEventListener(e, durum)); }
+  function calHazir(sessizHata){
     ses0.loop = false; ses0.volume = ses;
     try { ses0.currentTime = 0; } catch(e){}
     ses0.play().then(durum).catch(() => { if (!sessizHata && typeof toast === 'function') toast('Müzik çalınamadı'); durum(); });

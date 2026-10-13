@@ -87,6 +87,8 @@ async function loadTab(){
   if (tab === 'skor') await loadSkor();
   if (tab === 'ayar') await loadGunluk();
   if (tab === 'hareket' || tab === 'genel') await loadHareket();
+  if (tab === 'duvar') await duvarYukle();
+  if (tab === 'kelime') await kelimeYukle();
 }
 // arka plan kontrolü: sadece değişiklik varsa çiz; yazı yazarken / düzenlerken asla
 async function poll(){
@@ -105,7 +107,7 @@ function renderTabs(){
   const c = counts();
   const defs = [['genel', '📊 Genel'], ['hareket', '📋 Hareketler'], ['bekliyor', '⏳ Onay bekleyen (' + c.bekliyor + ')'], ['onayli', '✅ Üyeler (' + c.onayli + ')']];
   if (c.askida || tab === 'askida') defs.push(['askida', '⏸ Durdurulan (' + c.askida + ')']);
-  defs.push(['red', '✗ Reddedilen (' + c.red + ')'], ['saka', '🎭 Şaka'], ['bildirim', '🔔 Bildirimler'], ['skor', '🏆 Skorlar'], ['muzik', '🎵 Müzik'], ['ayar', '⚙️ Ayarlar']);
+  defs.push(['red', '✗ Reddedilen (' + c.red + ')'], ['saka', '🎭 Şaka'], ['bildirim', '🔔 Bildirimler'], ['duvar', '🎬 Video duvar kağıtları'], ['kelime', '🔤 Kelimeler'], ['skor', '🏆 Skorlar'], ['muzik', '🎵 Müzik'], ['ayar', '⚙️ Ayarlar']);
   const s = JSON.stringify(defs) + tab;
   if (s === tabSig) return; tabSig = s;
   const tabs = $('tabs'); tabs.innerHTML = '';
@@ -132,6 +134,8 @@ function renderList(){
   else if (tab === 'muzik') renderMuzik(list);
   else if (tab === 'ayar') renderAyar(list);
   else if (tab === 'hareket') renderHareket(list);
+  else if (tab === 'duvar') renderDuvarTab(list);
+  else if (tab === 'kelime') renderKelime(list);
   fresh.clear();
 }
 
@@ -381,7 +385,7 @@ function renderMuzik(list){
 
 // ---------- kullanıcı hareketleri ----------
 const hk = { liste: null, sig: '', kisi: '', tur: '' };
-const HK_TUR = { giris: ['🚪', 'Giriş'], cikis: ['👋', 'Çıkış'], oda: ['🏠', 'Oda açtı'], etiket: ['📣', 'Etiket'], saka: ['🍅', 'Şaka'], replik: ['🎬', 'Replik'], oyun: ['🎲', 'Oyun'], muzik: ['🎵', 'Müzik'], radyo: ['📻', 'Radyo'], ses: ['🎤', 'Ses efekti'], film: ['🎞️', 'Film'], ekran: ['🖥', 'Ekran'] };
+const HK_TUR = { giris: ['🚪', 'Giriş'], cikis: ['👋', 'Çıkış'], oda: ['🏠', 'Oda açtı'], etiket: ['📣', 'Etiket'], saka: ['🍅', 'Şaka'], replik: ['🎬', 'Replik'], oyun: ['🎲', 'Oyun'], muzik: ['🎵', 'Müzik'], radyo: ['📻', 'Radyo'], ses: ['🎤', 'Ses efekti'], film: ['🎞️', 'Film'], ekran: ['🖥', 'Ekran'], hata: ['🐞', 'Hata'], kopma: ['📶', 'Kopma'] };
 const HK_CIHAZ = { mobil: ['📱', 'Telefondan'], tablet: ['📲', 'Tabletten'], pc: ['💻', 'Bilgisayardan'] };
 async function loadHareket(){
   try { const d = await req('/api/hareket/admin-liste'); hk.liste = d.liste || []; hk.sig = hk.liste.length + ':' + (hk.liste[0] ? hk.liste[0].ts : 0); } catch(e){ hk.liste = hk.liste || []; }

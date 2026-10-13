@@ -128,7 +128,12 @@ try {
     sessionStorage.removeItem('oyunodasi-otodon');
     const r = lastRoom();
     if (r && r.code === oto && (store.get('oyunodasi-name') || (typeof account !== 'undefined' && account))){
-      setTimeout(() => { if (!joined && !$('rejoin').hidden && !$('rejoinBtn').disabled) $('rejoinBtn').click(); }, 600);
+      // "Odaya dön" kutusu sayfa açıldıktan biraz sonra görünür: 10 sn boyunca hazır olmasını bekle
+      let dene = 0;
+      const t = setInterval(() => {
+        if (joined || ++dene > 40){ clearInterval(t); return; }
+        if (!$('rejoin').hidden && !$('rejoinBtn').disabled){ clearInterval(t); $('rejoinBtn').click(); }
+      }, 250);
     }
   }
 } catch(e){}

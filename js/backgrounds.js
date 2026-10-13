@@ -2927,73 +2927,108 @@ const SCENES = {
   ozel: { grup: 'Kişisel', name: 'Kendi görselin', icon: '📷', desc: 'İstediğin resmi arka plan yap. Resim sadece bu cihazda saklanır, kimseye gönderilmez.', make: sceneOzel }
 };
 /* ---------- Video duvar kağıtları: duvar-kagitlari/<Kategori>/*.mp4 (liste: duvar-liste.json, Netlify yayında üretir) ---------- */
-const VID = { el: new Map(), kare: new Map(), hazir: new Map() };
-function videoEl(src){
-  let v = VID.el.get(src); if (v) return v;
+const VID = { el: new Map(), kare: new Map(), hazir: new Map(), blob: new Map() };
+// panelden yüklenen dosya: 3 MB'lık parçaları indirip tek dosyada birleştir (blob adresi). Parçalar tarayıcıda uzun süre saklanır.
+function parcaUrl(id, tur, f, s){
+  const key = id + '/' + tur + '/' + (s || 0);
+  if (VID.blob.has(key)) return VID.blob.get(key);
+  const p = Promise.all(Array.from({ length: f.parca }, (_, i) => fetch('/api/duvar/parca?id=' + id + '&tur=' + tur + '&n=' + i + (s ? '&s=' + s : '')).then(r => { if (!r.ok) throw new Error('parça'); return r.arrayBuffer(); })))
+    .then(parts => URL.createObjectURL(new Blob(parts, { type: f.tip })))
+    .catch(() => { VID.blob.delete(key); return null; });
+  VID.blob.set(key, p); return p;
+}
+function parcaBirak(id, tur, s){ const key = id + '/' + tur + '/' + (s || 0), p = VID.blob.get(key); if (p){ VID.blob.delete(key); p.then(u => { if (u) URL.revokeObjectURL(u); }); } }
+function videoEl(item){
+  let v = VID.el.get(item.key); if (v) return v;
   v = document.createElement('video');
   v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.preload = 'auto';
   v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
-  v.src = src; VID.el.set(src, v); return v;
+  VID.el.set(item.key, v);
+  item.kaynak('v').then(u => { if (u && VID.el.get(item.key) === v) v.src = u; });
+  return v;
 }
-// önizleme karesi: varsa aynı adlı resim, yoksa videonun ~1. saniyesi (küçük tuvale)
+// önizleme karesi: varsa resim, yoksa videonun ~1. saniyesi (küçük tuvale)
 function videoKare(item){
-  if (VID.kare.has(item.url)) return VID.kare.get(item.url);
+  if (VID.kare.has(item.key)) return VID.kare.get(item.key);
   const p = new Promise(res => {
     let bitti = false;
-    const bit = c => { if (bitti) return; bitti = true; VID.hazir.set(item.url, c); res(c); };
+    const bit = c => { if (bitti) return; bitti = true; VID.hazir.set(item.key, c); res(c); };
     const kucuk = (im, w, h) => { const W = 480, c = mk(W, Math.max(1, Math.round(W * h / w))); c2(c).drawImage(im, 0, 0, c.width, c.height); return c; };
-    if (item.poster){
-      const im = new Image(); im.onload = () => bit(kucuk(im, im.naturalWidth, im.naturalHeight)); im.onerror = () => bit(null); im.src = item.poster;
-    } else {
+    const videodan = () => item.kaynak('v').then(u => {
+      if (!u) return bit(null);
       const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto';
       const birak = () => { try { v.removeAttribute('src'); v.load(); } catch(e){} };
       v.onloadeddata = () => { try { v.currentTime = Math.min(1, (v.duration || 3) / 3); } catch(e){ birak(); bit(null); } };
       v.onseeked = () => { let c = null; try { c = kucuk(v, v.videoWidth, v.videoHeight); } catch(e){} birak(); bit(c); };
       v.onerror = () => { birak(); bit(null); };
       setTimeout(() => { birak(); bit(null); }, 20000);
-      v.src = item.url;
-    }
+      v.src = u;
+    });
+    item.kaynak('p').then(u => {
+      if (!u) return videodan();
+      const im = new Image(); im.onload = () => bit(kucuk(im, im.naturalWidth, im.naturalHeight)); im.onerror = () => videodan(); im.src = u;
+    });
   });
-  VID.kare.set(item.url, p); return p;
+  VID.kare.set(item.key, p); return p;
 }
 function kaplaCiz(c, im, iw, ih, W, H){ const k = Math.max(W / iw, H / ih), w = iw * k, h = ih * k; c.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
 function sceneVideo(item){
   return (W, H, o) => {
     if (o.thumb){
-      const k = VID.hazir.get(item.url);
+      const k = VID.hazir.get(item.key);
       return { draw(c){ if (k) kaplaCiz(c, k, k.width, k.height, W, H); else { c.fillStyle = vgrad(c, 0, H, [[0, '#1a1f2b'], [1, '#0d1016']]); c.fillRect(0, 0, W, H); } },
-        thumbAsync: VID.hazir.has(item.url) ? null : videoKare(item) };
+        thumbAsync: VID.hazir.has(item.key) ? null : videoKare(item) };
     }
-    const v = videoEl(item.url);
+    const v = videoEl(item);
     let calisiyor = false;
     const yeniden = () => o.redraw && o.redraw();
     if (v.readyState < 2) v.addEventListener('loadeddata', yeniden, { once: true });
-    if (!VID.hazir.has(item.url)) videoKare(item).then(yeniden);
+    if (!VID.hazir.has(item.key)) videoKare(item).then(yeniden);
     // iPhone düşük güç modu gibi otomatik oynatmayı engelleyen durumlarda ilk dokunuşta başlat
     const dokun = () => { if (calisiyor) v.play().catch(() => {}); };
     document.addEventListener('pointerdown', dokun, { once: true, passive: true });
     return {
       draw(c, t, dt, still){
         if (v.readyState >= 2 && v.videoWidth) kaplaCiz(c, v, v.videoWidth, v.videoHeight, W, H);
-        else { const k = VID.hazir.get(item.url); if (k) kaplaCiz(c, k, k.width, k.height, W, H); else { c.fillStyle = '#05070b'; c.fillRect(0, 0, W, H); } }
-        if (!still && calisiyor && v.paused) v.play().catch(() => {});
+        else { const k = VID.hazir.get(item.key); if (k) kaplaCiz(c, k, k.width, k.height, W, H); else { c.fillStyle = '#05070b'; c.fillRect(0, 0, W, H); } }
+        if (!still && calisiyor && v.paused && v.src) v.play().catch(() => {});
       },
-      calis(on){ calisiyor = on; if (on) v.play().catch(() => {}); else if (!v.paused) v.pause(); },
-      kapat(){ calisiyor = false; v.pause(); document.removeEventListener('pointerdown', dokun); try { v.removeAttribute('src'); v.load(); } catch(e){} VID.el.delete(item.url); }
+      calis(on){ calisiyor = on; if (on){ if (v.src) v.play().catch(() => {}); } else if (!v.paused) v.pause(); },
+      kapat(){ calisiyor = false; v.pause(); document.removeEventListener('pointerdown', dokun); try { v.removeAttribute('src'); v.load(); } catch(e){} VID.el.delete(item.key); if (item.birak) item.birak(); }
     };
   };
 }
 const yolUrl = rel => 'duvar-kagitlari/' + rel.split('/').map(encodeURIComponent).join('/');
-const VIDEO_LISTE = (location.protocol === 'file:' ? Promise.resolve(null) : fetch('duvar-liste.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).catch(() => null)).then(d => {
+const sahneDuyur = () => { try { window.dispatchEvent(new Event('oyunbg-liste')); degisti(); } catch(e){} };
+// 1) GitHub'daki duvar-kagitlari klasörü (Netlify yayında duvar-liste.json üretir)
+const DOSYA_LISTE = (location.protocol === 'file:' ? Promise.resolve(null) : fetch('duvar-liste.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).catch(() => null)).then(d => {
   const ek = [];
   if (d && Array.isArray(d.kategoriler)) for (const k of d.kategoriler) for (const x of (k.videolar || [])){
-    const id = 'v:' + x.dosya, item = { url: yolUrl(x.dosya), poster: x.poster ? yolUrl(x.poster) : null };
+    const id = 'v:' + x.dosya, url = yolUrl(x.dosya), poster = x.poster ? yolUrl(x.poster) : null;
+    const item = { key: id, kaynak: tur => Promise.resolve(tur === 'v' ? url : tur === 'p' ? poster : null) };
     SCENES[id] = { grup: '🎬 ' + k.ad, name: x.ad, icon: x.muzik ? '🎵' : '🎬', desc: 'Video duvar kağıdı (' + k.ad + ')' + (x.muzik ? ' · müziği var' : ''), make: sceneVideo(item), hd: true, video: true, muzik: x.muzik ? yolUrl(x.muzik) : null };
     ek.push(id);
   }
-  if (ek.length) try { window.dispatchEvent(new Event('oyunbg-liste')); degisti(); } catch(e){}
   return ek;
 });
+// 2) yönetim panelinden yüklenenler (parça parça, /api/duvar)
+function panelListe(){
+  if (location.protocol === 'file:') return Promise.resolve([]);
+  return fetch('/api/duvar/liste', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null).then(d => {
+    for (const id of Object.keys(SCENES)) if (id.startsWith('p:')) delete SCENES[id];
+    const ek = [];
+    if (d && Array.isArray(d.videolar)) for (const x of d.videolar){
+      const id = 'p:' + x.id, ms = x.muzik && x.muzik.s;
+      const item = { key: id, kaynak: tur => tur === 'v' ? parcaUrl(x.id, 'v', x.video) : tur === 'p' ? (x.poster ? parcaUrl(x.id, 'p', x.poster) : Promise.resolve(null)) : Promise.resolve(null),
+        birak: () => parcaBirak(x.id, 'v') };
+      SCENES[id] = { grup: '🎬 ' + x.kategori, name: x.ad, icon: x.muzik ? '🎵' : '🎬', desc: 'Video duvar kağıdı (' + x.kategori + ')' + (x.muzik ? ' · müziği var' : ''), make: sceneVideo(item), hd: true, video: true,
+        muzik: x.muzik ? { al: () => parcaUrl(x.id, 'm', x.muzik, ms) } : null, panel: x };
+      ek.push(id);
+    }
+    return ek;
+  });
+}
+const VIDEO_LISTE = Promise.all([DOSYA_LISTE, panelListe()]).then(([a, b]) => { const ek = a.concat(b); if (ek.length) sahneDuyur(); return ek; });
 
 // Görünüm penceresindeki sıra: önce gerçekçi HD sahneler, sonra temalar, en sonda videolar ve kişisel görsel
 const GRUP_SIRA = ['Genel', 'Gerçekçi', 'Japonya', 'Doğa', 'Huzur', 'Uzay', 'Şehir', 'Cyberpunk', 'Fantastik', 'Soyut'];
@@ -3120,6 +3155,8 @@ window.OyunBG = {
     .concat(Object.keys(SCENES).map(id => ({ id, grup: SCENES[id].grup, name: SCENES[id].name, icon: SCENES[id].icon, desc: SCENES[id].desc, hd: !!SCENES[id].hd, video: !!SCENES[id].video, yeni: !!SCENES[id].yeni })))
     .sort((a, b) => grupSira(a.grup) - grupSira(b.grup)); },
   videolar: VIDEO_LISTE,
+  // panelden video eklenince/silinince listeyi yenile
+  panelYenile(){ return panelListe().then(ek => { sahneDuyur(); return ek; }); },
   set, thumb, saved, setCustomImage, removeCustom,
   hasCustom(){ return loadCustom().then(c => !!c); },
   get efekt(){ return st.efekt; },
@@ -3128,7 +3165,7 @@ window.OyunBG = {
   pause(v){ st.paused = !!v; schedule(); },
   restore(){ const p = saved(); if (p && p.efekt) st.efekt = p.efekt; if (p && p.id && SCENES[p.id]) set(p.id, { animate: p.animate, dim: p.dim, save: false }); else if (p){ if (p.dim !== undefined) st.dim = clamp(+p.dim || 0, 0, .8); if (p.animate !== undefined) st.animate = !!p.animate;
     // video duvar kağıdı: liste gelince aç
-    if (p.id && String(p.id).startsWith('v:')) VIDEO_LISTE.then(() => { const q = saved(); if (SCENES[p.id] && !st.id && q && q.id === p.id) set(p.id, { animate: p.animate, dim: p.dim, save: false }); }); } },
+    if (p.id && /^[vp]:/.test(String(p.id))) VIDEO_LISTE.then(() => { const q = saved(); if (SCENES[p.id] && !st.id && q && q.id === p.id) set(p.id, { animate: p.animate, dim: p.dim, save: false }); }); } },
   info(){
     const a = st.ms, avg = a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
     return { id: st.id, animate: st.animate, paused: st.paused, running: !!st.raf, fps: st.fps, scale: +st.s.toFixed(3), quality: +st.q.toFixed(2),

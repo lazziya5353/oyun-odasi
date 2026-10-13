@@ -8,7 +8,7 @@ import { getStore } from '../lib/blobs.mjs';
 const store = name => (globalThis.__oyunOdasiTestStore ? globalThis.__oyunOdasiTestStore(name) : getStore({ name, consistency: 'strong' }));
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
 const clip = (s, n) => String(s || '').replace(/[\u0000-\u001f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
-const TURLER = ['giris', 'cikis', 'oda', 'etiket', 'saka', 'replik', 'oyun', 'muzik', 'radyo', 'ses', 'film', 'ekran'];
+const TURLER = ['giris', 'cikis', 'oda', 'etiket', 'saka', 'replik', 'oyun', 'muzik', 'radyo', 'ses', 'film', 'ekran', 'hata', 'kopma'];
 const MAX = 500;
 
 async function isAdmin(req){
@@ -52,7 +52,7 @@ export default async (req, context) => {
       const now = Date.now();
       const items = (Array.isArray(b.olaylar) ? b.olaylar : []).slice(0, 30)
         .filter(o => o && TURLER.includes(o.tur))
-        .map(o => ({ ts: Math.min(now, Math.max(now - 3600e3, Number(o.ts) || now)), ad, cihaz, uye, tur: o.tur, metin: clip(o.metin, 120), oda: clip(o.oda, 12) }))
+        .map(o => ({ ts: Math.min(now, Math.max(now - 3600e3, Number(o.ts) || now)), ad, cihaz, uye, tur: o.tur, metin: clip(o.metin, o.tur === 'hata' || o.tur === 'kopma' ? 220 : 120), oda: clip(o.oda, 12) }))
         .sort((x, y) => y.ts - x.ts);
       if (!items.length) return json({ ok: true, n: 0 });
       await ekle(items);

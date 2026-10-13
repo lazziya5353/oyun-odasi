@@ -16,30 +16,84 @@ const SAKA_TUM = SAKA_LIST.concat([['mesaj', '📣', 'Ekrana mesaj']], SAKA_SES,
 // replik videoları: sitedeki "replikler" klasörü (liste Netlify yayınında otomatik çıkar)
 let REPLIKLER = null;
 async function replikYukle(){
-  try { const r = await fetch('replikler/liste.json', { cache: 'no-store' }); const d = r.ok ? await r.json() : null; REPLIKLER = d && Array.isArray(d.klipler) ? d.klipler : []; } catch(e){ REPLIKLER = []; }
+  const al = u => fetch(u, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const [d, p] = await Promise.all([al('replikler/liste.json'), al('/api/duvar/replikler')]);
+  const a = d && Array.isArray(d.klipler) ? d.klipler.map(k => Object.assign({ kaynak: 'github' }, k)) : [];
+  const b = p && Array.isArray(p.replikler) ? p.replikler.map(x => ({ kaynak: 'panel', dosya: 'p_' + x.id + (/webm/.test(x.video.tip) ? '.webm' : '.mp4'), ad: x.ad, boyut: x.video.boyut, panel: x })) : [];
+  REPLIKLER = a.concat(b).sort((x, y) => String(x.ad).localeCompare(String(y.ad), 'tr'));
+}
+// panelden yüklenen replik: parçaları birleştirip önizle
+async function replikSrc(k){
+  if (k.kaynak !== 'panel') return 'replikler/' + encodeURIComponent(k.dosya);
+  const x = k.panel;
+  const parts = await Promise.all(Array.from({ length: x.video.parca }, (_, i) => fetch('/api/duvar/parca?id=' + x.id + '&tur=r&n=' + i).then(r => r.arrayBuffer())));
+  return URL.createObjectURL(new Blob(parts, { type: x.video.tip }));
+}
+function replikYuklemeFormu(box){
+  const f = el('div', 'replik-yukle');
+  const inp = el('input'); inp.type = 'file'; inp.accept = 'video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v'; inp.multiple = true;
+  const ad = el('input', 'inp'); ad.placeholder = 'Replik adı (tek video seçince)'; ad.maxLength = 100;
+  const bil = note('');
+  const cubuk = el('div', 'dv-cubuk'); const ic = el('i'); cubuk.append(ic); cubuk.hidden = true;
+  inp.onchange = () => {
+    const fs = [...inp.files];
+    if (fs.length === 1 && !ad.value) ad.value = fs[0].name.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').trim().slice(0, 100);
+    ad.hidden = fs.length > 1;
+    bil.textContent = fs.length ? fs.length + ' video · ' + (fs.reduce((t, f) => t + f.size, 0) / 1048576).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' MB' + (fs.length > 1 ? ' (adlar dosya adından alınır)' : '') : '';
+  };
+  const yukle = button('⬆️ Replik yükle', 'primary', async () => {
+    const fs = [...inp.files];
+    if (!fs.length){ toast('Önce video seç'); return; }
+    const buyuk = fs.find(f => f.size > 40 * 1048576); if (buyuk){ toast(buyuk.name + ' 40 MB’tan büyük'); return; }
+    yukle.disabled = true; cubuk.hidden = false; ic.style.width = '0%';
+    const top = fs.reduce((t, f) => t + f.size, 0); let biten = 0, n = 0;
+    try {
+      for (const f of fs){
+        const id = yeniId(), adi = fs.length === 1 && ad.value.trim() ? ad.value.trim() : f.name.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').trim().slice(0, 100);
+        bil.textContent = '⬆️ ' + adi + '…';
+        const video = await parcaYukle(id, 'r', f, p => { ic.style.width = Math.round((biten + p * f.size) / top * 100) + '%'; });
+        await req('/api/duvar/admin-replik-ekle', { id, ad: adi, video });
+        biten += f.size; n++;
+      }
+      toast('✅ ' + n + ' replik yüklendi; herkesin Şaka panelinde hemen çıkar');
+      await replikYukle(); renderList();
+    } catch(e){ toast('Yüklenemedi: ' + (e.message || e)); yukle.disabled = false; cubuk.hidden = true; await replikYukle(); }
+  });
+  f.append(el('b', '', '⬆️ Panelden replik yükle'), note('GitHub’a ve yayına gerek yok. mp4/webm, video başına en fazla 40 MB (kısa replikler genelde 1–5 MB). Birden fazla video seçebilirsin.'), inp, ad, bil, cubuk, yukle);
+  box.append(f);
 }
 function replikKutusu(list, gonderilebilir){
   const box = el('div', 'ad-box'); box.id = 'sakaReplik';
   box.append(el('h3', '', '🎬 Replikler (' + (REPLIKLER ? REPLIKLER.length : '…') + ')'));
   if (!REPLIKLER){ box.append(note('Yükleniyor…')); list.append(box); replikYukle().then(() => { if (tab === 'saka') renderList(); }); return; }
-  if (!REPLIKLER.length) box.append(note('Henüz replik yok. GitHub’da “replikler” klasörüne mp4 video at (dosya adı = replik adı); site güncellenince burada ve herkesin Şaka panelinde çıkar.'));
+  replikYuklemeFormu(box);
+  if (!REPLIKLER.length) box.append(note('Henüz replik yok. Yukarıdan video yükle.'));
   const g = el('div', 'replik-liste');
   REPLIKLER.forEach(k => {
     const row = el('div', 'replik-satir');
     const ad = el('span', 'replik-ad', '🎬 ' + k.ad);
+    if (k.kaynak === 'github') ad.append(el('span', 'pill', 'GitHub'));
     const mb = el('span', 'note', (k.boyut / 1048576).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' MB');
     row.append(ad, mb);
-    row.append(button('👁 Önizle', '', () => {
-      const ex = row.querySelector('video'); if (ex){ ex.remove(); return; }
-      const v = el('video'); v.src = 'replikler/' + encodeURIComponent(k.dosya); v.controls = true; v.autoplay = true; v.className = 'replik-onizle';
-      row.append(v);
+    row.append(button('👁 Önizle', '', async () => {
+      const ex = row.querySelector('video'); if (ex){ if (ex.src.startsWith('blob:')) URL.revokeObjectURL(ex.src); ex.remove(); return; }
+      const v = el('video'); v.controls = true; v.autoplay = true; v.className = 'replik-onizle'; row.append(v);
+      try { v.src = await replikSrc(k); } catch(e){ toast('Önizleme açılamadı'); v.remove(); }
     }));
     if (gonderilebilir){ const b = button('📤 Gönder', 'primary', () => sakaSend('replik', '', k.dosya)); row.append(b); }
+    if (k.kaynak === 'panel'){
+      row.append(button('✏️', '', () => {
+        const a = el('input', 'inp'); a.value = k.ad; a.maxLength = 100; a.style.flex = '1';
+        row.innerHTML = ''; row.append(a, button('Kaydet', 'primary', async () => { try { await req('/api/duvar/admin-replik-ad', { id: k.panel.id, ad: a.value }); toast('Kaydedildi'); await replikYukle(); renderList(); } catch(e){ toast(e.message); } }), button('Vazgeç', '', () => renderList()));
+        a.focus();
+      }));
+      row.append(dangerBtn('🗑', async () => { try { await req('/api/duvar/admin-replik-sil', { id: k.panel.id }); toast('Replik silindi'); await replikYukle(); renderList(); } catch(e){ toast(e.message); } }));
+    }
     g.append(row);
   });
   box.append(g);
   if (REPLIKLER.length && !gonderilebilir) box.append(note('Göndermek için yukarıdan odaya bağlan.'));
-  box.append(note('Yeni replik eklemek için: GitHub → replikler klasörü → Add file → Upload files → mp4 videoları sürükle → Commit. Silmek için dosyayı GitHub’dan sil.'));
+  box.append(note('GitHub’daki “replikler” klasöründen eklenenler de burada görünür; onları silmek için dosyayı GitHub’dan sil.'));
   list.append(box);
 }
 // kullanıcıların birbirine şaka yapma ayarları

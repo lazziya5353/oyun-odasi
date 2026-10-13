@@ -46,11 +46,25 @@ const REPLIK_RE = /^[^\/\\]{1,160}\.(mp4|webm|m4v|mov)$/i;
 function replikYukle(force){
   if (!force && replikP) return replikP;
   if (!force && Date.now() - replikAt < 3 * 60e3) return Promise.resolve(REPLIK);
-  replikP = fetch('replikler/liste.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => {
-    if (d && Array.isArray(d.klipler)) REPLIK = d.klipler.filter(k => k && REPLIK_RE.test(k.dosya)).map(k => ({ dosya: k.dosya, ad: clip(k.ad || k.dosya, 100) }));
+  const al = u => fetch(u, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+  // GitHub'daki "replikler" klasörü + yönetim panelinden yüklenenler (parça parça saklanır, dosya adı "p_<id>.mp4")
+  replikP = Promise.all([al('replikler/liste.json'), al('/api/duvar/replikler')]).then(([d, p]) => {
+    const a = d && Array.isArray(d.klipler) ? d.klipler.filter(k => k && REPLIK_RE.test(k.dosya)).map(k => ({ dosya: k.dosya, ad: clip(k.ad || k.dosya, 100) })) : null;
+    const b = p && Array.isArray(p.replikler) ? p.replikler.map(x => ({ dosya: 'p_' + x.id + (/webm/.test(x.video.tip) ? '.webm' : '.mp4'), ad: clip(x.ad, 100), panel: x })) : [];
+    if (a || b.length) REPLIK = (a || REPLIK.filter(k => !k.panel)).concat(b).sort((x, y) => x.ad.localeCompare(y.ad, 'tr'));
     replikAt = Date.now(); replikP = null; return REPLIK;
   }, () => { replikP = null; return REPLIK; });
   return replikP;
+}
+// replik videosunun adresi: klasördekiler doğrudan, panelden yüklenenler parçaları birleştirerek (blob)
+async function replikKaynak(dosya){
+  if (!/^p_[a-f0-9]{32}\./.test(dosya)) return 'replikler/' + encodeURIComponent(dosya);
+  let k = REPLIK.find(x => x.dosya === dosya);
+  if (!k){ await replikYukle(true); k = REPLIK.find(x => x.dosya === dosya); }
+  if (!k || !k.panel) return null;
+  const x = k.panel;
+  const parts = await Promise.all(Array.from({ length: x.video.parca }, (_, i) => fetch('/api/duvar/parca?id=' + x.id + '&tur=r&n=' + i).then(r => { if (!r.ok) throw new Error('parça'); return r.arrayBuffer(); })));
+  return URL.createObjectURL(new Blob(parts, { type: x.video.tip }));
 }
 const replikAd = dosya => { const k = REPLIK.find(x => x.dosya === dosya); return k ? k.ad : String(dosya || '').replace(/\.[^.]+$/, ''); };
 const SAKA_KEY = 'oyunodasi-saka';
@@ -615,19 +629,33 @@ function replikOynat(dosya, kimden){
   return new Promise(res => {
     const box = add('', 'saka-replik');
     const v = document.createElement('video');
-    v.src = 'replikler/' + encodeURIComponent(dosya); v.playsInline = true; v.preload = 'auto';
+    v.playsInline = true; v.preload = 'auto';
     v.muted = typeof deafened !== 'undefined' && deafened;
     v.volume = Math.max(0, Math.min(1, typeof masterVol === 'number' ? masterVol : 1));
     const cap = document.createElement('div'); cap.className = 'saka-replik-cap';
-    cap.append(Object.assign(document.createElement('b'), { textContent: '🎬 ' + replikAd(dosya) }), Object.assign(document.createElement('span'), { textContent: kimden ? kimden + ' gönderdi' : '' }));
-    box.append(v, cap);
+    const baslik = Object.assign(document.createElement('b'), { textContent: '🎬 ' + replikAd(dosya) });
+    cap.append(baslik, Object.assign(document.createElement('span'), { textContent: kimden ? kimden + ' gönderdi' : '' }));
+    // sağ üst köşede ✕: isteyen kendi ekranında repliği kapatır (başkalarında oynamaya devam eder)
+    const kapat = document.createElement('button'); kapat.type = 'button'; kapat.className = 'saka-replik-kapat'; kapat.textContent = '✕';
+    kapat.title = 'Repliği kapat (sadece senin ekranında)'; kapat.setAttribute('aria-label', 'Repliği kapat');
+    kapat.onclick = e => { e.stopPropagation(); try { v.pause(); } catch(err){} bitir(); };
+    box.append(v, cap, kapat);
     let done = false;
     const bitir = () => { if (done) return; done = true; clearTimeout(maxT); clearTimeout(loadT);
       // arka plandaki sekmede animasyon bitişi gelmeyebilir: hemen kaldır
-      if (document.hidden){ v.removeAttribute('src'); v.load(); box.remove(); res(); return; }
-      box.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(.85)', opacity: 0 }], { duration: 300, fill: 'forwards' }).onfinish = () => { v.removeAttribute('src'); v.load(); box.remove(); res(); }; };
-    const maxT = setTimeout(bitir, 45000);
-    const loadT = setTimeout(() => { if (v.readyState < 3) bitir(); }, 12000);     // yüklenemezse takılı kalmasın
+      const temizle = () => { v.removeAttribute('src'); v.load(); if (blobUrl) URL.revokeObjectURL(blobUrl); box.remove(); res(); };
+      if (document.hidden){ temizle(); return; }
+      box.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(.85)', opacity: 0 }], { duration: 300, fill: 'forwards' }).onfinish = temizle; };
+    let maxT = 0, loadT = 0, blobUrl = null;
+    replikKaynak(dosya).then(src => {
+      if (done) return;
+      if (!src){ bitir(); return; }
+      if (src.startsWith('blob:')) blobUrl = src;
+      baslik.textContent = '🎬 ' + replikAd(dosya);      // liste yeni yüklendiyse adı güncelle
+      v.src = src;
+      maxT = setTimeout(bitir, 45000);
+      loadT = setTimeout(() => { if (v.readyState < 3) bitir(); }, 12000);     // yüklenemezse takılı kalmasın
+    }, () => bitir());
     v.addEventListener('ended', bitir); v.addEventListener('error', bitir);
     v.addEventListener('canplay', () => {
       if (done || box.classList.contains('acik')) return;
@@ -825,3 +853,5 @@ window.sakaAdminConn = sakaAdminConn;
 window.sakaOnData = sakaOnData;
 window.playSaka = playSaka;
 })();
+// replik adları bildirimde ve başlıkta doğru görünsün: liste açılışta bir kez alınır
+setTimeout(() => { try { replikYukle(); } catch(e){} }, 3000);

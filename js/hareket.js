@@ -9,7 +9,7 @@ function cihazTuru(){
 }
 function hareket(tur, metin, hemen){
   try {
-    hk.kuyruk.push({ ts: Date.now(), tur, metin: String(metin || '').slice(0, 120), oda: typeof roomCode !== 'undefined' ? roomCode : '' });
+    hk.kuyruk.push({ ts: Date.now(), tur, metin: String(metin || '').slice(0, 220), oda: typeof roomCode !== 'undefined' ? roomCode : '' });
     if (hk.kuyruk.length > 30) hk.kuyruk.splice(0, hk.kuyruk.length - 30);
     if (hemen) hareketGonder();
     else if (!hk.zaman) hk.zaman = setTimeout(hareketGonder, 45000);

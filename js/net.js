@@ -644,6 +644,7 @@ function removePeer(id, opts = {}){
   if (kayip){
     kayiplar.set(id, { name: p.name, ts: Date.now() });
     toast('📶 ' + p.name + '’in bağlantısı koptu, tekrar bağlanılıyor…');
+    if (typeof hareket === 'function') hareket('kopma', p.name + ' ile bağlantı koptu (' + (p.badKind || (p.lastSeen && Date.now() - p.lastSeen > 60000 ? 'sinyal gelmedi' : 'kanal kapandı')) + ')' + (typeof taniDurum === 'function' ? ' | ' + taniDurum() : ''));
     addSys(p.name + '’in bağlantısı koptu');
   } else if (!opts.silent && p.helloed){
     toast(p.name + (p.kicked ? ' odadan çıkarıldı' : ' ayrıldı')); chime(false);

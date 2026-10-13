@@ -80,6 +80,38 @@
   .replik-ad{flex:1;min-width:160px;font-weight:600;overflow-wrap:anywhere}
   .replik-onizle{flex-basis:100%;max-width:420px;max-height:260px;border-radius:10px;background:#000}
   @media (max-width:600px){ .u{grid-template-columns:auto 1fr} .u-acts{grid-column:1/-1;justify-content:flex-start} }
+  .replik-yukle{display:grid;gap:8px;padding:12px;border:1px dashed var(--line);border-radius:12px;margin-bottom:6px}
+  .replik-yukle input[type=file]{font:inherit;font-size:13px;color:var(--muted)}
+  .replik-yukle .inp[hidden]{display:none}
+  /* video duvar kağıtları sekmesi */
+  .dv-form{gap:10px}
+  .dv-satir{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:10px;margin:0;text-transform:none;letter-spacing:0;font-size:14px;color:var(--fg)}
+  .dv-satir input[type=file]{font:inherit;font-size:13px;color:var(--muted);min-width:0}
+  .dv-cubuk{height:10px;border-radius:99px;background:var(--panel-2);overflow:hidden}
+  .dv-cubuk[hidden]{display:none}
+  .dv-cubuk i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+  .dv-kat{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .dv-video{display:grid;grid-template-columns:120px 1fr auto;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+  .dv-video img{width:120px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#0b0d14}
+  .dv-bilgi{display:grid;gap:2px;min-width:0}
+  .dv-bilgi b{overflow-wrap:anywhere}
+  .dv-video .u-acts .inp{width:150px}
+  @media (max-width:700px){ .dv-satir{grid-template-columns:1fr;gap:4px} .dv-video{grid-template-columns:96px 1fr} .dv-video img{width:96px} .dv-video .u-acts{grid-column:1/-1;justify-content:flex-start} }
+  /* kelimeler sekmesi */
+  .kl-yasak{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+  @media (max-width:700px){ .kl-yasak{grid-template-columns:1fr 1fr} }
+  .kl-liste{display:grid;gap:2px;max-height:520px;overflow:auto}
+  .kl-kart{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+  .kl-metin{flex:1;min-width:0;display:grid}
+  .kl-metin b{font-size:15px}
+  .kl-metin .ad-muted{overflow-wrap:anywhere}
+  .kl-kart .btn.small{padding:4px 9px}
+  .kl-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:520px;overflow:auto}
+  .kl-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 4px 4px 10px;border-radius:99px;background:var(--panel-2);border:1px solid var(--line);font-size:13px}
+  .kl-chip.yeni{border-color:var(--accent);color:var(--accent)}
+  .kl-chip button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;width:20px;height:20px;border-radius:50%}
+  .kl-chip button:hover{background:var(--danger);color:#fff}
+  details.ad-box summary{cursor:pointer;font-weight:600}
   /* sol sütun: duvar kağıtları */
   .yan-ic{display:grid;gap:12px;align-content:start}
   .yd-bas{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -178,5 +210,9 @@
 <script src="js/backgrounds.js"></script>
 <script src="js/dinlen.js"></script>
 <script src="js/admin-duvar.js"></script>
+<script src="js/games/ciz.js"></script>
+<script src="js/games/tabu-kartlar.js"></script>
+<script src="js/games/tabu.js"></script>
+<script src="js/admin-icerik.js"></script>
 </body>
 </html>

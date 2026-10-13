@@ -31,9 +31,10 @@ if (typeof registerTableGame === 'function') (function(){
   function remember(w){ const h = hist(); h.push(w); try { localStorage.setItem(HK, JSON.stringify(h.slice(-Math.floor(T.CARDS.length * 0.8)))); } catch(e){} }
   function freshDeck(st){
     const h = new Set(hist());
-    let idx = T.CARDS.map((c, i) => i).filter(i => !st.used.includes(i) && !h.has(T.CARDS[i].w));
-    if (idx.length < 20) idx = T.CARDS.map((c, i) => i).filter(i => !st.used.includes(i));
-    if (!idx.length){ st.used = []; idx = T.CARDS.map((c, i) => i); }
+    const ok = i => !T.CARDS[i].silindi;    // panelden silinen kartlar desteye girmez
+    let idx = T.CARDS.map((c, i) => i).filter(i => ok(i) && !st.used.includes(i) && !h.has(T.CARDS[i].w));
+    if (idx.length < 20) idx = T.CARDS.map((c, i) => i).filter(i => ok(i) && !st.used.includes(i));
+    if (!idx.length){ st.used = []; idx = T.CARDS.map((c, i) => i).filter(ok); }
     return shuffle(idx);
   }
   function drawCard(st){
