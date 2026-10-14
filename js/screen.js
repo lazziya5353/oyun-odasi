@@ -61,7 +61,7 @@ function syncScreenOut(){
 // ---------- paylaşım seçenekleri ----------
 function openShareDialog(){
   const box = $('shareOpts'); box.innerHTML = '';
-  const order = myChan().type === 'film' ? ['film', 'balanced', 'motion', 'detail', 'low'] : ['balanced', 'motion', 'detail', 'film', 'low'];
+  const order = myChan().type === 'film' ? ['film', 'balanced', 'motion', 'detail', 'low'] : myChan().type === 'ders' ? ['detail', 'balanced', 'low', 'motion', 'film'] : ['balanced', 'motion', 'detail', 'film', 'low'];
   order.forEach(k => {
     const q = QUALITY[k];
     const b = document.createElement('button'); b.className = 'btn share-opt' + (k === shareQ ? ' on' : '');

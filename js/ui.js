@@ -5,7 +5,8 @@ const DEFAULT_CHANNELS = [
   { id: 'genel', name: 'Genel Sohbet', icon: '🎮', type: 'voice' },
   { id: 'muzik', name: 'Müzik Odası',  icon: '🎵', type: 'music' },
   { id: 'film',  name: 'Film Odası',   icon: '🎬', type: 'film' },
-  { id: 'oyun',  name: 'Oyun Salonu',  icon: '🎲', type: 'game' }
+  { id: 'oyun',  name: 'Oyun Salonu',  icon: '🎲', type: 'game' },
+  { id: 'ders',  name: 'Toplantı & Ders', icon: '🗂', type: 'ders' }
 ];
 let channels = DEFAULT_CHANNELS.map(c => Object.assign({}, c));
 const chanById = id => channels.find(c => c.id === id);
@@ -18,10 +19,11 @@ function setChannels(list){
     if (!c || typeof c !== 'object') return;
     if (typeof c.id !== 'string' || !/^[a-z0-9-]{1,24}$/.test(c.id)) return;
     if (clean.some(x => x.id === c.id)) return;
-    const type = ['voice', 'music', 'film', 'game'].includes(c.type) ? c.type : 'voice';
+    const type = ['voice', 'music', 'film', 'game', 'ders'].includes(c.type) ? c.type : 'voice';
     clean.push({ id: c.id, name: clip(c.name, 24) || 'Kanal', icon: clip(c.icon, 4) || '🎮', type });
   });
-  DEFAULT_CHANNELS.forEach(d => { if (!clean.some(c => c.id === d.id)) clean.unshift(Object.assign({}, d)); });
+  // eksik varsayılan kanal (oda sahibinin sitesi eskiyse): baştaki sırasına yerleşsin, en üste değil
+  DEFAULT_CHANNELS.forEach((d, i) => { if (!clean.some(c => c.id === d.id)) clean.splice(Math.min(i, clean.length), 0, Object.assign({}, d)); });
   channels = clean;
   peers.forEach(p => { if (!chanById(p.channel)) p.channel = 'genel'; });
   if (!chanById(me.channel)) switchChannel('genel', true);
@@ -49,7 +51,7 @@ function switchChannel(id, quiet){
 }
 function setRoomChannelClass(){
   const r = $('room');
-  r.classList.remove('ch-voice', 'ch-music', 'ch-film', 'ch-game');
+  r.classList.remove('ch-voice', 'ch-music', 'ch-film', 'ch-game', 'ch-ders');
   r.classList.add('ch-' + myChan().type);
 }
 
@@ -100,6 +102,11 @@ function chanSubtitle(c){
     const t = musicCurrentTitle(); if (t) return '🎵 ' + t;
   }
   if (c.type === 'film' && yt) return '▶️ YouTube birlikte izleniyor';
+  if (c.type === 'ders'){
+    const anlatan = [...peers.values()].find(p => p.sharing && p.channel === c.id);
+    if (anlatan) return '🖥 ' + anlatan.name + ' anlatıyor';
+    if (typeof screenStream !== 'undefined' && screenStream && me.channel === c.id) return '🖥 Sen anlatıyorsun';
+  }
   if (c.type === 'game' && tables.size){
     const playing = [...tables.values()].filter(t => t.status === 'playing').length;
     return '🎲 ' + tables.size + ' masa' + (playing ? ' · ' + playing + ' oyunda' : '');
@@ -136,6 +143,7 @@ function renderDeck(){
   if (t === 'music') renderMusicDeck(d);
   else if (t === 'film') renderFilmDeck(d);
   else if (t === 'game') renderGameDeck(d);
+  else if (t === 'ders' && typeof renderDersDeck === 'function') renderDersDeck(d);
   else d.innerHTML = '';
 }
 
@@ -254,6 +262,7 @@ function renderSelf(){
   if (noMic) ic.insertAdjacentHTML('beforeend', '<span class="pill">🎧 Dinleyici</span>');
   if (screenStream) ic.insertAdjacentHTML('beforeend', '<span class="pill live">🖥 Yayında</span>');
   if (isHost) ic.insertAdjacentHTML('beforeend', '<span class="pill">👑 Oda sahibi</span>');
+  if (typeof dersRozet === 'function' && peer) ic.insertAdjacentHTML('beforeend', dersRozet(peer.id));
   if (typeof vfxId !== 'undefined' && vfxId !== 'normal') ic.insertAdjacentHTML('beforeend', '<span class="pill vfx">' + vfxEtiket(vfxId) + '</span>');
   updateCount();
 }
@@ -304,6 +313,7 @@ function renderPeer(p){
   if (p.noMic) ic.insertAdjacentHTML('beforeend', '<span class="pill">🎧 Dinleyici</span>');
   if (p.sharing) ic.insertAdjacentHTML('beforeend', '<span class="pill live">🖥 Yayında</span>');
   if (p.id === currentHostId) ic.insertAdjacentHTML('beforeend', '<span class="pill">👑 Oda sahibi</span>');
+  if (typeof dersRozet === 'function') ic.insertAdjacentHTML('beforeend', dersRozet(p.id));
   if (p.vfx && p.vfx !== 'normal' && typeof vfxEtiket === 'function') ic.insertAdjacentHTML('beforeend', '<span class="pill vfx">' + vfxEtiket(p.vfx) + '</span>');
   if (p.tile){ const w = p.tile.querySelector('.who'); if (w) w.textContent = screenTitleFor(p); }
   syncPeerUI(p);

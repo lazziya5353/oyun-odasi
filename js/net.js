@@ -454,6 +454,7 @@ function onData(id, d){
         p.helloed = true;
         const geri = kayipGeriDondu(p.id) || !!p._geri; p._geri = false;
         gamesOnHello(p);
+        if (typeof dersOnHello === 'function') dersOnHello(p);
         if (geri){ toast('🔄 ' + p.name + ' geri bağlandı'); chime(true); addSys(p.name + ' geri bağlandı'); }
         else { toast(p.name + ' odaya katıldı'); chime(true); addSys(p.name + ' odaya katıldı'); }
       }
@@ -531,6 +532,8 @@ function onData(id, d){
   if (chatOnData(id, d)) return;
   if (musicOnData(id, d)) return;
   if (filmOnData(id, d)) return;
+  if (typeof kayitOnData === 'function' && kayitOnData(id, d)) return;
+  if (typeof dersOnData === 'function' && dersOnData(id, d)) return;
 }
 
 function afterPeerStateChange(p){
@@ -797,6 +800,7 @@ function closeIfAlone(){
   try { localStorage.removeItem('oyunodasi-chat-' + roomCode); localStorage.removeItem('oyunodasi-chatclr-' + roomCode); } catch(e){}
 }
 function leaveRoom(){
+  if (typeof kayitBitir === 'function' && kayitBitir(leaveRoom)) return;   // önce kayıt kaydedilip insin
   hoscaKal();
   if (typeof hareket === 'function' && joined){ hareket('cikis', roomCode + ' odasından çıktı'); hareketGonder(true); }
   closeIfAlone();
