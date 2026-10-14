@@ -679,7 +679,9 @@ html.dinlen:has(#dinlenUI.gizli), html.dinlen:has(#dinlenUI.gizli) body{cursor:n
 @media (max-width:860px){ #kayitKutu{right:12px;bottom:84px} }
 
 /* ---------- 📷 Kamera ---------- */
-.person .kam-v{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;background:#000;box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 60%,transparent)}
+.person .kam-v{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;border-radius:14px;background:#000;box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 60%,transparent)}
+.person.kam-dik .kam-v{width:auto;max-width:100%;height:min(360px,46vh);margin:0 auto}
+.room.sharing .person.kam-dik .kam-v{height:220px}
 .person .kam-v.ayna{transform:scaleX(-1)}
 .person.kamerali .av-wrap{display:none}
 .room.ch-ders:not(.sharing) .person.kamerali{width:300px;padding:10px}
