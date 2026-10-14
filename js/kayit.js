@@ -1,5 +1,7 @@
 // Toplantı / ders kaydı: paylaşılan ekranın üstündeki "⏺ Kaydet" düğmesi o ekranı ve odada duyduğun bütün sesleri
-// (kendi mikrofonun, kanaldakiler, ekranın kendi sesi) tek dosyaya kaydeder. "⏹ Bitir" deyince dosya bilgisayarına iner.
+// (kendi mikrofonun, kanaldakiler, ekranın kendi sesi) tek dosyaya kaydeder. "⏹ Bitir" deyince kayıt kendiliğinden İNMEZ:
+// "💾 Kayıtların" kutusu çıkar, İndir'e basan bilgisayarına indirir, Sil'e basan siler. Kayıt indirilene/silinene kadar saklanır
+// (sayfa yenilense de kutu tekrar çıkar).
 //  • Kayıt sırasında dosya tarayıcının kendi diskine (OPFS) parça parça yazılır: saatlerce sürse de bellek dolmaz.
 //    Tarayıcı desteklemiyorsa bellekte tutulur.
 //  • Sayfa kayıt sırasında kapanırsa (çökme, pil) sonraki açılışta "yarım kalan kaydı indir" çıkar.
@@ -9,13 +11,20 @@
   const K = { rec: null, akis: null, video: null, kaynak: '', t0: 0, saat: null, parcalar: [], yazici: null, dosyaAdi: '', opfs: null,
               zincir: Promise.resolve(), sesler: new Map(), hedef: null, sesTimer: null, duyuru: null, bitiyor: false, ext: 'webm', tip: '' };
   const kaydedenler = new Map();             // id → { ad, son }
-  const ACIK_KEY = 'oyunodasi-kayit-acik';
+  const ACIK_KEY = 'oyunodasi-kayit-acik';          // eski sürümden kalan tek kayıt (taşınır)
+  const LISTE_KEY = 'oyunodasi-kayitlar';            // [{ kok, ad, tip, ts, sure, durum: 'kayitta'|'hazir'|'indirildi' }]
+  const bellekte = new Map();                        // diske yazılamayan (OPFS yok) kayıtlar: kok → Blob (sayfa yenilenince kaybolur)
+  const listeOku = () => { try { const l = JSON.parse(localStorage.getItem(LISTE_KEY) || '[]'); return Array.isArray(l) ? l.filter(x => x && x.kok) : []; } catch(e){ return []; } };
+  const listeYaz = l => { try { localStorage.setItem(LISTE_KEY, JSON.stringify(l.slice(-20))); } catch(e){} };
+  const listeGuncelle = (kok, degis) => { const l = listeOku(); const x = l.find(y => y.kok === kok); if (x) Object.assign(x, degis); else l.push(Object.assign({ kok }, degis)); listeYaz(l); };
   const destek = () => typeof MediaRecorder !== 'undefined';
 
   function tipSec(){
     const adaylar = [
-      ['video/mp4;codecs=avc1.42E01F,mp4a.40.2', 'mp4'], ['video/mp4;codecs=avc1,mp4a', 'mp4'],
-      ['video/webm;codecs=vp9,opus', 'webm'], ['video/webm;codecs=vp8,opus', 'webm'], ['video/webm', 'webm'], ['video/mp4', 'mp4']
+      // WebM önce: indirirken süre ve atlama dizini eklenip ileri sarılabilir hâle getirilir (js/webm-duzelt.js).
+      // VP8 işlemciyi en az yorar (görüşme sürerken kayıt da alınıyor). mp4 sadece WebM yazamayan tarayıcılar (Safari) için.
+      ['video/webm;codecs=vp8,opus', 'webm'], ['video/webm;codecs=vp9,opus', 'webm'], ['video/webm', 'webm'],
+      ['video/mp4;codecs=avc1.42E01F,mp4a.40.2', 'mp4'], ['video/mp4;codecs=avc1,mp4a', 'mp4'], ['video/mp4', 'mp4']
     ];
     for (const [t, e] of adaylar) try { if (MediaRecorder.isTypeSupported(t)) return [t, e]; } catch(err){}
     return ['', 'webm'];
@@ -89,7 +98,8 @@
     const o = await opfsAc('kayit-' + Date.now());
     // kayıt sürdükçe kilit tutulur: aynı anda açık başka bir sekme bunu "yarım kalan kayıt" sanıp silmesin
     if (o && navigator.locks) try { navigator.locks.request(o.kok, () => new Promise(r => { K.kilitBirak = r; })); } catch(e){}
-    if (o){ K.opfs = o; try { localStorage.setItem(ACIK_KEY, JSON.stringify({ kok: o.kok, ad: K.dosyaAdi, tip: (tip || 'video/webm').split(';')[0], ts: Date.now() })); } catch(e){} }
+    K.kok = o ? o.kok : 'bellek-' + Date.now();
+    if (o){ K.opfs = o; listeGuncelle(o.kok, { ad: K.dosyaAdi, tip: (tip || 'video/webm').split(';')[0], ts: Date.now(), sure: 0, durum: 'kayitta' }); }
     let rec;
     try { rec = new MediaRecorder(K.akis, Object.assign({ videoBitsPerSecond: 2500000, audioBitsPerSecond: 128000 }, tip ? { mimeType: tip } : {})); }
     catch(e){ try { rec = new MediaRecorder(K.akis); } catch(e2){ toast('Kayıt başlatılamadı: ' + (e2.message || e2)); return temizle(); } }
@@ -109,7 +119,7 @@
     K.saat = setInterval(ciz, 1000);
     duyur(true); K.duyuru = setInterval(() => duyur(true), 10000);
     if (typeof hareket === 'function') hareket('ekran', 'kayıt başlattı: ' + kaynak.ad);
-    toast('🔴 Kayıt başladı. Bitince dosya bilgisayarına inecek.');
+    toast('🔴 Kayıt başladı. Bitince “İndir” ile bilgisayarına alabilirsin.');
     ciz();
   }
   function bitir(){
@@ -118,27 +128,26 @@
     try { if (K.rec.state !== 'inactive') K.rec.stop(); else kaydet(); } catch(e){ kaydet(); }
   }
   async function kaydet(){
-    const sureMs = Date.now() - K.t0, ad = K.dosyaAdi;
+    const sureMs = Date.now() - K.t0, kok = K.kok, sonra = K.sonra; K.sonra = null;
     try {
       let dosya = null;
       if (K.opfs){
         await K.zincir;
         try { dosya = await parcalariTopla(K.opfs.d, K.opfs.kok, (K.tip || 'video/webm').split(';')[0]); } catch(e){ dosya = null; }
-        if (dosya && K.yedek) dosya = new Blob([dosya].concat(K.parcalar), { type: dosya.type });   // disk dolduysa kalan kısım bellekte
+        if (dosya && K.yedek){ dosya = new Blob([dosya].concat(K.parcalar), { type: dosya.type }); bellekte.set(kok, dosya); }   // disk dolduysa kalan kısım bellekte
         if (!dosya || !dosya.size) dosya = null;
       }
-      if (!dosya) dosya = new Blob(K.parcalar, { type: (K.tip || 'video/webm').split(';')[0] });
+      if (!dosya){ dosya = new Blob(K.parcalar, { type: (K.tip || 'video/webm').split(';')[0] }); if (dosya.size) bellekte.set(kok, dosya); }
       if (dosya.size){
-        indir(dosya, ad);
-        toast('💾 Kayıt indirildi: ' + ad + ' (' + sure(sureMs) + ', ' + (dosya.size / 1048576).toFixed(1) + ' MB)');
-        // Toplantı & Ders kanalında: herkesle paylaşma yolunu hatırlat
-        if (typeof myChan === 'function' && myChan().type === 'ders') setTimeout(() => toast('Herkesle paylaşmak için Google Drive’a yükle, linkini üstteki 🔗 Kayıt linki’ne yapıştır.'), 4500);
-      } else toast('Kayıt boş kaldı.');
-      try { localStorage.removeItem(ACIK_KEY); } catch(e){}
+        listeGuncelle(kok, { ad: K.dosyaAdi, tip: dosya.type, ts: K.t0, sure: sureMs, durum: 'hazir', boyut: dosya.size, bellek: bellekte.has(kok) });
+        // sadece bellekte duruyorsa ve odadan çıkılıyorsa (sayfa yenilenecek) kaybolmasın: o zaman kendiliğinden indir
+        if (sonra && bellekte.has(kok)){ indir(typeof webmDuzelt === 'function' && /webm/.test(dosya.type) ? await webmDuzelt(dosya) : dosya, K.dosyaAdi); listeGuncelle(kok, { durum: 'indirildi' }); }
+        else toast('💾 Kayıt hazır (' + sure(sureMs) + ', ' + (dosya.size / 1048576).toFixed(1) + ' MB). İndirmek için “İndir”e bas.');
+      } else { toast('Kayıt boş kaldı.'); listeGuncelle(kok, { durum: 'indirildi' }); }
     } catch(e){ toast('Kayıt kaydedilemedi: ' + (e.message || e)); }
     temizle();
-    const sonra = K.sonra; K.sonra = null;
-    if (sonra) setTimeout(sonra, 1500);              // indirme başlasın, sonra sayfa yenilensin
+    kutuCiz();
+    if (sonra) setTimeout(sonra, bellekte.has(kok) ? 1500 : 200);
   }
   function temizle(){
     clearInterval(K.saat); clearInterval(K.sesTimer); clearInterval(K.duyuru);
@@ -173,7 +182,7 @@
     document.querySelectorAll('#screens .kayit-btn').forEach(b => {
       const bu = on && b.closest('.screen') === K.tile;
       b.textContent = bu ? '⏹ Kaydı bitir · ' + t : '⏺ Kaydet';
-      b.title = bu ? 'Kaydı bitir ve bilgisayarına indir' : 'Bu ekranı ve odadaki sesleri kaydet (bilgisayarına iner)';
+      b.title = bu ? 'Kaydı bitir (sonra “İndir” ile bilgisayarına alırsın)' : 'Bu ekranı ve odadaki sesleri kaydet';
       b.classList.toggle('kayitta', bu);
       b.disabled = on && !bu;
     });
@@ -194,7 +203,7 @@
       document.body.append(el);
     }
     el.hidden = false; el.textContent = metin + (K.rec ? '  ⏹' : ''); el.classList.toggle('benim', !!K.rec);
-    el.title = K.rec ? 'Kaydı bitir ve indir' : 'Bu odada kayıt alınıyor';
+    el.title = K.rec ? 'Kaydı bitir' : 'Bu odada kayıt alınıyor';
   }
   setInterval(() => { if (kaydedenler.size) pill(); }, 5000);
 
@@ -226,31 +235,84 @@
   // kayıt sürerken sekme kapatılmak istenirse tarayıcı "Siteden ayrılsın mı?" diye sorar
   addEventListener('beforeunload', e => { if (K.rec && !K.sonra){ e.preventDefault(); e.returnValue = ''; } });
 
-  // ---------- açılışta: yarım kalan kayıt var mı? Eski (indirilmiş) parçaları temizle ----------
-  (async () => {
+  // ---------- 💾 Kayıtların kutusu: hazır kayıtlar, İndir / Sil ----------
+  let kutuGizli = false;
+  async function dosyaAl(x){
+    if (bellekte.has(x.kok)) return bellekte.get(x.kok);
+    const d = await opfsDizin(); if (!d) return null;
+    const b = await parcalariTopla(d, x.kok, x.tip || 'video/webm');
+    return b.size ? b : null;
+  }
+  async function parcaSil(kok){
+    bellekte.delete(kok);
     const d = await opfsDizin(); if (!d || !d.values) return;
-    let acik = null; try { acik = JSON.parse(localStorage.getItem(ACIK_KEY) || 'null'); } catch(e){}
-    if (acik && !acik.kok) acik = null;
-    // başka sekmede süren kayıtların parçalarına dokunma
+    const adlar = []; try { for await (const h of d.values()) if (h.name.startsWith(kok + '-')) adlar.push(h.name); } catch(e){}
+    for (const n of adlar) try { await d.removeEntry(n); } catch(e){}
+  }
+  function kutuCiz(){
+    let kutu = document.getElementById('kayitKutu');
+    const hazir = listeOku().filter(x => x.durum === 'hazir' && (!x.bellek || bellekte.has(x.kok)));
+    if (!hazir.length || kutuGizli){ if (kutu) kutu.remove(); return; }
+    if (!kutu){ kutu = document.createElement('div'); kutu.id = 'kayitKutu'; kutu.className = 'kayit-yarim'; document.body.append(kutu); }
+    kutu.innerHTML = '';
+    const bas = document.createElement('div'); bas.className = 'kk-bas';
+    const b = document.createElement('b'); b.textContent = '💾 Kayıtların (' + hazir.length + ')';
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'btn small'; x.textContent = '✕'; x.title = 'Gizle (kayıtlar silinmez, sayfa yenilenince yine çıkar)';
+    x.onclick = () => { kutuGizli = true; kutuCiz(); };
+    bas.append(b, x); kutu.append(bas);
+    hazir.sort((a, c) => c.ts - a.ts).forEach(k => {
+      const r = document.createElement('div'); r.className = 'kk-satir';
+      const bilgi = document.createElement('span');
+      bilgi.textContent = k.ad.replace(/^Oyun Odası kaydı - /, '') + ' · ' + (k.sure ? sure(k.sure) + ' · ' : '') + (k.boyut ? (k.boyut / 1048576).toFixed(1) + ' MB' : '') + (k.yarim ? ' · yarım kaldı' : '');
+      const ind = document.createElement('button'); ind.className = 'btn primary small'; ind.textContent = '⬇️ İndir';
+      ind.onclick = async () => {
+        ind.disabled = true;
+        let f = await dosyaAl(k);
+        if (!f){ toast('Kayıt bulunamadı'); listeGuncelle(k.kok, { durum: 'indirildi' }); kutuCiz(); return; }
+        // ileri sarılabilsin: süre + atlama dizini ekle (birkaç saniye)
+        if (/webm/.test(f.type || k.tip || '') && typeof webmDuzelt === 'function'){
+          ind.textContent = '⏳ Hazırlanıyor…';
+          f = await webmDuzelt(f, o => { ind.textContent = '⏳ Hazırlanıyor %' + Math.round(o * 100); });
+        }
+        indir(f, k.yarim ? k.ad.replace(/(\.\w+)$/, ' (yarım)$1') : k.ad);
+        listeGuncelle(k.kok, { durum: 'indirildi' });          // parçalar bir sonraki açılışta silinir (indirme bitsin diye)
+        toast('⬇️ İndiriliyor: ' + k.ad);
+        if (typeof myChan === 'function' && typeof joined !== 'undefined' && joined && myChan().type === 'ders') setTimeout(() => toast('Herkesle paylaşmak için Google Drive’a yükle, linkini üstteki 🔗 Kayıt linki’ne yapıştır.'), 4000);
+        kutuCiz();
+      };
+      const sil = document.createElement('button'); sil.className = 'btn small'; sil.textContent = '🗑 Sil';
+      sil.onclick = async () => {
+        if (sil.dataset.emin !== '1'){ sil.dataset.emin = '1'; sil.textContent = 'Emin misin? Sil'; sil.classList.add('off'); setTimeout(() => { if (sil.isConnected){ sil.dataset.emin = ''; sil.textContent = '🗑 Sil'; sil.classList.remove('off'); } }, 4000); return; }
+        await parcaSil(k.kok); listeYaz(listeOku().filter(y => y.kok !== k.kok)); toast('Kayıt silindi'); kutuCiz();
+      };
+      r.append(bilgi, ind, sil); kutu.append(r);
+    });
+  }
+  window.kayitKutusu = () => { kutuGizli = false; kutuCiz(); };
+
+  // ---------- açılışta: yarım kalanları "hazır" yap, indirilmişleri ve sahipsiz parçaları temizle ----------
+  (async () => {
+    let l = listeOku();
+    // eski sürümün tek kaydını listeye taşı
+    try { const eski = JSON.parse(localStorage.getItem(ACIK_KEY) || 'null'); if (eski && eski.kok && !l.some(x => x.kok === eski.kok)) l.push({ kok: eski.kok, ad: eski.ad, tip: eski.tip, ts: eski.ts, durum: 'kayitta' }); localStorage.removeItem(ACIK_KEY); } catch(e){}
+    const d = await opfsDizin();
+    // başka sekmede süren kayıtlara dokunma
     let suren = [];
-    try { if (navigator.locks && navigator.locks.query) suren = ((await navigator.locks.query()).held || []).map(l => l.name).filter(n => /^kayit-\d+$/.test(n)); } catch(e){}
-    if (acik && suren.includes(acik.kok)) acik = null;
-    const silinecek = [];
-    try { for await (const h of d.values()) if (h.kind === 'file' && /^kayit-\d+/.test(h.name) && !(acik && h.name.startsWith(acik.kok + '-')) && !suren.some(k => h.name.startsWith(k + '-'))) silinecek.push(h.name); } catch(e){}
-    for (const n of silinecek) try { await d.removeEntry(n); } catch(e){}
-    if (!acik) return;
-    const dosya = await parcalariTopla(d, acik.kok, acik.tip || 'video/webm');
-    const parcaSil = async () => { const adlar = []; try { for await (const h of d.values()) if (h.name.startsWith(acik.kok + '-')) adlar.push(h.name); } catch(e){} for (const n of adlar) try { await d.removeEntry(n); } catch(e){} };
-    if (!dosya.size){ try { localStorage.removeItem(ACIK_KEY); } catch(e){} parcaSil(); return; }
-    const kutu = document.createElement('div'); kutu.className = 'kayit-yarim';
-    kutu.innerHTML = '<b>💾 Yarım kalan bir kaydın var</b><span></span><div class="row"></div>';
-    kutu.querySelector('span').textContent = acik.ad + ' · ' + (dosya.size / 1048576).toFixed(1) + ' MB (sayfa kayıt sırasında kapanmış)';
-    const ind = document.createElement('button'); ind.className = 'btn primary small'; ind.textContent = 'İndir';
-    const sil = document.createElement('button'); sil.className = 'btn small'; sil.textContent = 'Sil';
-    const kapat = () => { kutu.remove(); try { localStorage.removeItem(ACIK_KEY); } catch(e){} };
-    ind.onclick = () => { indir(dosya, acik.ad.replace(/(\.\w+)$/, ' (yarım)$1')); kapat(); };   // parçalar bir sonraki açılışta silinir
-    sil.onclick = () => { kapat(); parcaSil(); };
-    kutu.querySelector('.row').append(ind, sil);
-    document.body.append(kutu);
+    try { if (navigator.locks && navigator.locks.query) suren = ((await navigator.locks.query()).held || []).map(k => k.name).filter(n => /^kayit-\d+$/.test(n)); } catch(e){}
+    l = l.filter(x => !x.bellek || x.durum === 'kayitta');      // bellekteki kayıtlar sayfa yenilenince yok olur
+    for (const x of l) if (x.durum === 'kayitta' && !suren.includes(x.kok)){ x.durum = 'hazir'; x.yarim = true; }
+    if (d && d.values){
+      for (const x of l.filter(x => x.durum === 'indirildi')) await parcaSil(x.kok);
+      l = l.filter(x => x.durum !== 'indirildi');
+      const bilinen = new Set(l.map(x => x.kok).concat(suren));
+      const sahipsiz = [];
+      try { for await (const h of d.values()) if (h.kind === 'file' && /^kayit-\d+/.test(h.name) && ![...bilinen].some(k => h.name.startsWith(k + '-'))) sahipsiz.push(h.name); } catch(e){}
+      for (const n of sahipsiz) try { await d.removeEntry(n); } catch(e){}
+      // boyutları ve boş kalanları kontrol et
+      for (const x of l.filter(x => x.durum === 'hazir')){ const f = await parcalariTopla(d, x.kok, x.tip || 'video/webm'); if (!f.size){ x.durum = 'sil'; await parcaSil(x.kok); } else x.boyut = f.size; }
+      l = l.filter(x => x.durum !== 'sil');
+    } else l = [];
+    listeYaz(l);
+    kutuCiz();
   })();
 })();

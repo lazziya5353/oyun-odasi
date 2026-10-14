@@ -670,3 +670,10 @@ html.dinlen:has(#dinlenUI.gizli), html.dinlen:has(#dinlenUI.gizli) body{cursor:n
 .room.ch-ders:not(.sharing) .person{--av:60px;width:160px;padding:14px 10px 10px}
 .room.ch-ders:not(.sharing) .pname{font-size:13px}
 @media (max-width:860px){ .room.ch-ders:not(.sharing) .person{width:calc(33% - 8px)} }
+
+#kayitKutu{gap:8px}
+#kayitKutu .kk-bas{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#kayitKutu .kk-satir{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:8px}
+#kayitKutu .kk-satir span{flex:1 1 180px;min-width:0;font-size:13px;color:var(--fg)}
+#kayitKutu{left:auto;right:16px;transform:none}
+@media (max-width:860px){ #kayitKutu{right:12px;bottom:84px} }

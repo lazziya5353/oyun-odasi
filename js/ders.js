@@ -16,7 +16,7 @@
     d.innerHTML = '';
     const h = document.createElement('h2'); h.className = 'deck-title'; h.textContent = '🗂 Toplantı & Ders';
     const p = document.createElement('p'); p.className = 'note';
-    p.textContent = 'Anlatacak kişi ekranını paylaşır, diğerleri dinler. Sorusu olan ✋ Söz iste ile el kaldırır. Kayıt alınabilir, kayıt bitince bilgisayara iner.';
+    p.textContent = 'Anlatacak kişi ekranını paylaşır, diğerleri dinler. Sorusu olan ✋ Söz iste ile el kaldırır. Kayıt alınabilir, bitince istersen bilgisayarına indirirsin.';
     const grid = document.createElement('div'); grid.className = 'film-start ders-start';
     const kart = (big, baslik, aciklama, fn) => {
       const b = document.createElement(fn ? 'button' : 'div'); b.className = 'film-card' + (fn ? '' : ' bilgi');
@@ -28,7 +28,22 @@
       if (typeof screenStream !== 'undefined' && screenStream){ toast('Zaten ekranını paylaşıyorsun.'); return; }
       shareQ = 'detail'; store.set('oyunodasi-q', 'detail'); startScreenShare();
     });
-    kart('🔴', 'Kayıt nasıl alınır?', 'Ekran paylaşılınca ekranın üstünde ⏺ Kaydet çıkar: görüntü ve kanaldaki bütün sesler kaydedilir, bitince bilgisayarına iner. Herkesle paylaşmak için Google Drive’a yükle, linki yukarıdaki 🔗 Kayıt linki’ne yapıştır.');
+    kart('🔴', 'Kayıt nasıl alınır?', 'Ekran paylaşılınca ekranın üstünde ⏺ Kaydet çıkar: görüntü ve kanaldaki bütün sesler kaydedilir. Bitince “💾 Kayıtların” kutusundan İndir’e basıp bilgisayarına alırsın. Herkesle paylaşmak için Google Drive’a yükle, linki yukarıdaki 🔗 Kayıt linki’ne yapıştır.');
+    kart('🛠', 'Eski kaydı onar', 'Daha önce indirdiğin kayıt ileri sarılmıyorsa buradan seç: süresi ve atlama dizini eklenip yeniden iner. Dosya hiçbir yere yüklenmez, senin bilgisayarında düzeltilir.', () => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.webm,video/webm,.mp4,video/mp4';
+      inp.onchange = async () => {
+        const f = inp.files && inp.files[0]; if (!f) return;
+        if (!/webm$/i.test(f.name) && !/webm/.test(f.type)){ toast('Bu bir mp4 kayıt. Onarım WebM kayıtlar için; mp4’ü VLC ile açarsan ileri sarabilirsin.'); return; }
+        toast('⏳ Kayıt onarılıyor…');
+        const yeni = typeof webmDuzelt === 'function' ? await webmDuzelt(f) : f;
+        if (yeni === f){ toast('Bu kayıtta düzeltilecek bir şey bulunamadı (zaten ileri sarılabiliyor olabilir).'); return; }
+        const u = URL.createObjectURL(yeni), a = document.createElement('a');
+        a.href = u; a.download = f.name.replace(/(\.webm)$/i, ' (onarıldı)$1'); document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(u), 120000);
+        toast('✅ Onarılan kayıt indirildi: ' + a.download);
+      };
+      inp.click();
+    });
     d.append(h, p, grid);
   };
 
