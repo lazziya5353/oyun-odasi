@@ -677,3 +677,15 @@ html.dinlen:has(#dinlenUI.gizli), html.dinlen:has(#dinlenUI.gizli) body{cursor:n
 #kayitKutu .kk-satir span{flex:1 1 180px;min-width:0;font-size:13px;color:var(--fg)}
 #kayitKutu{left:auto;right:16px;transform:none}
 @media (max-width:860px){ #kayitKutu{right:12px;bottom:84px} }
+
+/* ---------- 📷 Kamera ---------- */
+.person .kam-v{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;background:#000;box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 60%,transparent)}
+.person .kam-v.ayna{transform:scaleX(-1)}
+.person.kamerali .av-wrap{display:none}
+.room.ch-ders:not(.sharing) .person.kamerali{width:300px;padding:10px}
+.room.sharing .person.kamerali{flex-direction:column}
+.room.sharing .person.kamerali .person-head{flex-direction:column;align-items:stretch;gap:6px}
+.person.kamerali.speaking .kam-v{box-shadow:0 0 0 3px var(--c),0 0 18px color-mix(in srgb,var(--c) 60%,transparent)}
+@media (max-width:860px){ .room.ch-ders:not(.sharing) .person.kamerali{width:calc(50% - 8px)} }
+.ders-serit .btn.on{color:var(--fg)}
+@media (max-width:860px){ .room.ch-ders .ders-start{display:none} }

@@ -389,7 +389,7 @@ function handleConn(conn){
   conn.on('open', () => {
     p.linked = true; p.failed = false; p.lastSeen = Date.now(); clearTimeout(p.linkTimer);
     if (!joined) enterRoom();
-    send(conn, { t: 'hello', name: myName, muted: micMuted, noMic, sharing: !!screenStream, channel: me.channel, foto: typeof myFoto !== 'undefined' ? myFoto : null, stil: typeof myStil !== 'undefined' ? myStil : null, vfx: typeof vfxId !== 'undefined' ? vfxId : 'normal' });
+    send(conn, { t: 'hello', name: myName, muted: micMuted, noMic, sharing: !!screenStream, channel: me.channel, foto: typeof myFoto !== 'undefined' ? myFoto : null, stil: typeof myStil !== 'undefined' ? myStil : null, vfx: typeof vfxId !== 'undefined' ? vfxId : 'normal', kam: 1 });
     if (isHost){
       send(conn, { t: 'peers', ids: [...peers.values()].filter(o => o.linked && o.id !== conn.peer).map(o => o.id) });
       send(conn, Object.assign({ t: 'sync' }, makeSync()));
@@ -449,6 +449,7 @@ function onData(id, d){
       p.foto = typeof safeFoto === 'function' ? safeFoto(d.foto) : null;
       p.stil = typeof cleanStil === 'function' ? cleanStil(d.stil) : null;
       p.vfx = typeof VFX !== 'undefined' && VFX.some(v => v[0] === d.vfx) ? d.vfx : 'normal';
+      p.kamDestek = !!d.kam;
       if (p.stil) p.color = colorFor(p.id);
       if (!p.helloed){
         p.helloed = true;
@@ -534,6 +535,7 @@ function onData(id, d){
   if (filmOnData(id, d)) return;
   if (typeof kayitOnData === 'function' && kayitOnData(id, d)) return;
   if (typeof dersOnData === 'function' && dersOnData(id, d)) return;
+  if (typeof kameraOnData === 'function' && kameraOnData(id, d)) return;
 }
 
 function afterPeerStateChange(p){
@@ -558,6 +560,8 @@ function handleCall(call){
   } else if (kind === 'music'){
     call.answer(undefined, { sdpTransform: sdpHiFi });
     attachCall(call.peer, call, 'music');
+  } else if (kind === 'kamera'){
+    if (typeof kameraGelen === 'function') kameraGelen(call, p); else try { call.close(); } catch(e){}
   } else {
     const old = p.micCall;
     call.answer(localStream); attachCall(call.peer, call, 'mic');
@@ -622,6 +626,7 @@ function updateMicRouting(p){
 function updateRouting(){
   peers.forEach(p => { applyVolume(p); updateMicRouting(p); });
   syncScreenOut();
+  if (typeof kameraEsitle === 'function') kameraEsitle();
   syncMusicOut();
   applyMusicVolume();
 }

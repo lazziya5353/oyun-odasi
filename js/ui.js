@@ -264,6 +264,7 @@ function renderSelf(){
   if (isHost) ic.insertAdjacentHTML('beforeend', '<span class="pill">👑 Oda sahibi</span>');
   if (typeof dersRozet === 'function' && peer) ic.insertAdjacentHTML('beforeend', dersRozet(peer.id));
   if (typeof vfxId !== 'undefined' && vfxId !== 'normal') ic.insertAdjacentHTML('beforeend', '<span class="pill vfx">' + vfxEtiket(vfxId) + '</span>');
+  if (typeof kameraKart === 'function') kameraKart(c, null);
   updateCount();
 }
 
@@ -316,6 +317,7 @@ function renderPeer(p){
   if (typeof dersRozet === 'function') ic.insertAdjacentHTML('beforeend', dersRozet(p.id));
   if (p.vfx && p.vfx !== 'normal' && typeof vfxEtiket === 'function') ic.insertAdjacentHTML('beforeend', '<span class="pill vfx">' + vfxEtiket(p.vfx) + '</span>');
   if (p.tile){ const w = p.tile.querySelector('.who'); if (w) w.textContent = screenTitleFor(p); }
+  if (typeof kameraKart === 'function') kameraKart(c, p);
   syncPeerUI(p);
   updateCount();
   renderMixer();

@@ -69,7 +69,11 @@
     const sus = document.createElement('button'); sus.type = 'button'; sus.className = 'btn small';
     sus.textContent = '🔇 Herkesi sustur'; sus.title = 'Kanaldaki diğer herkesin mikrofonu kapanır (isteyen kendi açabilir)';
     sus.onclick = herkesiSustur;
-    s.append(el, sus);
+    const kam = document.createElement('button'); kam.type = 'button'; kam.id = 'kamBtn'; kam.className = 'btn small';
+    kam.title = 'Kameranı aç: görüntün kanaldaki herkesin ekranında kendi kutucuğunda görünür';
+    kam.onclick = () => { if (typeof kameraAcKapat === 'function') kameraAcKapat(); };
+    s.append(el, kam, sus);
+    if (typeof kameraDugmeCiz === 'function') kameraDugmeCiz(); else kam.textContent = '📷 Kamera';
     // söz isteyenler (sırayla)
     const sira = [...D.elSira.entries()].sort((a, b) => a[1] - b[1]).map(([id]) => id);
     if (sira.length){
