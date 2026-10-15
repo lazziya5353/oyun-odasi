@@ -168,6 +168,7 @@
     return null;
   }
   function dugmeEkle(tile){
+    if (tile.classList.contains('yt')) return;            // YouTube oynatıcısı kaydedilemez (gömülü YouTube)
     const tools = tile.querySelector('.screen-tools'); if (!tools || tools.querySelector('.kayit-btn')) return;
     const b = document.createElement('button'); b.className = 'kayit-btn'; b.type = 'button';
     b.onclick = () => {

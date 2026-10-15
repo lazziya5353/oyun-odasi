@@ -691,3 +691,8 @@ html.dinlen:has(#dinlenUI.gizli), html.dinlen:has(#dinlenUI.gizli) body{cursor:n
 @media (max-width:860px){ .room.ch-ders:not(.sharing) .person.kamerali{width:calc(50% - 8px)} }
 .ders-serit .btn.on{color:var(--fg)}
 @media (max-width:860px){ .room.ch-ders .ders-start{display:none} }
+.stats.hide.zorla{display:grid}
+
+/* YouTube: düğmeler videonun altındaki çubukta (YouTube'un kendi kontrolleri açık kalsın) */
+.screen.yt .screen-bar .screen-tools{position:static;opacity:1;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+.screen.yt .screen-bar .screen-tools button{padding:6px 10px;font-size:13px}

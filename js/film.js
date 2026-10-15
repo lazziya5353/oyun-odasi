@@ -151,6 +151,9 @@ async function ensureYTTile(newVideo){
   stopB.onclick = stopYT;
   ytTile = makeTile('▶️ YouTube – herkes senkron izliyor', host, { extraTools: [stopB], stats: false });
   ytTile.classList.add('yt');
+  // düğmeler videonun üstünde durursa YouTube'un kendi düğmelerini (ses, altyazı, ayarlar) kapatıyor: alttaki çubuğa taşı
+  const araclar = ytTile.querySelector('.screen-tools');
+  if (araclar && ytTile._bar) ytTile._bar.append(araclar);
   $('screens').prepend(ytTile);
   updateStage();
   try { await loadYTApi(); } catch(e){ toast('YouTube yüklenemedi. İnternet bağlantını kontrol et.'); return; }

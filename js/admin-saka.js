@@ -176,14 +176,9 @@ function sakaServers(){
   return list;
 }
 async function sakaIce(){
+  // aktarma (TURN): Cloudflare (/api/turn). Eski herkese açık Open Relay kapandı.
   const list = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
-  try {
-    const enc = s => new TextEncoder().encode(s);
-    const username = (Math.floor(Date.now() / 1000) + 24 * 3600) + ':oyunodasi';
-    const key = await crypto.subtle.importKey('raw', enc('openrelayprojectsecret'), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
-    const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc(username)));
-    list.push({ urls: ['turn:staticauth.openrelay.metered.ca:80', 'turn:staticauth.openrelay.metered.ca:443', 'turn:staticauth.openrelay.metered.ca:443?transport=tcp'], username, credential: btoa(String.fromCharCode(...sig)) });
-  } catch(e){}
+  try { const r = await fetch('/api/turn', { cache: 'no-store' }); const d = r.ok ? await r.json() : null; if (d && Array.isArray(d.iceServers)) list.push(...d.iceServers); } catch(e){}
   return list;
 }
 function sakaDisconnect(){

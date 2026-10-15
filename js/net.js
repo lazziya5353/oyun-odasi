@@ -11,20 +11,25 @@ const peers = new Map();
 const blocked = new Set();
 const me = { channel: 'genel' };
 
-// Modem/NAT engeli olanlar için aktarma (TURN) sunucusu: Open Relay'in herkese açık "static auth" girişi.
-async function iceServers(){
-  const list = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
+// Modem/NAT engeli olanlar için aktarma (TURN) sunucusu: Cloudflare (Netlify'da anahtarı tanımlıysa: /api/turn).
+let turnOnbellek = null;        // { list, bitis }
+async function cfTurn(){
+  if (turnOnbellek && turnOnbellek.bitis > Date.now()) return turnOnbellek.list;
+  if (location.protocol === 'file:') return [];
   try {
-    const enc = s => new TextEncoder().encode(s);
-    const username = (Math.floor(Date.now() / 1000) + 24 * 3600) + ':oyunodasi';
-    const key = await crypto.subtle.importKey('raw', enc('openrelayprojectsecret'), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
-    const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc(username)));
-    list.push({
-      urls: ['turn:staticauth.openrelay.metered.ca:80', 'turn:staticauth.openrelay.metered.ca:443',
-             'turn:staticauth.openrelay.metered.ca:443?transport=tcp'],
-      username, credential: btoa(String.fromCharCode(...sig))
-    });
-  } catch(e){ console.warn('TURN ayarlanamadı', e); }
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 2500);
+    const r = await fetch('/api/turn', { cache: 'no-store', signal: ctl.signal }); clearTimeout(t);
+    const d = r.ok ? await r.json() : null;
+    const list = d && Array.isArray(d.iceServers) ? d.iceServers : [];
+    turnOnbellek = { list, bitis: Date.now() + (list.length ? 6 * 3600e3 : 10 * 60e3) };
+    return list;
+  } catch(e){ return []; }
+}
+async function iceServers(){
+  // Not: eskiden kullanılan herkese açık Open Relay (staticauth.openrelay.metered.ca) kapandı (adres çözülmüyor);
+  // aktarma artık sadece Cloudflare'den (Netlify'da CF_TURN_ID / CF_TURN_TOKEN tanımlıysa).
+  const list = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
+  list.push(...await cfTurn());
   return list;
 }
 // ---------- eşleştirme sunucuları ----------

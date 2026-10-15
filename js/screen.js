@@ -257,8 +257,33 @@ function dropScreen(p){
 
 // ---------- canlı kalite göstergesi ----------
 // İzleyen: gelen çözünürlük, FPS, hız ve donma sayısı. Gönderen: giden kalite ve kodlayıcının neden kısıtladığı.
+// bağlantı doğrudan mı, aktarma (TURN) sunucusu üzerinden mi?
+function baglantiTuru(rep){
+  let cift = null, yerel = null;
+  rep.forEach(r => { if (r.type === 'transport' && r.selectedCandidatePairId) cift = rep.get(r.selectedCandidatePairId); });
+  if (!cift) rep.forEach(r => { if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') cift = r; });
+  if (cift) yerel = rep.get(cift.localCandidateId);
+  const uzak = cift && rep.get(cift.remoteCandidateId);
+  if (!yerel) return '';
+  if (yerel.candidateType === 'relay' || (uzak && uzak.candidateType === 'relay')){
+    const adr = String((yerel.url || '') + ' ' + (yerel.relayProtocol || ''));
+    return /cloudflare/.test(adr) ? 'aktarma: Cloudflare' : /metered/.test(adr) ? 'aktarma: Metered' : 'aktarma sunucusu';
+  }
+  return 'doğrudan';
+}
+// videodan küçük bir örnek alıp neredeyse tamamen siyah mı bak (16×9 piksel yeter)
+const siyahTuval = document.createElement('canvas'); siyahTuval.width = 16; siyahTuval.height = 9;
+function simsiyahMi(tile){
+  const v = tile.querySelector('video'); if (!v || !v.videoWidth) return false;
+  try {
+    const g = siyahTuval.getContext('2d', { willReadFrequently: true }); g.drawImage(v, 0, 0, 16, 9);
+    const d = g.getImageData(0, 0, 16, 9).data; let en = 0;
+    for (let i = 0; i < d.length; i += 4) en = Math.max(en, d[i], d[i + 1], d[i + 2]);
+    return en < 12;
+  } catch(e){ return false; }
+}
 function watchReceiverStats(tile, p){
-  let last = null;
+  let last = null, sifir = 0, siyah = 0, bildirildi = false;
   tile._statsTimer = setInterval(async () => {
     if (!tile.isConnected){ clearInterval(tile._statsTimer); return; }
     const pc = p.screenCall && p.screenCall.peerConnection; if (!pc) return;
@@ -266,7 +291,17 @@ function watchReceiverStats(tile, p){
       const rep = await pc.getStats();
       let v = null;
       rep.forEach(r => { if (r.type === 'inbound-rtp' && r.kind === 'video') v = r; });
-      if (!v) return;
+      if (!v){
+        // hiç görüntü paketi gelmedi: bağlantı kurulamamış ya da yayıncıdan görüntü çıkmıyor
+        sifir++;
+        if (sifir >= 3){
+          const tur0 = baglantiTuru(rep);
+          const w0 = '⚠ Görüntü gelmiyor' + (/aktarma/.test(tur0) ? ' – bağlantı aktarma sunucusundan geçiyor, yavaş kalıyor' : ' – bağlantı kurulamadı ya da yayıncının görüntüsü boş');
+          setStats(tile, [tur0 ? 'bağlantı: ' + tur0 : 'bağlantı kuruluyor…'], w0);
+          if (!bildirildi && typeof hareket === 'function'){ bildirildi = true; hareket('kopma', p.name + ' ekranından hiç görüntü gelmiyor (' + (tur0 || 'bağlantı yok') + ')' + (typeof taniDurum === 'function' ? ' | ' + taniDurum() : '')); }
+        }
+        return;
+      }
       const now = performance.now();
       let mbps = 0, freezes = 0, lossPct = 0;
       if (last){
@@ -278,8 +313,24 @@ function watchReceiverStats(tile, p){
       last = { t: now, bytes: v.bytesReceived, freezes: v.freezeCount || 0, lost: v.packetsLost || 0, got: v.packetsReceived || 0 };
       const fps = Math.round(v.framesPerSecond || 0);
       if (p.filmPaused){ setStats(tile, ['⏸ Yayıncı filmi duraklattı'], ''); return; }
-      const lines = [(v.frameHeight ? v.frameHeight + 'p · ' : '') + fps + ' fps · ' + mbps.toFixed(1) + ' Mbps'];
+      const tur = baglantiTuru(rep);
+      const lines = [(v.frameHeight ? v.frameHeight + 'p · ' : '') + fps + ' fps · ' + mbps.toFixed(1) + ' Mbps' + (tur ? ' · ' + tur : '')];
       let warn = '';
+      sifir = fps === 0 ? sifir + 1 : 0;
+      if (sifir >= 3){
+        // 6 sn'dir hiç kare gelmiyor: siyah ekran. Sebebini söyle, panele de bir kez yaz.
+        warn = '⚠ Görüntü gelmiyor' + (/aktarma/.test(tur) ? ' – bağlantı aktarma sunucusundan geçiyor, yavaş kalıyor' : ' – yayıncı korumalı bir içerik (Netflix vb.) ya da tam ekran oyun paylaşıyor olabilir');
+        setStats(tile, lines, warn);
+        if (!bildirildi && typeof hareket === 'function'){ bildirildi = true; hareket('kopma', p.name + ' ekranından görüntü gelmiyor (' + (tur || 'bağlantı türü bilinmiyor') + ')' + (typeof taniDurum === 'function' ? ' | ' + taniDurum() : '')); }
+        return;
+      }
+      // kareler geliyor ama simsiyah (Netflix gibi korumalı içerik, tam ekran oyun, ekran kartı yakalama sorunu)
+      siyah = fps > 0 && simsiyahMi(tile) ? siyah + 1 : 0;
+      if (siyah >= 3){
+        setStats(tile, lines, '⚠ Görüntü simsiyah geliyor – yayıncı korumalı içerik (Netflix vb.) ya da tam ekran oyun paylaşıyor olabilir');
+        if (!bildirildi && typeof hareket === 'function'){ bildirildi = true; hareket('kopma', p.name + ' ekranı simsiyah geliyor (' + (tur || '?') + ')' + (typeof taniDurum === 'function' ? ' | ' + taniDurum() : '')); }
+        return;
+      }
       if (freezes > 0) warn = '⚠ Görüntü dondu (' + freezes + ')';
       else if (fps > 0 && fps < 12) warn = '⚠ Takılıyor';
       if (warn) warn += lossPct > 3 ? ' – senin internetin dalgalanıyor' : ' – yayıncının yükleme hızı yetmiyor olabilir';
@@ -320,4 +371,6 @@ function setStats(tile, lines, warn){
   s.innerHTML = '';
   lines.forEach(l => { const d = document.createElement('span'); d.textContent = l; s.append(d); });
   if (warn){ const w = document.createElement('span'); w.className = 'warn'; w.textContent = warn; s.append(w); }
+  // görüntü hiç gelmiyorsa uyarı FPS kapalı olsa da görünsün
+  s.classList.toggle('zorla', !!warn && /gelmiyor|simsiyah/.test(warn));
 }
