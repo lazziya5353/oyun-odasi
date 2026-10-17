@@ -348,7 +348,7 @@ function emPaintDice(ui){
     if (c._n !== n || !c._pos){
       if (!c._pos) c._pos = k ? [50, -70] : [-55, -95];
       if (c._rz === undefined) c._rz = k ? 14 : -11;
-      c.style.transform = 'translate3d(' + c._pos[0] + 'px,' + c._pos[1] + 'px,0) ' + emDiceTransform(n, c._rz); c._n = n;
+      c.style.transform = 'translate3d(' + c._pos[0] + 'px,' + c._pos[1] + 'px,28px) ' + emDiceTransform(n, c._rz); c._n = n;
     }
   });
 }
@@ -360,26 +360,28 @@ function emRollDice(ui, d){
   const side = Math.floor(Math.random() * 4), sgn = side % 2 ? 1 : -1;
   return Promise.all(cubes.map((c, k) => {
     c._rolling = true;
-    const rz = Math.round(Math.random() * 360 - 180);
+    const rz = Math.round(Math.random() * 360 - 180) % 360;
     const [fx, fy] = land[k];
     // zar tahtanın bir kenarından fırlatılır, 2 kez sekip kayarak durur
     const ex = side < 2 ? sgn * 300 : (Math.random() * 2 - 1) * 240;
     const ey = side < 2 ? (Math.random() * 2 - 1) * 240 : sgn * 300;
     const dx = fx - ex, dy = fy - ey;
     const f = EM_FACE[d[k]];
-    const rnd = () => Math.random() * 360;
-    const at = (t, z, rx, ry, r) => 'translate3d(' + (ex + dx * t) + 'px,' + (ey + dy * t) + 'px,' + z + 'px) rotateZ(' + r + 'deg) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
+    const sx = Math.random() < .5 ? 1 : -1, sy = Math.random() < .5 ? 1 : -1;
+    const H = 28; // zarın yarı boyu: zemine oturunca merkezi 28px yukarıda olmalı
+    // açı = hedef yüz + 360'ın katı; katlar adım adım azalıp 0'a iner (sona doğru yavaşlayan yuvarlanma, geri takla yok)
+    const at = (t, z, nx, ny, nz) => 'translate3d(' + (ex + dx * t) + 'px,' + (ey + dy * t) + 'px,' + z + 'px) rotateZ(' + (rz + 360 * nz * sx) + 'deg) rotateX(' + (f[0] + 360 * nx * sy) + 'deg) rotateY(' + (f[1] + 360 * ny * sx) + 'deg)';
     const kf = [
-      { transform: at(0, 170, rnd(), rnd(), rnd()), offset: 0 },
-      { transform: at(0.45, 0, rnd() + 360, rnd() + 360, rz + 200), offset: 0.38 },
-      { transform: at(0.7, 62, rnd() + 720, rnd() + 360, rz + 120), offset: 0.55 },
-      { transform: at(0.88, 0, f[0] + 720, f[1] + 720, rz + 40), offset: 0.74 },
-      { transform: at(0.97, 16, f[0] + 720, f[1] + 720, rz + 10), offset: 0.88 },
-      { transform: 'translate3d(' + fx + 'px,' + fy + 'px,0) ' + emDiceTransform(d[k], rz), offset: 1 }
+      { transform: at(0, 190, 3.6, 3.2, 1.2), offset: 0 },
+      { transform: at(0.42, H, 2.1, 1.9, 0.7), offset: 0.36 },
+      { transform: at(0.62, 84, 1.3, 1.2, 0.4), offset: 0.54 },
+      { transform: at(0.8, H, 0.55, 0.5, 0.15), offset: 0.72 },
+      { transform: at(0.93, H + 22, 0.18, 0.15, 0.05), offset: 0.85 },
+      { transform: at(1, H, 0, 0, 0), offset: 1 }
     ];
     c._rz = rz; c._n = d[k]; c._pos = [fx, fy];
     const an = c.animate(kf, { duration: 1350 + k * 140, easing: 'cubic-bezier(.3,.55,.4,1)', fill: 'forwards' });
-    return new Promise(res => { an.onfinish = () => { c.style.transform = kf[5].transform; an.cancel(); c._rolling = false; res(); }; });
+    return new Promise(res => { an.onfinish = () => { c.style.transform = 'translate3d(' + fx + 'px,' + fy + 'px,28px) ' + emDiceTransform(d[k], rz); an.cancel(); c._rolling = false; res(); }; });
   }));
 }
 
@@ -644,15 +646,15 @@ function emPaintCenter(ui){
   const v = ui.v, box = ui.root.querySelector('.em-cturn');
   if (!box) return;
   const act = EmlakCore.actor(v), mine = ui.seat >= 0 && act === ui.seat;
-  const canRoll = !ui.busy && mine && v.phase === 'roll';
-  const sig = [v.phase, act, canRoll, v.again, ui.busy, emName(ui, act)].join('|');
+  const canRoll = !ui.busy && mine && v.phase === 'roll', showRoll = !ui.busy && v.phase === 'roll';
+  const sig = [v.phase, act, canRoll, showRoll, v.again, ui.busy, emName(ui, act)].join('|');
   if (box._sig === sig) return;
   box._sig = sig;
   if (v.phase === 'over'){ box.innerHTML = '<div class="ct-pill">🏆 Oyun bitti</div>'; return; }
   const col = emColor(act);
   const who = mine ? 'Sıra sende' : 'Sıra ' + emEsc(emName(ui, act)) + '\'de';
   box.innerHTML = '<div class="ct-pill" style="--pc:' + col + '"><i></i>' + who + '</div>' +
-    (canRoll ? '<button type="button" class="ct-roll">🎲 ' + (v.again ? 'Tekrar at' : 'Zar at') + '</button>' : '');
+    (canRoll ? '<button type="button" class="ct-roll">🎲 ZAR AT</button>' : showRoll ? '<div class="ct-roll wait">ZAR AT</div>' : '');
   const b = box.querySelector('.ct-roll');
   if (b) b.onclick = () => { if (ui.busy) return; emAct({ type: 'roll' }); };
 }
