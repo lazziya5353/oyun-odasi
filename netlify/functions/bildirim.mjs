@@ -70,6 +70,29 @@ async function isAdmin(req){
   const s = await store('oyunodasi-uye').get('a/' + h, { type: 'json' });
   return !!(s && s.exp > Date.now());
 }
+const sha256 = async t => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))].map(x => x.toString(16).padStart(2, '0')).join('');
+const kucuk = x => String(x || '').toLocaleLowerCase('tr-TR');
+// odayı açan üye kim? (oturum anahtarından; üye değilse null)
+async function gonderenUye(req){
+  const h = req.headers.get('authorization') || '', t = h.startsWith('Bearer ') ? h.slice(7) : '';
+  if (!t || t.length > 100) return null;
+  const us = store('oyunodasi-uye');
+  const s = await us.get('s/' + await sha256(t), { type: 'json' });
+  if (!s || s.exp < Date.now()) return null;
+  const u = await us.get('u/' + s.id, { type: 'json' });
+  return u && u.durum === 'onayli' && (s.sv || 0) === (u.sv || 0) ? u : null;
+}
+// cihaz (abonelik anahtarı) → sahibi olan üye ve ayarı
+async function cihazSahipleri(){
+  const us = store('oyunodasi-uye'), map = {};
+  const { blobs } = await us.list({ prefix: 'u/' });
+  for (const b of blobs){
+    const u = await us.get(b.key, { type: 'json' });
+    if (!u || u.durum !== 'onayli') continue;
+    for (const sub of (u.push || [])) map[await hash(sub.endpoint)] = { kadi: kucuk(u.kadi), ayar: u.bildirimAyar || {} };
+  }
+  return map;
+}
 async function logSend(entry){
   const st = store('oyunodasi-ayar');
   const l = (await st.get('gecmis', { type: 'json' })) || [];
@@ -179,12 +202,25 @@ export default async (req, context) => {
         tag: 'oda-' + code + '-' + Date.now()      // her bildirim ayrı: aynı etiket iPhone'da sessizce üstüne yazılıyordu
       };
       const me = typeof b.endpoint === 'string' ? await hash(b.endpoint) : '';
-      const list = (await allSubs()).filter(s => s.key !== me);
+      // üyenin kendi ayarı: bildirim hiç gitmesin / sadece seçtiği üyelerin cihazlarına gitsin; alıcı da "bildirim alma" diyebilir
+      const gonderen = await gonderenUye(req), sg = gonderen ? (gonderen.bildirimAyar || {}) : {};
+      if (gonderen && sg.gonder === false) return json({ ok: true, sent: 0, total: 0, kapali: true });
+      const sahip = await cihazSahipleri();
+      const secili = gonderen && sg.kime === 'secili' ? (Array.isArray(sg.secili) ? sg.secili.map(kucuk) : []) : null;
+      let atlanan = 0;
+      const list = (await allSubs()).filter(s => {
+        if (s.key === me) return false;
+        const o = sahip[s.key];
+        if (gonderen && o && o.kadi === kucuk(gonderen.kadi)) return false;      // kendi diğer cihazlarına da gitmesin
+        if (o && o.ayar.al === false){ atlanan++; return false; }
+        if (secili && !(o && secili.includes(o.kadi))){ atlanan++; return false; }
+        return true;
+      });
       const res = await Promise.all(list.map(s => sendAndRecord(s, payload, v, origin, { ttl: 1800 })));
       const sent = res.filter(r => r.st >= 200 && r.st < 300).length, gone = res.filter(r => r.gone).length;
       const fails = list.map((s, i) => ({ name: s.name || '—', platform: platformOf(s.sub.endpoint), st: res[i].st, err: res[i].err })).filter((x, i) => !(res[i].st >= 200 && res[i].st < 300));
       await logSend({ at: Date.now(), code, by: name, total: list.length, sent, gone, fails: fails.slice(0, 10) });
-      return json({ ok: true, sent, gone, failed: list.length - sent - gone, total: list.length });
+      return json({ ok: true, sent, gone, failed: list.length - sent - gone, total: list.length, atlanan, secili: !!secili });
     }
     return json({ hata: 'bilinmeyen işlem' }, 404);
   } catch(e){

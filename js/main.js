@@ -15,7 +15,22 @@ $('codeInput').addEventListener('input', e => {
   if (e.target.value !== c) e.target.value = c;
 });
 
+// yönetici katılımı: panelden gelen imzalı bilet doğrulanırsa ad "Yönetici" olur (herkes görür; gizli değil)
+let yoneticiGiris = false;
+(async function yoneticiBilet(){
+  const m = /yonetici=(\d+)\.([\w-]+)/.exec(location.hash);
+  if (!m) return;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
+  try {
+    const r = await (await fetch('/api/uye/saka-dogrula', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ exp: +m[1], sig: m[2] }) })).json();
+    if (!r.ok) return;
+    yoneticiGiris = true;
+    $('nameInput').value = 'Yönetici'; $('nameInput').readOnly = true;
+    lobbyError('🛡 Yönetici olarak giriyorsun: odadakiler seni “Yönetici” adıyla görecek. “Katıl”a bas.');
+  } catch(e){}
+})();
 function readName(){
+  if (yoneticiGiris) return 'Yönetici';
   if (typeof account !== 'undefined' && account) return clip(account.uye.name, 20);   // üye: ad sorulmaz
   const n = $('nameInput').value.trim();
   if (!n){ lobbyError('Önce adını yaz.'); $('nameInput').focus(); return null; }

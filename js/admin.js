@@ -107,7 +107,7 @@ function renderTabs(){
   const c = counts();
   const defs = [['genel', '📊 Genel'], ['hareket', '📋 Hareketler'], ['bekliyor', '⏳ Onay bekleyen (' + c.bekliyor + ')'], ['onayli', '✅ Üyeler (' + c.onayli + ')']];
   if (c.askida || tab === 'askida') defs.push(['askida', '⏸ Durdurulan (' + c.askida + ')']);
-  defs.push(['red', '✗ Reddedilen (' + c.red + ')'], ['saka', '🎭 Şaka'], ['bildirim', '🔔 Bildirimler'], ['duvar', '🎬 Video duvar kağıtları'], ['kelime', '🔤 Kelimeler'], ['skor', '🏆 Skorlar'], ['muzik', '🎵 Müzik'], ['ayar', '⚙️ Ayarlar']);
+  defs.push(['red', '✗ Reddedilen (' + c.red + ')'], ['saka', '🎭 Şaka'], ['hava', '🌦 Hava'], ['radyo', '📻 Radyo'], ['bildirim', '🔔 Bildirimler'], ['duvar', '🎬 Video duvar kağıtları'], ['kelime', '🔤 Kelimeler'], ['skor', '🏆 Skorlar'], ['muzik', '🎵 Müzik'], ['ayar', '⚙️ Ayarlar']);
   const s = JSON.stringify(defs) + tab;
   if (s === tabSig) return; tabSig = s;
   const tabs = $('tabs'); tabs.innerHTML = '';
@@ -136,6 +136,8 @@ function renderList(){
   else if (tab === 'hareket') renderHareket(list);
   else if (tab === 'duvar') renderDuvarTab(list);
   else if (tab === 'kelime') renderKelime(list);
+  else if (tab === 'hava') renderHava(list);
+  else if (tab === 'radyo') renderRadyo(list);
   fresh.clear();
 }
 
@@ -208,7 +210,7 @@ function userRow(u){
   const av = el('div', 'u-av');
   if (u.foto) av.style.backgroundImage = 'url("' + u.foto + '")'; else av.textContent = initial(u.name);
   const info = el('div', 'u-info');
-  const b = el('b', '', u.adSoyad);
+  const b = el('b', 'ad-ad', u.adSoyad); b.title = 'Profilini aç'; b.onclick = () => kisiProfil({ kadi: u.kadi });
   const P = { onayli: ['ok', 'üye'], bekliyor: ['wait', 'onay bekliyor'], red: ['no', 'reddedildi'], askida: ['no', 'durduruldu'] }[u.durum] || ['', u.durum];
   b.append(el('span', 'pill ' + P[0], P[1]));
   if (u.gizliOda) b.append(el('span', 'pill gizli', '🔒 gizli oda yetkisi'));

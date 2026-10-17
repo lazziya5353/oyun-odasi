@@ -262,6 +262,23 @@
     <label>Görünen ad (odada herkes bunu görür)
       <div class="row" style="gap:8px"><input type="text" id="pName" maxlength="20" style="flex:1 1 160px"><button class="btn small" id="pNameSave" style="flex:0 0 auto">Kaydet</button></div>
     </label>
+    <label>Hakkımda (isteğe bağlı, en fazla 200 karakter)
+      <textarea id="pBio" maxlength="200" rows="2" placeholder="İstediğini yaz…" style="resize:vertical"></textarea>
+      <div class="row" style="gap:8px;margin-top:6px"><span class="note" id="pBioSay" style="flex:1"></span><button class="btn small" id="pBioSave" style="flex:0 0 auto">Kaydet</button></div>
+    </label>
+    <details class="prof-pw" id="pBildirimKutu"><summary>🔔 Bildirim ayarları</summary>
+      <div class="stack" style="margin-top:10px;gap:10px">
+        <label class="prof-sec"><input type="checkbox" id="pBGonder"> Ben oda açınca başkalarına bildirim gitsin</label>
+        <div class="stack" id="pBKime" style="gap:6px;padding-left:4px">
+          <label class="prof-sec"><input type="radio" name="pBKime" value="herkes"> Herkese gitsin</label>
+          <label class="prof-sec"><input type="radio" name="pBKime" value="secili"> Sadece seçtiğim kişilere gitsin</label>
+          <div class="prof-uyeler" id="pBSecili" hidden></div>
+        </div>
+        <label class="prof-sec"><input type="checkbox" id="pBAl"> Başkaları oda açınca bana bildirim gelsin</label>
+        <div class="row" style="gap:8px"><button class="btn small primary" id="pBSave" style="flex:0 0 auto">Kaydet</button><button class="btn small" id="pBCihaz" style="flex:0 0 auto">🔔 Bu cihazda bildirimi aç/kapat</button></div>
+        <span class="note">Bildirimin telefonuna ya da bilgisayarına gelmesi için ayrıca bu cihazda bildirimi açman gerekir.</span>
+      </div>
+    </details>
     <details class="prof-pw"><summary>🔑 Şifre değiştir</summary>
       <form class="stack" id="pwForm" style="margin-top:10px" onsubmit="return false">
         <input type="text" id="pUser" autocomplete="username" hidden>

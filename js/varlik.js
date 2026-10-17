@@ -22,7 +22,10 @@
       const r = v.ad ? await fetch('/api/oda/nabiz', { method: 'POST', headers: Object.assign({ 'content-type': 'text/plain' }, v.gizli && account ? { authorization: 'Bearer ' + account.token } : {}), body: JSON.stringify(v) })
                      : await fetch('/api/oda/acik', { cache: 'no-store' });
       if (v.ad) gonderdi = true;
-      if (r.ok){ const d = await r.json(); odalar = d.odalar || []; ciz(); }
+      if (r.ok){
+        const d = await r.json(); odalar = d.odalar || []; ciz();
+        if (d.at && katildi() && typeof kickedOut === 'function') kickedOut();      // yönetici odadan çıkardı
+      }
     } catch(e){}
   }
   // ---------- lobideki "Açık odalar" kutusu ----------

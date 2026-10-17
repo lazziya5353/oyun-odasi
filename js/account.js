@@ -145,7 +145,37 @@ function openProfil(){
   $('pInfo').textContent = account.uye.adSoyad + ' · @' + account.uye.kadi;
   $('pFotoSil').hidden = !myFoto;
   $('pMsg').textContent = '';
+  $('pBio').value = account.uye.bio || ''; bioSay();
+  bildirimAyarCiz();
   $('profilDlg').showModal();
+}
+const bioSay = () => { $('pBioSay').textContent = $('pBio').value.length + '/200'; };
+// bildirim ayarları: oda açınca gitsin mi, kime (herkes / seçilen üyeler), ben alayım mı
+let uyeListe = null;
+function bildirimAyarCiz(){
+  const a = account.uye.bildirim || { gonder: true, kime: 'herkes', secili: [], al: true };
+  $('pBGonder').checked = a.gonder; $('pBAl').checked = a.al;
+  document.querySelectorAll('input[name=pBKime]').forEach(r => { r.checked = r.value === a.kime; });
+  const guncelle = () => {
+    const secili = document.querySelector('input[name=pBKime]:checked');
+    $('pBKime').style.opacity = $('pBGonder').checked ? '' : '.45';
+    $('pBSecili').hidden = !($('pBGonder').checked && secili && secili.value === 'secili');
+  };
+  $('pBGonder').onchange = guncelle;
+  document.querySelectorAll('input[name=pBKime]').forEach(r => { r.onchange = guncelle; });
+  guncelle();
+  const kutu = $('pBSecili'); kutu.innerHTML = '';
+  const ciz = () => {
+    kutu.innerHTML = '';
+    if (!uyeListe.length){ kutu.textContent = 'Başka üye yok.'; return; }
+    uyeListe.forEach(u => {
+      const l = document.createElement('label'); l.className = 'prof-sec';
+      const c = document.createElement('input'); c.type = 'checkbox'; c.value = u.kadi.toLocaleLowerCase('tr-TR'); c.checked = a.secili.includes(c.value);
+      l.append(c, document.createTextNode(u.name + ' (@' + u.kadi + ')')); kutu.append(l);
+    });
+  };
+  if (uyeListe) ciz();
+  else { kutu.textContent = 'Yükleniyor…'; uyeApi('uye-listesi').then(d => { uyeListe = d.uyeler || []; ciz(); }).catch(() => { kutu.textContent = 'Üye listesi alınamadı.'; }); }
 }
 function pMsg(t, ok){ $('pMsg').textContent = t; $('pMsg').className = 'uye-msg ' + (ok ? 'ok' : 'err'); }
 // fotoğrafı kare kırp, 256 px JPEG'e küçült
@@ -180,6 +210,19 @@ function squareJpeg(file){
     try { const d = await uyeApi('profil', { name: $('pName').value.trim() }); account.uye = d.uye; saveAccount(); store.set('oyunodasi-name', d.uye.name); announceProfile(); pMsg('✓ Adın güncellendi', true); paintAvatar($('pAv'), account.uye.name, myFoto); }
     catch(e){ pMsg(e.message); }
   };
+  $('pBio').oninput = bioSay;
+  $('pBioSave').onclick = async () => {
+    try { const d = await uyeApi('profil', { bio: $('pBio').value }); account.uye = d.uye; saveAccount(); pMsg('✓ Hakkımda güncellendi', true); }
+    catch(e){ pMsg(e.message); }
+  };
+  $('pBSave').onclick = async () => {
+    const sec = document.querySelector('input[name=pBKime]:checked');
+    const body = { gonder: $('pBGonder').checked, al: $('pBAl').checked, kime: sec ? sec.value : 'herkes', secili: [...document.querySelectorAll('#pBSecili input:checked')].map(c => c.value) };
+    if (body.gonder && body.kime === 'secili' && !body.secili.length){ pMsg('“Sadece seçtiklerim” için en az bir kişi seç.'); return; }
+    try { const d = await uyeApi('profil', { bildirim: body }); account.uye = d.uye; saveAccount(); pMsg('✓ Bildirim ayarların kaydedildi', true); }
+    catch(e){ pMsg(e.message); }
+  };
+  $('pBCihaz').onclick = () => { if (typeof toggleNotifs === 'function') toggleNotifs(); };
   $('pFotoBtn').onclick = () => $('pFoto').click();
   $('pFoto').onchange = async e => {
     const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;

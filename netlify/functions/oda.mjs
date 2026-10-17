@@ -92,9 +92,24 @@ export default async (req, context) => {
       for (const c of Object.values(d.canli)){ if (!cevrimici(c, now)) continue; const s = simdi[c.anahtar]; if (!s || (c.kod && !s.kod) || c.son > s.son) simdi[c.anahtar] = c; }
       const kisiler = Object.entries(d.kisiler).map(([k, p]) => {
         const c = simdi[k];
-        return { anahtar: k, ad: p.ad, uye: p.uye, cihaz: c ? c.cihaz : p.cihaz, ilk: p.ilk, son: c ? now : p.son, cevrimici: !!c, oda: c ? c.kod : '', odaGiris: c ? c.giris : 0, gecmis: p.gecmis || [] };
+        return { anahtar: k, ad: p.ad, uye: p.uye, cihaz: c ? c.cihaz : p.cihaz, ilk: p.ilk, son: c ? now : p.son, cevrimici: !!c, oda: c ? c.kod : '', odaGiris: c ? c.giris : 0, gecmis: p.gecmis || [],
+          siteMs: p.siteMs || 0, odaMs: p.odaMs || 0, girisler: p.girisler || 0 };
       }).sort((a, b) => (b.cevrimici - a.cevrimici) || (b.son || 0) - (a.son || 0));
       return json({ simdi: now, odalar: odaListesi(d, now, true), kisiler });
+    }
+    if (req.method === 'POST' && (islem === 'admin-at' || islem === 'admin-kisi-sil')){
+      if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
+      const b = await req.json().catch(() => ({}));
+      const anahtar = clip(b.anahtar, 40);
+      if (!/^[um]:/.test(anahtar)) return json({ hata: 'kişi' }, 400);
+      await guncelle((d, now) => {
+        if (islem === 'admin-at'){ d.at = d.at || {}; d.at[anahtar] = now; }
+        else {
+          delete d.kisiler[anahtar];
+          for (const [cid, c] of Object.entries(d.canli)) if (c.anahtar === anahtar) delete d.canli[cid];
+        }
+      });
+      return json({ ok: true });
     }
     if (req.method === 'POST' && islem === 'dogrula'){
       // listedeki odaya girmek için yazılan kod o odanın kodu mu?
@@ -121,6 +136,7 @@ export default async (req, context) => {
       const ad = clip(b.ad, 20), uye = clip(b.uye, 24).toLocaleLowerCase('tr'), cihaz = ['mobil', 'tablet', 'pc'].includes(b.cihaz) ? b.cihaz : 'pc';
       const kod = clip(b.kod, 12).toUpperCase().replace(/[^A-Z0-9ÇĞİÖŞÜ-]/g, '');
       const gizli = !!b.gizli && !!kod && await gizliYetkili(req);
+      let atildi = false;
       const d = await guncelle((d, now) => {
         temizle(d, now);
         const onceki = d.canli[cid];
@@ -130,7 +146,19 @@ export default async (req, context) => {
         if (!k) k = d.kisiler[anahtar] = { ad, uye, cihaz, ilk: now, son: now, gecmis: [] };
         k.ad = ad; k.uye = uye; k.cihaz = cihaz;
         const devam = onceki && onceki.anahtar === anahtar && now - onceki.son < (onceki.kapali ? 90e3 : CANLI + 60e3);
-        if (!devam) gecmisEkle(k, { ts: now, tur: 'site', cihaz });
+        if (!devam){ gecmisEkle(k, { ts: now, tur: 'site', cihaz }); k.girisler = (k.girisler || 0) + 1; }
+        // süre sayacı: iki nabız arası (en fazla 2,5 dk) sitede / odada geçen süre olarak eklenir
+        if (devam && !onceki.kapali){
+          const dt = Math.max(0, Math.min(now - onceki.son, CANLI));
+          k.siteMs = (k.siteMs || 0) + dt;
+          if (kod && onceki.kod === kod){
+            k.odaMs = (k.odaMs || 0) + dt;
+            k.odalar = k.odalar || {};
+            k.odalar[kod] = (k.odalar[kod] || 0) + dt;
+            const ks = Object.keys(k.odalar);
+            if (ks.length > 30){ ks.sort((a, b) => k.odalar[a] - k.odalar[b]); delete k.odalar[ks[0]]; }
+          }
+        }
         let giris = devam && onceki.kod === kod ? onceki.giris : now;
         if (devam && onceki.kapali && onceki.kod === kod && kod){
           // sayfa yenilendi / kısa kopma: az önce yazılan "çıktı" kaydını geri al
@@ -149,8 +177,13 @@ export default async (req, context) => {
         }
         k.son = now;
         d.canli[cid] = { anahtar, ad, uye, cihaz, kod, giris: kod ? giris : 0, son: now };
+        // yönetici "odadan at" dediyse: bu kişinin odadaki sekmesine haber ver (bir kez)
+        d.at = d.at || {};
+        const atTs = d.at[anahtar];
+        if (atTs && now - atTs < 10 * 60e3){ if (kod) { atildi = true; delete d.at[anahtar]; } }
+        else if (atTs) delete d.at[anahtar];
       });
-      return json({ odalar: odaListesi(d, Date.now(), false) });
+      return json({ odalar: odaListesi(d, Date.now(), false), at: atildi });
     }
     return json({ hata: 'bilinmeyen işlem' }, 404);
   } catch(e){

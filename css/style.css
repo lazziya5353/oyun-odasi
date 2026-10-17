@@ -696,3 +696,10 @@ html.dinlen:has(#dinlenUI.gizli), html.dinlen:has(#dinlenUI.gizli) body{cursor:n
 /* YouTube: düğmeler videonun altındaki çubukta (YouTube'un kendi kontrolleri açık kalsın) */
 .screen.yt .screen-bar .screen-tools{position:static;opacity:1;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
 .screen.yt .screen-bar .screen-tools button{padding:6px 10px;font-size:13px}
+
+/* profil: bio + bildirim ayarları */
+.prof-sec{display:flex;align-items:center;gap:8px;font-size:14px;text-transform:none;letter-spacing:0;color:var(--fg);margin:0}
+.prof-sec input{width:auto;flex:0 0 auto}
+.prof-uyeler{display:grid;gap:4px;max-height:180px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.prof-uyeler[hidden]{display:none}
+#pBio{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:15px;color:var(--fg)}

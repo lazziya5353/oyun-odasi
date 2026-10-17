@@ -25,8 +25,15 @@ const DEFAULT_ADMIN = 'c884240bc2367d1eaae80e94dbc4486b663184137bed5899d0a53e610
 
 function pub(u){
   return { id: u.id, kadi: u.kadi, adSoyad: u.adSoyad, name: u.name, durum: u.durum, created: u.created, approvedAt: u.approvedAt || null,
-    foto: u.foto ? '/api/uye/foto?id=' + u.id + '&v=' + u.foto : null, lastSeen: u.lastSeen || null, gizliOda: !!u.gizliOda };
+    foto: u.foto ? '/api/uye/foto?id=' + u.id + '&v=' + u.foto : null, lastSeen: u.lastSeen || null, gizliOda: !!u.gizliOda,
+    bio: u.bio || '', bildirim: bildirimAyar(u) };
 }
+// bildirim ayarı: gonder (oda açınca başkalarına bildirim gitsin mi), kime (herkes | secili), secili (kullanıcı adları), al (başkalarının oda bildirimini alayım mı)
+function bildirimAyar(u){
+  const a = u.bildirimAyar || {};
+  return { gonder: a.gonder !== false, kime: a.kime === 'secili' ? 'secili' : 'herkes', secili: Array.isArray(a.secili) ? a.secili : [], al: a.al !== false };
+}
+const ostore = name => (globalThis.__oyunOdasiTestStore ? globalThis.__oyunOdasiTestStore(name) : getStore({ name, consistency: 'strong' }));
 async function getUser(id){ return id ? store().get('u/' + id, { type: 'json' }) : null; }
 async function putUser(u){ await store().setJSON('u/' + u.id, u); }
 async function authUser(req){
@@ -120,6 +127,36 @@ export default async (req, context) => {
       const u = await authUser(req);
       if (u && Date.now() - (u.lastSeen || 0) > 10 * 60e3){ u.lastSeen = Date.now(); await putUser(u); }
       return u ? json({ uye: pub(u) }) : json({ hata: 'oturum yok' }, 401);
+    }
+    if (req.method === 'GET' && islem === 'uye-listesi'){
+      // bildirim gönderilecek kişileri seçmek için: onaylı üyelerin kullanıcı adı ve görünen adı
+      const u = await authUser(req); if (!u) return json({ hata: 'oturum yok' }, 401);
+      const us = await allUsers();
+      return json({ uyeler: us.filter(x => x.durum === 'onayli' && x.id !== u.id).map(x => ({ kadi: x.kadi, name: x.name })).sort((a, b) => a.name.localeCompare(b.name, 'tr')) });
+    }
+    if (req.method === 'GET' && islem === 'admin-detay'){
+      // bir kişinin profili: üyelik bilgisi, sitede/odalarda geçirdiği süre, giriş-çıkış geçmişi, hareketleri
+      if (!(await authAdmin(req))) return json({ hata: 'yetki' }, 401);
+      const kadi = clip(url.searchParams.get('kadi'), 20), misafir = clip(url.searchParams.get('misafir'), 20);
+      let u = null, anahtar = '';
+      if (kadi){
+        const ex = await store().get('k/' + lowerKey(kadi), { type: 'json' });
+        u = ex && await getUser(ex.id);
+        if (!u) return json({ hata: 'üye bulunamadı' }, 404);
+        anahtar = 'u:' + lowerKey(u.kadi);
+      } else if (misafir) anahtar = 'm:' + lowerKey(misafir);
+      else return json({ hata: 'kişi yok' }, 400);
+      const vr = await ostore('oyunodasi-varlik').get('durum', { type: 'json' });
+      const kisi = vr && vr.kisiler && vr.kisiler[anahtar] || null;
+      const canli = vr && vr.canli ? Object.values(vr.canli).filter(c => c.anahtar === anahtar && !c.kapali && Date.now() - c.son < 150e3).sort((a, b) => b.son - a.son)[0] : null;
+      const hr = await ostore('oyunodasi-hareket').get('son', { type: 'json' });
+      const ad = u ? u.name : misafir;
+      const hareket = ((hr && hr.liste) || []).filter(x => u ? (x.kadi ? x.kadi === lowerKey(u.kadi) : (x.uye && x.ad === u.name)) : (!x.uye && x.ad === misafir)).slice(0, 120);
+      return json({
+        uye: u ? Object.assign(pub(u), { bildirimCihaz: (u.push || []).length }) : null, ad, anahtar,
+        kisi: kisi ? { ilk: kisi.ilk, son: kisi.son, cihaz: kisi.cihaz, siteMs: kisi.siteMs || 0, odaMs: kisi.odaMs || 0, girisler: kisi.girisler || 0, odalar: kisi.odalar || {}, gecmis: kisi.gecmis || [] } : null,
+        canli: canli ? { kod: canli.kod, giris: canli.giris, cihaz: canli.cihaz } : null, simdi: Date.now(), hareket
+      });
     }
     if (req.method === 'GET' && islem === 'admin-liste'){
       if (!(await authAdmin(req))) return json({ hata: 'yetki' }, 401);
@@ -215,6 +252,14 @@ export default async (req, context) => {
     if (islem === 'profil'){
       const u = await authUser(req); if (!u) return json({ hata: 'oturum yok' }, 401);
       if (b.name !== undefined){ const n = clip(b.name, 20); if (n.length < 2) return json({ hata: 'Görünen ad en az 2 harf olmalı.' }, 400); u.name = n; }
+      if (b.bio !== undefined) u.bio = clip(b.bio, 200);
+      if (b.bildirim && typeof b.bildirim === 'object'){
+        const x = b.bildirim;
+        u.bildirimAyar = {
+          gonder: x.gonder !== false, kime: x.kime === 'secili' ? 'secili' : 'herkes', al: x.al !== false,
+          secili: Array.isArray(x.secili) ? [...new Set(x.secili.map(k => lowerKey(clip(k, 20))).filter(Boolean))].slice(0, 100) : []
+        };
+      }
       if (b.fotoSil){ u.foto = 0; await store().delete('f/' + u.id); }
       if (validSub(b.push) && !(u.push || []).some(s => s.endpoint === b.push.endpoint)) u.push = (u.push || []).concat(cleanSub(b.push)).slice(-5);
       await putUser(u);

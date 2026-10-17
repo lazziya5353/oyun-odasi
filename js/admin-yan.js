@@ -31,10 +31,17 @@
       const ust = el('div', 'yan-oda-ust');
       const kb = el('b', 'yan-kod', o.kod); if (o.gizli) kb.append(el('span', 'pill gizli', '🔒 gizli'));
       ust.append(kb, el('span', 'yan-sure', '⏱ ' + acikSure(o.sure)));
+      const kodu = o.kod;
+      const katil = button('👋 Yönetici olarak katıl', '', async () => {
+        try {
+          const t = await api('admin-saka-bilet', {});
+          window.open('./?oda=' + encodeURIComponent(kodu) + '#yonetici=' + t.exp + '.' + t.sig, '_blank', 'noopener');
+        } catch(e){ toast(e.message); }
+      });
       k.append(ust, el('div', 'ad-muted', 'Açılış ' + saat(o.acilis) + (o.acan ? ' · açan: ' + o.acan : '') + ' · ' + o.kisi + ' kişi'));
       const ch = el('div', 'yan-chips');
       o.kisiler.forEach(p => ch.append(el('span', 'hk-chip', (CIHAZ[p.cihaz] || '') + ' ' + p.ad)));
-      k.append(ch); ob.append(k);
+      k.append(ch, katil); ob.append(k);
     }
     yan.append(ob);
     // ---- kişiler
@@ -63,7 +70,7 @@
       const bas = el('button', 'yan-kisi-bas'); bas.type = 'button';
       const av = el('span', 'yan-av', initial(k.ad)); av.append(el('i', 'yan-durum'));
       const bilgi = el('span', 'yan-bilgi');
-      const ad = el('b', '', k.ad); ad.append(el('span', 'pill' + (k.uye ? ' ok' : ''), k.uye ? '@' + k.uye : 'misafir'));
+      const ad = el('b', 'ad-ad', k.ad); ad.title = 'Profilini aç'; ad.onclick = e => { e.stopPropagation(); kisiProfil(k.uye ? { kadi: k.uye } : { misafir: k.ad }); }; ad.append(el('span', 'pill' + (k.uye ? ' ok' : ''), k.uye ? '@' + k.uye : 'misafir'));
       let durum;
       if (k.cevrimici) durum = k.oda ? '🎮 ' + k.oda + ' odasında · ' + sure(Date.now() - Y.fark - k.odaGiris) : '🟢 Sitede (lobide)';
       else durum = 'Son görülme: ' + ago(k.son) + ' · ' + saat(k.son);
@@ -75,6 +82,14 @@
         const g = el('div', 'yan-gecmis');
         g.append(el('div', 'ad-muted', 'İlk görülme: ' + saat(k.ilk)));
         if (!k.gecmis.length) g.append(el('div', 'ad-muted', 'Geçmiş yok.'));
+        const bt = el('div', 'yan-btnler');
+        bt.append(button('👤 Profil', '', () => kisiProfil(k.uye ? { kadi: k.uye } : { misafir: k.ad })));
+        if (k.cevrimici && k.oda) bt.append(dangerBtn('🚪 Odadan at', async () => { try { await req('/api/oda/admin-at', { anahtar: k.anahtar }); toast(k.ad + ' odadan atılacak (en geç 1 dakika içinde)'); } catch(e){ toast(e.message); } }));
+        if (k.uye){
+          const u = (typeof users !== 'undefined' ? users : []).find(x => x.kadi.toLocaleLowerCase('tr-TR') === k.uye);
+          if (u) bt.append(dangerBtn('🗑 Üyeliği kaldır', () => act('admin-sil', { id: u.id }, k.ad + ' üyelikten kaldırıldı').then(() => window.yanYenile())));
+        } else bt.append(dangerBtn('🗑 Listeden kaldır', async () => { try { await req('/api/oda/admin-kisi-sil', { anahtar: k.anahtar }); toast(k.ad + ' listeden kaldırıldı'); window.yanYenile(); } catch(e){ toast(e.message); } }));
+        g.append(bt);
         k.gecmis.forEach(x => {
           const t = x.tur === 'site' ? '🌐 Siteyi açtı' + (x.cihaz ? ' (' + (x.cihaz === 'pc' ? 'bilgisayar' : 'telefon') + ')' : '')
             : x.tur === 'oda' ? '🎮 ' + x.kod + ' odasına girdi' : '🚪 ' + x.kod + ' odasından çıktı';

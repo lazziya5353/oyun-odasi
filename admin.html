@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Figtree:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/bg.css">
+<link rel="stylesheet" href="css/hava.css">
 <style>
   body{overflow:auto}
   .adm{max-width:1320px;margin:0 auto;padding:24px 16px 60px;display:grid;gap:18px}
@@ -127,6 +128,20 @@
   .yd-sec span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .yd-sec.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
   .yd-sec:hover{border-color:var(--accent)}
+  /* radyo mini çubuğu, kişi profili */
+  .ad-radyo-mini{display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;border-radius:99px;border:1px solid var(--line);background:var(--panel-2);font-size:13px;max-width:100%}
+  .ad-radyo-mini span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+  .ad-radyo-mini input{width:80px}
+  .ad-ad{cursor:pointer}
+  .ad-ad:hover{text-decoration:underline;color:var(--accent)}
+  dialog#kisiDlg{width:min(720px,94vw);max-height:90vh;padding:0;border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--fg)}
+  dialog#kisiDlg::backdrop{background:rgba(0,0,0,.55)}
+  dialog#kisiDlg .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+  dialog#kisiDlg .dlg-head h3{margin:0}
+  dialog#kisiDlg .dlg-body{max-height:calc(90vh - 64px);overflow:auto}
+  dialog#kisiDlg .ad-stat b{font-size:22px}
+  dialog#kisiDlg .ad-stats{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  .yan-btnler{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 2px}
   /* arka plan açıkken paneller cam gibi */
   :root[data-bg] :is(.adm-card,.yan-kutu){background:var(--glass);border-color:var(--glass-line);-webkit-backdrop-filter:var(--glass-fx);backdrop-filter:var(--glass-fx)}
   :root[data-bg] :is(.u,.ad-box,.ad-stat){background:color-mix(in srgb,var(--bg) 70%,transparent)}
@@ -201,6 +216,10 @@
     </div>
   </section>
 </main>
+<dialog id="kisiDlg" aria-labelledby="kisiBaslik">
+  <div class="dlg-head"><h3 id="kisiBaslik">👤 Kişi</h3><button class="btn small" type="button" onclick="document.getElementById('kisiDlg').close()">Kapat</button></div>
+  <div class="dlg-body"></div>
+</dialog>
 <div class="toast" id="toast" hidden></div>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="js/config.js"></script>
@@ -208,6 +227,8 @@
 <script src="js/admin-saka.js"></script>
 <script src="js/admin-yan.js"></script>
 <script src="js/backgrounds.js"></script>
+<script src="js/hava.js"></script>
+<script src="js/admin-ek.js"></script>
 <script src="js/dinlen.js"></script>
 <script src="js/admin-duvar.js"></script>
 <script src="js/games/ciz.js"></script>

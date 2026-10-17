@@ -14,7 +14,9 @@ function b64uToBytes(s){
   return Uint8Array.from(b, c => c.charCodeAt(0));
 }
 async function pushApi(path, body){
-  const r = await fetch(PUSH_API + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {});
+  const h = { 'content-type': 'application/json' };
+  if (path === 'oda' && typeof account !== 'undefined' && account) h.authorization = 'Bearer ' + account.token;   // ayarların (kime gitsin) uygulanması için üye olduğunu bildir
+  const r = await fetch(PUSH_API + path, body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : {});
   if (!r.ok) throw new Error('api ' + r.status);
   return r.json();
 }
@@ -69,10 +71,11 @@ async function notifyRoomOpened(){
     try { const sub = swReg && await swReg.pushManager.getSubscription(); endpoint = sub ? sub.endpoint : ''; } catch(e){}
     const r = await pushApi('oda', { code: roomCode, name: myName, endpoint });
     // oda açana kısa bilgi: kaç kişiye gitti
-    if (r.sinir === 'kod') toast('🔔 Bu oda için 1 dakika içinde zaten bildirim gönderildi');
+    if (r.kapali) toast('🔕 Ayarlarına göre bu odada kimseye bildirim gitmedi');
+    else if (r.sinir === 'kod') toast('🔔 Bu oda için 1 dakika içinde zaten bildirim gönderildi');
     else if (r.sinir) toast('🔔 Son bir saatte çok fazla oda açıldı; bildirim gönderilmedi');
     else if (r.total === 0) toast('🔔 Bildirim gidecek kimse yok: arkadaşların önce “Bildirimleri aç” demeli (senin cihazına kendi odanın bildirimi gelmez)');
-    else toast('🔔 ' + r.sent + ' cihaza “oda açıldı” bildirimi gitti' + (r.failed ? ' · ' + r.failed + ' cihaza ulaşılamadı' : ''));
+    else toast('🔔 ' + r.sent + ' cihaza “oda açıldı” bildirimi gitti' + (r.secili ? ' (seçtiğin kişilere)' : '') + (r.failed ? ' · ' + r.failed + ' cihaza ulaşılamadı' : ''));
   } catch(e){ /* bildirim gitmezse oda yine de açık */ }
 }
 

@@ -48,11 +48,11 @@ export default async (req, context) => {
       const text = await req.text();
       if (text.length > 20000) return json({ hata: 'büyük' }, 413);
       let b; try { b = JSON.parse(text); } catch(e){ return json({ hata: 'json' }, 400); }
-      const ad = clip(b.ad, 20) || 'Biri', cihaz = ['mobil', 'tablet', 'pc'].includes(b.cihaz) ? b.cihaz : 'pc', uye = !!b.uye;
+      const ad = clip(b.ad, 20) || 'Biri', cihaz = ['mobil', 'tablet', 'pc'].includes(b.cihaz) ? b.cihaz : 'pc', uye = !!b.uye, kadi = uye ? clip(b.kadi, 24).toLocaleLowerCase('tr-TR') : '';
       const now = Date.now();
       const items = (Array.isArray(b.olaylar) ? b.olaylar : []).slice(0, 30)
         .filter(o => o && TURLER.includes(o.tur))
-        .map(o => ({ ts: Math.min(now, Math.max(now - 3600e3, Number(o.ts) || now)), ad, cihaz, uye, tur: o.tur, metin: clip(o.metin, o.tur === 'hata' || o.tur === 'kopma' ? 220 : 120), oda: clip(o.oda, 12) }))
+        .map(o => ({ ts: Math.min(now, Math.max(now - 3600e3, Number(o.ts) || now)), ad, cihaz, uye, kadi, tur: o.tur, metin: clip(o.metin, o.tur === 'hata' || o.tur === 'kopma' ? 220 : 120), oda: clip(o.oda, 12) }))
         .sort((x, y) => y.ts - x.ts);
       if (!items.length) return json({ ok: true, n: 0 });
       await ekle(items);

@@ -16,7 +16,7 @@ function hareket(tur, metin, hemen){
   } catch(e){}
 }
 function hareketVeri(){
-  return JSON.stringify({ ad: typeof myName !== 'undefined' ? myName : '', cihaz: cihazTuru(), uye: !!(typeof account !== 'undefined' && account), olaylar: hk.kuyruk.splice(0) });
+  return JSON.stringify({ ad: typeof myName !== 'undefined' ? myName : '', cihaz: cihazTuru(), uye: !!(typeof account !== 'undefined' && account), kadi: (typeof account !== 'undefined' && account && account.uye) ? account.uye.kadi : '', olaylar: hk.kuyruk.splice(0) });
 }
 function hareketGonder(beacon){
   clearTimeout(hk.zaman); hk.zaman = null;
