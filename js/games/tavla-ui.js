@@ -122,22 +122,37 @@ function renderTavla(body, s, lv){
   tvFit(root);
 }
 function tvBoardSvg(){
-  // üçgenler: üst sıra aşağı, alt sıra yukarı bakar; renkler sırayla
+  // üçgenler: üst sıra aşağı, alt sıra yukarı bakar; renkler sırayla (degrade + ince gölge ile kabartmalı görünür)
   let tri = '';
-  const col = (k) => k % 2 ? 'var(--tv-p2)' : 'var(--tv-p1)';
+  const col = (k) => k % 2 ? 'url(#tvg-p2)' : 'url(#tvg-p1)';
   for (let k = 0; k < 12; k++){
     const x = k < 6 ? 0.3 + k : 7.3 + (k - 6);
-    tri += `<polygon points="${x},0.3 ${x + 1},0.3 ${x + 0.5},4.9" fill="${col(k)}"/>`;
-    tri += `<polygon points="${x},10.7 ${x + 1},10.7 ${x + 0.5},6.1" fill="${col(k + 1)}"/>`;
+    tri += `<polygon points="${x + 0.04},0.3 ${x + 0.96},0.3 ${x + 0.5},4.9" fill="${col(k)}" stroke="rgb(0 0 0 / .35)" stroke-width="0.025"/>`;
+    tri += `<polygon points="${x + 0.04},10.7 ${x + 0.96},10.7 ${x + 0.5},6.1" fill="${col(k + 1)}" stroke="rgb(0 0 0 / .35)" stroke-width="0.025"/>`;
   }
   return `<svg class="tv-bg" viewBox="0 0 15 11" preserveAspectRatio="none" aria-hidden="true">
-    <rect x="0" y="0" width="15" height="11" rx="0.35" fill="var(--tv-frame)"/>
-    <rect x="0.3" y="0.3" width="6" height="10.4" fill="var(--tv-felt)"/>
-    <rect x="7.3" y="0.3" width="6" height="10.4" fill="var(--tv-felt)"/>
-    <rect x="6.3" y="0" width="1" height="11" fill="var(--tv-bar)"/>
-    <rect x="13.6" y="0.3" width="1.3" height="10.4" rx="0.15" fill="var(--tv-tray)"/>
+    <defs>
+      <linearGradient id="tvg-wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a4a2b"/><stop offset=".5" stop-color="#5a3320"/><stop offset="1" stop-color="#3d2112"/></linearGradient>
+      <linearGradient id="tvg-grain" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".0"/><stop offset=".5" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <radialGradient id="tvg-felt" cx=".5" cy=".5" r=".75"><stop offset="0" stop-color="#2f5d4d"/><stop offset="1" stop-color="#1a382f"/></radialGradient>
+      <linearGradient id="tvg-p1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6ecd0"/><stop offset="1" stop-color="#cdb98c"/></linearGradient>
+      <linearGradient id="tvg-p2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b94a46"/><stop offset="1" stop-color="#72211f"/></linearGradient>
+      <linearGradient id="tvg-bar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2e180d"/><stop offset=".5" stop-color="#6a3f24"/><stop offset="1" stop-color="#2e180d"/></linearGradient>
+      <linearGradient id="tvg-tray" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1c0f08"/><stop offset="1" stop-color="#3c2314"/></linearGradient>
+      <radialGradient id="tvg-brass" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffe9a6"/><stop offset="1" stop-color="#9a6a1c"/></radialGradient>
+    </defs>
+    <rect x="0" y="0" width="15" height="11" rx="0.35" fill="url(#tvg-wood)"/>
+    <rect x="0" y="0" width="15" height="11" rx="0.35" fill="url(#tvg-grain)"/>
+    <rect x="0.3" y="0.3" width="6" height="10.4" fill="url(#tvg-felt)"/>
+    <rect x="7.3" y="0.3" width="6" height="10.4" fill="url(#tvg-felt)"/>
+    <rect x="0.3" y="0.3" width="6" height="10.4" fill="none" stroke="rgb(0 0 0 / .55)" stroke-width="0.06"/>
+    <rect x="7.3" y="0.3" width="6" height="10.4" fill="none" stroke="rgb(0 0 0 / .55)" stroke-width="0.06"/>
+    <rect x="6.3" y="0" width="1" height="11" fill="url(#tvg-bar)"/>
+    <circle cx="6.8" cy="1.3" r="0.16" fill="url(#tvg-brass)"/><circle cx="6.8" cy="9.7" r="0.16" fill="url(#tvg-brass)"/>
+    <rect x="13.6" y="0.3" width="1.3" height="10.4" rx="0.15" fill="url(#tvg-tray)"/>
+    <rect x="13.6" y="0.3" width="1.3" height="10.4" rx="0.15" fill="none" stroke="rgb(0 0 0 / .6)" stroke-width="0.05"/>
     ${tri}
-    <line x1="13.6" y1="5.5" x2="14.9" y2="5.5" stroke="var(--tv-frame)" stroke-width="0.08"/>
+    <line x1="13.6" y1="5.5" x2="14.9" y2="5.5" stroke="#6a3f24" stroke-width="0.08"/>
   </svg>`;
 }
 function tvPlayerBar(el, s, v, p, names){
@@ -299,8 +314,8 @@ function isFirstRollOfGame(v){
 // kalan alana 15:11 oranında en büyük tahta yerleştirilir. Kısa ekranlarda düğmeler kendi şeridinin yanına geçer.
 let tvObs = null;
 function tvFit(root){
-  root = root || document.querySelector('.tavla');
-  if (!root || !root.isConnected) return;
+  if (!root){ const bd = document.querySelector('.tv-board'); root = bd ? bd.closest('.tavla') : null; }
+  if (!root || !root.isConnected || !root.querySelector('.tv-board')) return;
   const deck = root.closest('.deck') || root.parentElement;
   if (!tvObs && typeof ResizeObserver !== 'undefined'){
     tvObs = new ResizeObserver(() => requestAnimationFrame(() => tvFit()));

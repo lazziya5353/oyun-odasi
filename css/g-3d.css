@@ -1,0 +1,91 @@
+/* ===== 3 boyutlu görünüm katmanı: tavla, okey, 2048, mayın, salon kartları =====
+   games.css ve diğer oyun dosyalarının ÜSTÜNE biner (index.html'de sonra yüklenir). Hepsi saf CSS; kapatmak için
+   <html class="duz"> eklemek yeterli (ya da hareketi azalt ayarı). Dokunmatik/sürükleme davranışı değişmez. */
+
+/* ---------- salon kartları ---------- */
+.make-card,.tcard{transition:transform .25s cubic-bezier(.3,.7,.3,1),box-shadow .25s,border-color .25s;transform-style:preserve-3d}
+@media (hover:hover){
+  .make-card:hover,.tcard:hover{transform:translateY(-5px) perspective(900px) rotateX(2.2deg);box-shadow:0 22px 34px -16px rgb(0 0 0 / .7),0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+}
+.mc-ico{box-shadow:0 6px 12px -4px rgb(0 0 0 / .6),inset 0 2px 0 rgb(255 255 255 / .12),inset 0 -3px 0 rgb(0 0 0 / .25)}
+
+/* ---------- TAVLA ---------- */
+.tv-board-wrap{perspective:1800px;perspective-origin:50% -8%;padding-bottom:calc(var(--tv-w,520px) * .035)}
+.tv-board{--ck-w:#f2e9d4;
+  transform:rotateX(21deg) scale(.94);transform-origin:50% 8%;transform-style:preserve-3d;
+  box-shadow:0 1px 0 #3a2012,0 2px 0 #36200f,0 3px 0 #321d0e,0 4px 0 #2e1a0c,0 5px 0 #2a170a,0 6px 0 #261509,0 7px 0 #221308,0 8px 0 #1e1107,0 9px 0 #1a0e06,0 10px 0 #160c05,0 36px 44px -16px rgb(0 0 0 / .75)}
+.tv-bg{border-radius:12px}
+.tv-board::before{content:"";position:absolute;inset:0;border-radius:12px;pointer-events:none;z-index:7;
+  background:linear-gradient(165deg,rgb(255 255 255 / .16),transparent 28%,transparent 70%,rgb(0 0 0 / .18));mix-blend-mode:soft-light}
+.ck{--sh:0 1px 0 var(--e1),0 2px 0 var(--e2),0 3px 0 var(--e2),0 4px 0 var(--e3),0 5px 0 var(--e3),0 6px 0 var(--e4),0 10px 9px rgb(0 0 0 / .5)}
+.ck.w{--e1:#ddd2b6;--e2:#cabc99;--e3:#b6a782;--e4:#a19068;
+  background:radial-gradient(circle at 34% 26%,#ffffff,#f3ead6 46%,#d6c8a6 100%);border:1px solid #bdae8a;box-shadow:var(--sh),inset 0 2px 2px rgb(255 255 255 / .9),inset 0 -3px 4px rgb(120 100 60 / .25)}
+.ck.b{--e1:#6a342a;--e2:#552a21;--e3:#431f18;--e4:#321610;
+  background:radial-gradient(circle at 34% 26%,#9a5a4c,#5b2b22 48%,#2b0e0a 100%);border:1px solid #1b0907;box-shadow:var(--sh),inset 0 2px 2px rgb(255 190 170 / .35),inset 0 -3px 4px rgb(0 0 0 / .4)}
+.ck::after{inset:17%;border:0;background:radial-gradient(circle at 50% 36%,rgb(0 0 0 / .06),rgb(0 0 0 / .0) 60%);box-shadow:inset 0 2px 3px rgb(0 0 0 / .22),0 1px 0 rgb(255 255 255 / .35)}
+.ck.b::after{box-shadow:inset 0 2px 3px rgb(0 0 0 / .55),0 1px 0 rgb(255 200 180 / .25)}
+.ck.off{box-shadow:0 1px 0 var(--e2),0 2px 0 var(--e3),0 3px 4px rgb(0 0 0 / .5)}
+.ck.can{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 85%,transparent),var(--sh),0 0 18px color-mix(in srgb,var(--accent) 55%,transparent)}
+.ck.sel{box-shadow:0 0 0 4px var(--accent),var(--sh),0 0 28px var(--accent)}
+.tgt{border-radius:3px}
+/* zarlar: kalın küpler, havadan düşüp yuvarlanır */
+.tv-dice{perspective:560px;gap:12px}
+.die{background:linear-gradient(145deg,#ffffff,#ebe4d3 62%,#cfc6ae);
+  box-shadow:inset 0 2px 0 #fff,inset 0 -3px 0 rgb(0 0 0 / .12),0 1px 0 #d3c9b0,0 2px 0 #c7bca2,0 3px 0 #bbb094,0 4px 0 #ada287,0 12px 14px rgb(0 0 0 / .55)}
+.die i{box-shadow:inset 0 1.5px 2px rgb(0 0 0 / .7)}
+.die.b-die{background:linear-gradient(145deg,#85493d,#4a221a 70%,#2c120d);box-shadow:inset 0 2px 0 rgb(255 190 170 / .3),0 1px 0 #3d1b14,0 2px 0 #34160f,0 3px 0 #2b120c,0 4px 0 #220e09,0 12px 14px rgb(0 0 0 / .55)}
+.die.rolling{animation:roll3d .72s cubic-bezier(.2,.7,.3,1)}
+@keyframes roll3d{
+  0%{transform:translate3d(-90px,-50px,170px) rotateX(-340deg) rotateY(260deg) rotateZ(-120deg) scale(.55);opacity:.15}
+  55%{transform:translate3d(10px,8px,70px) rotateX(-50deg) rotateY(40deg) rotateZ(14deg) scale(1.16);opacity:1}
+  78%{transform:translate3d(0,0,14px) rotateX(8deg) rotateY(-6deg) scale(1.03)}
+  100%{transform:none}}
+.tv-hit{text-shadow:0 2px 0 #7a1d12,0 4px 8px #000}
+@media (max-width:860px){ .tv-board{transform:rotateX(13deg) scale(.97)} .tv-board-wrap{perspective-origin:50% -4%} }
+
+/* ---------- OKEY ---------- */
+.ok-table{background:
+  radial-gradient(ellipse at 50% 38%,rgb(255 255 255 / .09),transparent 55%),
+  repeating-linear-gradient(45deg,rgb(255 255 255 / .012) 0 2px,transparent 2px 5px),
+  radial-gradient(ellipse at 50% 40%,var(--felt),var(--felt-2) 75%);
+  box-shadow:inset 0 0 0 5px #3b2414,inset 0 0 0 7px #8a5a2e,inset 0 0 0 9px #4a2d17,inset 0 0 60px rgb(0 0 0 / .55),0 2px 0 #2a170a,0 4px 0 #24140a,0 6px 0 #1e1008,0 26px 40px -18px #000}
+.tile{--tsh:0 1px 0 #e8dfc6,0 2px 0 #dcd1b5,0 3px 0 #d0c4a5,0 4px 0 #c3b695,0 5px 0 #b5a885,0 10px 10px rgb(0 0 0 / .38);
+  background:linear-gradient(172deg,#ffffff,var(--tile) 48%,#eadfc5);border:1px solid #d3c7a9;box-shadow:var(--tsh),inset 0 1px 0 #fff,inset 0 -3px 5px rgb(110 90 50 / .1)}
+.tile b{text-shadow:0 1px 0 rgb(255 255 255 / .8),0 -1px 0 rgb(0 0 0 / .14)}
+.tile i{box-shadow:inset 0 1px 1px rgb(0 0 0 / .35),0 1px 0 rgb(255 255 255 / .6)}
+.tile::before{content:"";position:absolute;inset:3px;border-radius:5px;border:1px solid rgb(0 0 0 / .05);pointer-events:none}
+.tile.back{--tsh:0 1px 0 #c9bd9c,0 2px 0 #bbae8d,0 3px 0 #ad9f7e,0 4px 0 #9f916f,0 5px 0 #91835f,0 10px 10px rgb(0 0 0 / .4);background:linear-gradient(160deg,#eadfc6,#cbbd98)}
+.tile.back::before{inset:8px 10px;border-radius:4px;border:2px solid rgb(120 90 50 / .25)}
+.tile.empty{box-shadow:none}.tile.empty::before{display:none}
+.tile.indicator{box-shadow:0 0 0 3px #ffe08a,var(--tsh),0 0 22px rgb(255 224 138 / .55)}
+.tile.sel{transform:translateY(-12px);box-shadow:0 0 0 3px var(--accent),var(--tsh),0 18px 22px rgb(0 0 0 / .35)}
+.tile.dragging{box-shadow:var(--tsh),0 22px 34px rgb(0 0 0 / .5);transform:rotate(4deg) scale(1.1)}
+.ok-rack{transform:perspective(1300px) rotateX(7deg);transform-origin:50% 100%;
+  background:linear-gradient(180deg,#9a6238,var(--wood) 38%,var(--wood-2)),repeating-linear-gradient(90deg,rgb(0 0 0 / .05) 0 2px,transparent 2px 7px);
+  box-shadow:inset 0 2px 0 rgb(255 255 255 / .16),inset 0 -8px 0 rgb(0 0 0 / .28),0 1px 0 #3e2312,0 2px 0 #38200f,0 3px 0 #321c0d,0 4px 0 #2c180b,0 5px 0 #26150a,0 24px 30px -14px #000}
+.ok-rack::after{background:linear-gradient(rgb(0 0 0 / .35),rgb(255 255 255 / .1));height:7px}
+.ok-backs i{background:linear-gradient(#efe6d0,#cdbf9d);box-shadow:0 1px 0 #b3a582,0 2px 0 #9d8f6c,0 3px 3px rgb(0 0 0 / .4)}
+.ok-disc,.ok-finish{box-shadow:inset 0 2px 8px rgb(0 0 0 / .35)}
+.ok-seat,.ok-me{box-shadow:0 8px 16px -8px rgb(0 0 0 / .6),inset 0 1px 0 rgb(255 255 255 / .08)}
+.ok-seat.turn,.ok-me.turn{box-shadow:0 0 0 2px var(--accent),0 0 22px color-mix(in srgb,var(--accent) 60%,transparent),0 8px 16px -8px rgb(0 0 0 / .6)}
+.pile-stack .tile,.disc-stack .tile{--tsh:0 1px 0 #d9cfb3,0 2px 0 #c9bd9e,0 5px 6px rgb(0 0 0 / .35)}
+.meld .tile,.res-hand .tile,.ok-stage .tile{--tsh:0 1px 0 #e0d6bb,0 2px 0 #d0c4a6,0 3px 0 #c1b494,0 6px 6px rgb(0 0 0 / .3)}
+
+/* ---------- 2048 ---------- */
+.ikibin-board{transform:perspective(1300px) rotateX(9deg);transform-origin:50% 90%;
+  box-shadow:0 1px 0 #151a24,0 2px 0 #11151e,0 3px 0 #0d1119,0 4px 0 #0a0d14,0 22px 36px -16px rgb(0 0 0 / .85),inset 0 0 0 1px color-mix(in srgb,var(--fg) 6%,transparent)}
+.ikibin-in{box-shadow:var(--t-sh,none),inset 0 2px 0 rgb(255 255 255 / .22),inset 0 -4px 0 rgb(0 0 0 / .22),0 3px 0 rgb(0 0 0 / .32),0 8px 10px -2px rgb(0 0 0 / .35)}
+.ikibin-cell{box-shadow:inset 0 2px 5px rgb(0 0 0 / .45)}
+
+/* ---------- MAYIN TARLASI ---------- */
+.mayin-board{box-shadow:0 1px 0 #151a24,0 2px 0 #11151e,0 3px 0 #0d1119,0 18px 30px -16px rgb(0 0 0 / .8)}
+.mayin-c:not(.open):not(.late):not(.boom){box-shadow:inset 2px 2px 0 rgb(255 255 255 / .22),inset -2px -3px 0 rgb(0 0 0 / .3),0 1px 0 rgb(0 0 0 / .4)}
+
+/* hareketi azalt / düz görünüm: eğimler kapanır */
+@media (prefers-reduced-motion:reduce){
+  .tv-board,.ok-rack,.ikibin-board{transform:none}
+  .tv-board-wrap{perspective:none}
+}
+html.duz .tv-board,html.duz .ok-rack,html.duz .ikibin-board{transform:none}
+html.duz .tv-board-wrap{perspective:none}
+html.duz .make-card:hover,html.duz .tcard:hover{transform:none}

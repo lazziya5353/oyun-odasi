@@ -312,3 +312,9 @@
   .room.oyun-tam .stage{padding:4px}
   .room.oyun-tam .vmp{flex:none;height:calc(100dvh - 190px);min-height:300px}
 }
+
+.nasil-tablo-sar{overflow-x:auto;margin:8px 0}
+.nasil-tablo{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+.nasil-tablo th{position:sticky;top:0;text-align:left;color:var(--muted);font-weight:600;padding:5px 7px;border-bottom:1px solid var(--line);white-space:nowrap}
+.nasil-tablo td{padding:5px 7px;border-bottom:1px solid var(--line)}
+.nasil-tablo td:first-child{white-space:nowrap;font-weight:600}

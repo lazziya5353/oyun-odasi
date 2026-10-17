@@ -70,6 +70,42 @@
       puan: 'İhaleyi alan söylediği kadar el alırsa aldığı el kadar artı, alamazsa ihale kadar eksi (battı). Diğerleri aldıkları el kadar artı yazar. Koz Maça’da: sözünü tutturan 10 × söz, tutturamayan −10 × söz.',
       ipucu: ['Eşli oyunda karşılıklı oturanlar takımdır.', 'Atabileceğin kartlar parlak, atamayacakların sönük görünür.'] },
 
+    { id: 'emlak', tur: 'masa', ikon: '🏙️', ad: 'Emlak Oyunu', kisi: '2-6 kişi · bot eklenebilir',
+      amac: 'Tapu satın alıp ev ve otel kurarak kira toplamak, diğer oyuncuları iflas ettirip ayakta kalan tek kişi olmak.',
+      adim: [
+        'Masayı aç, 2-6 kişi otursun (boş koltuğa 🤖 bot ekleyebilirsin). Herkesin kendi piyonu var: 🥯 simit, ⛴️ vapur, 🕊️ martı, 🍵 çay bardağı, 🐱 kedi, 🐟 balık. Herkes ₺1500 ile başlar; ilk oyuncu kurayla belirlenir.',
+        'Sırası gelen “🎲 Zar at” der ve iki zarın toplamı kadar tahtada ilerler (Başla\'dan sola doğru). Çift atarsan bir kez daha atarsın; üst üste 3 çift atarsan cezaevine gidersin.',
+        'Başla\'dan her geçişte bankadan ₺200 alırsın.',
+        'Sahipsiz bir tapuya gelirsen “Satın al” diyebilirsin. İstemezsen ya da paran yetmezse tapu açık artırmaya çıkar: sırayla teklif verilir ya da pas denir, en yüksek teklif alır.',
+        'Sahibi olan bir tapuya gelirsen sahibine kira ödersin. İpotekli tapudan kira alınmaz.',
+        'Aynı renkteki bütün tapular bir kişideyse o renk seti tamamlanmıştır: evsiz tapuların kirası 2 katına çıkar ve ev yapılabilir. Evler her renkte eşit yapılır (bir tapuya 2. evi yapmak için setteki hepsinde 1 ev olmalı). 4 evden sonra aynı tapuya otel kurulur. Bankada 32 ev ve 12 otel var.',
+        '❓ Şans ve 🎁 Kamu Fonu karelerine gelince bir kart çekilir; kart anında uygulanır. “Cezadan Çık” kartını saklayabilirsin.',
+        'Vergi karelerine gelirsen bankaya ödersin. “Hapse Git” karesine gelirsen doğrudan cezaevine gidersin (Başla\'dan geçmeden).',
+        'Cezaevinden çıkmak için: çift at, ₺50 öde ya da “Cezadan Çık” kartını kullan. 3 turda çift atamazsan ₺50 zorunlu ödenir. Cezaevindeyken kira toplamaya devam edersin.',
+        'Paran yetmezse: ev/otel sat (yapının yarı fiyatını alırsın) ya da tapuyu ipotek et (yarı fiyatını alırsın; ipoteği kaldırmak için %10 fazlasını ödersin). Yine de borcu ödeyemezsen iflas edersin: bütün varlığın alacaklıya (banka ise bankaya) geçer.',
+        '🤝 Takas: istediğin oyuncuya tapu, para ve “Cezadan Çık” kartı teklif edebilirsin. Karşı taraf kabul ederse takas olur. Evli setlerde önce yapıların satılması gerekir.'
+      ],
+      puan: 'Klasik oyun: herkesi iflas ettiren son oyuncu kazanır. Kısa oyun: herkes 2 tapuyla başlar, ev yapmak için 3\'lü renklerde 2 tapu yeter ve ilk iflas olduğunda oyun biter; en zengin (nakit + tapu + yapı değeri) kazanır.',
+      ipucu: ['Tahtadaki bir kareye (telefonda dokunarak) tıklayınca tapu kartı ve kira tablosu açılır.', 'Turuncu ve kırmızı renkler, çok uğranıldığı için en kârlı tapular arasındadır; istasyonları toplamak da güvenli gelir getirir.', 'Elinde nakit tut: kira ve vergiler beklenmedik gelir.', 'Telefonun ya da bilgisayarın yavaşsa üstteki “⚡ Hafif mod” ile 3 boyutlu görünümü kapatabilirsin.', 'Sıran gelince uzun süre hamle yapmazsan oyun senin yerine otomatik oynar.'],
+      tablolar: () => {
+        const C = window.EmlakCore; if (!C) return [];
+        const m = n => '₺' + n.toLocaleString('tr-TR');
+        const ad = { brown: 'Kahverengi', lblue: 'Açık mavi', pink: 'Pembe', orange: 'Turuncu', red: 'Kırmızı', yellow: 'Sarı', green: 'Yeşil', dblue: 'Koyu mavi' };
+        const sat = [];
+        Object.keys(C.GROUPS).forEach(g => C.GROUPS[g].forEach(i => { const T = C.TILES[i]; sat.push({ renk: C.GRP[g].c, c: [T.n + ' (' + ad[g] + ')', m(T.price), m(T.rent[0]), m(T.rent[1]), m(T.rent[2]), m(T.rent[3]), m(T.rent[4]), m(T.rent[5]), m(T.h)] }); }));
+        return [
+          { baslik: '🏷 Tapular: fiyat ve kiralar', bas: ['Tapu', 'Fiyat', 'Kira', '1 ev', '2 ev', '3 ev', '4 ev', 'Otel', 'Ev/otel'], sat, not: 'Renk setini tamamlayınca evsiz tapuların kirası 2 katı olur. İpotek değeri tapu fiyatının yarısıdır.' },
+          { baslik: '🚂 İstasyonlar ve 💡 şirketler', bas: ['', 'Fiyat', 'Kira'], sat: [
+            { c: ['İstasyonlar (Haydarpaşa, Sirkeci, Ankara, Basmane)', m(200), '1 istasyon ₺25 · 2 istasyon ₺50 · 3 istasyon ₺100 · 4 istasyon ₺200'] },
+            { c: ['Şirketler (Elektrik, Su)', m(150), 'Biri sendeyse zar × 4 · ikisi de sendeyse zar × 10'] }
+          ] },
+          { baslik: '💰 Maaş, vergi ve ceza', bas: ['', 'Tutar'], sat: [
+            { c: ['Başla\'dan geçiş', '+' + m(C.GO_PAY)] }, { c: ['Gelir Vergisi', m(200)] }, { c: ['Lüks Vergi', m(100)] },
+            { c: ['Cezaevinden ₺ ile çıkış', m(C.JAIL_FINE)] }, { c: ['İpotek kaldırma', 'ipotek bedeli + %10'] }, { c: ['Başlangıç parası', m(1500) + ' (masada ₺1000 / ₺2000 de seçilebilir)'] }
+          ] }
+        ];
+      } },
+
     { id: 'okey', tur: 'masa', ikon: '🀄', ad: 'Okey', kisi: '4 kişi · bot eklenebilir',
       amac: 'Bütün taşlarını per (aynı renk sıralı: 3-4-5) ya da grup (aynı sayı, farklı renk: 7-7-7) yapıp elini bitirmek.',
       adim: [
@@ -244,6 +280,21 @@
     if (x.ipucu && x.ipucu.length){
       const ip = el('div', 'nasil-kutu ipucu'); ip.append(el('b', '', '💡 İpucu'));
       const ul = el('ul'); x.ipucu.forEach(a => ul.append(el('li', '', a))); ip.append(ul); g.append(ip);
+    }
+    if (typeof x.tablolar === 'function'){
+      x.tablolar().forEach(t => {
+        const kt = el('div', 'nasil-kutu'); kt.append(el('b', '', t.baslik));
+        const sar = el('div', 'nasil-tablo-sar'); const tb = el('table', 'nasil-tablo');
+        const th = el('tr'); t.bas.forEach(h2 => th.append(el('th', '', h2))); tb.append(th);
+        t.sat.forEach(r => {
+          const tr = el('tr');
+          r.c.forEach((hc, q) => { const td = el('td', '', hc); if (q === 0 && r.renk){ td.style.borderLeft = '8px solid ' + r.renk; } tr.append(td); });
+          tb.append(tr);
+        });
+        sar.append(tb); kt.append(sar);
+        if (t.not) kt.append(el('p', 'note', t.not));
+        g.append(kt);
+      });
     }
     g.scrollTop = 0;
   }
