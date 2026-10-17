@@ -109,6 +109,13 @@ function emBuild(ui){
   ui.timerIv = setInterval(() => { if (!root.isConnected){ clearInterval(ui.timerIv); return; } emTick(ui); }, 500);
   return root;
 }
+const EM_LM_SVG = {
+  'Üsküdar': '<svg viewBox="0 0 40 40"><path d="M0 33q5-3 10 0t10 0 10 0 10 0v7H0z" fill="#3a8fd0"/><path d="M6 31q3-3 8 0l1 3H5z" fill="#8a6a4a"/><rect x="11" y="14" width="8" height="17" fill="#e9dcc0" stroke="#6b5a3e" stroke-width="1"/><path d="M9 14h12l-6-8z" fill="#c0392b"/><rect x="13.5" y="9" width="3" height="5" fill="#e9dcc0" stroke="#6b5a3e" stroke-width=".8"/><path d="M15 3v3M13.5 4.5h3" stroke="#6b5a3e" stroke-width="1.2"/><rect x="13.5" y="19" width="3" height="4" fill="#3a5a8a"/></svg>',
+  'Kadıköy': '<svg viewBox="0 0 40 40"><path d="M0 30q5-3 10 0t10 0 10 0 10 0v10H0z" fill="#3a8fd0"/><rect x="2" y="22" width="36" height="4" fill="#9a7048"/><rect x="5" y="26" width="2.5" height="9" fill="#6b4a2a"/><rect x="16" y="26" width="2.5" height="9" fill="#6b4a2a"/><rect x="28" y="26" width="2.5" height="9" fill="#6b4a2a"/><path d="M9 22V12l11-5 11 5v10z" fill="#f1e6cc" stroke="#7a5a35" stroke-width="1.2"/><rect x="14" y="14" width="4" height="8" fill="#7a5a35"/><rect x="22" y="14" width="4" height="8" fill="#7a5a35"/></svg>',
+  'Konak': '<svg viewBox="0 0 40 40"><rect x="14" y="10" width="12" height="26" fill="#e8d9b8" stroke="#6b5a3e" stroke-width="1.2"/><path d="M12 10h16l-8-8z" fill="#b8472f"/><circle cx="20" cy="19" r="4.6" fill="#fff" stroke="#3b2f1a" stroke-width="1.2"/><path d="M20 19v-3M20 19l2 1.4" stroke="#3b2f1a" stroke-width="1.2"/><path d="M17 28q3-4 6 0v8h-6z" fill="#8a6a3a"/><rect x="10" y="33" width="20" height="4" fill="#cdbb92"/></svg>'
+};
+const EM_LM = { 'Fatih': '🕌', 'Moda': '⛵', 'Caddebostan': '🏖️', 'Beşiktaş': '🦅', 'Ortaköy': '🌉', 'Bebek': '☕', 'Kızılay': '🏛️', 'Çankaya': '🏠', 'Tunalı': '🛍️', 'Alsancak': '🍻', 'Karşıyaka': '⛴️', 'Bornova': '🎓', 'Kordon': '🌅', 'Çeşme': '🏄', 'Bodrum': '🏰', 'Marmaris': '🚤', 'Fethiye': '🪂', 'Nişantaşı': '👜', 'Bağdat Caddesi': '🚗' };
+const emLandmark = n => EM_LM_SVG[n] || '<b>' + (EM_LM[n] || '🏘️') + '</b>';
 const EM_TILE_ICON = { chance: '❓', chest: '🎁', tax: '💸', rail: '🚂', jail: '⛓️', park: '🌳', gojail: '👮' };
 function emBuildTiles(ui, root){
   const box = root.querySelector('.em-tiles');
@@ -120,7 +127,7 @@ function emBuildTiles(ui, root){
     const rot = { b: 0, l: 90, t: 180, r: -90, c: 0 }[r.side];
     const inW = r.side === 'c' ? EMC : EMW, inH = EMC;
     let inner = '';
-    if (T.k === 'p') inner = '<i class="ti-band" style="background:' + EmlakCore.GRP[T.g].c + '"></i><span class="ti-name">' + emEsc(T.n) + '</span><span class="ti-sub">' + emMoney(T.price) + '</span>';
+    if (T.k === 'p') inner = '<i class="ti-band" style="background:' + EmlakCore.GRP[T.g].c + '"></i><span class="ti-lm">' + emLandmark(T.n) + '</span><span class="ti-name' + (T.n.length > 9 ? ' long' : '') + '">' + emEsc(T.n) + '</span><span class="ti-sub">' + emMoney(T.price) + '</span>';
     else if (T.k === 'rail') inner = '<span class="ti-ico">🚂</span><span class="ti-name">' + emEsc(T.n) + '</span><span class="ti-sub">' + emMoney(T.price) + '</span>';
     else if (T.k === 'util') inner = '<span class="ti-ico">' + (i === 12 ? '💡' : '🚰') + '</span><span class="ti-name">' + emEsc(T.n) + '</span><span class="ti-sub">' + emMoney(T.price) + '</span>';
     else if (T.k === 'tax') inner = '<span class="ti-ico">💸</span><span class="ti-name">' + emEsc(T.n) + '</span><span class="ti-sub">' + emMoney(T.amt) + ' öde</span>';
@@ -142,7 +149,7 @@ function emBuildMid(ui, root){
     '<div class="em-logo"><b>EMLAK</b><span>OYUNU</span><i>İstanbul · Ankara · İzmir</i></div>' +
     '<div class="em-deck sans"><i></i><i></i><i></i><b>ŞANS<br><big>?</big></b></div>' +
     '<div class="em-deck kamu"><i></i><i></i><i></i><b>KAMU<br>FONU</b></div>' +
-    '<div class="em-dice"></div>';
+    '<div class="em-dice"></div><div class="em-cturn"></div>';
   const dice = mid.querySelector('.em-dice');
   for (let k = 0; k < 2; k++){
     const cube = emEl('div', 'em-die'); cube.dataset.k = k;
@@ -196,6 +203,7 @@ function emPaint(ui){
   emPaintDice(ui);
   emPaintPlayers(ui);
   emPaintBanner(ui);
+  emPaintCenter(ui);
   emPaintActions(ui);
   emPaintTapu(ui);
   emPaintLog(ui);
@@ -321,14 +329,26 @@ function emPaintBuildings(ui){
 
 // zarlar
 function emDiceTransform(n, rz){ const f = EM_FACE[n]; return 'rotateZ(' + rz + 'deg) rotateX(' + f[0] + 'deg) rotateY(' + f[1] + 'deg)'; }
+function emDicePos(){
+  // iki zar için keçenin üstünde rastgele, birbirine değmeyen iniş noktaları
+  // alt orta bölge sıra yazısı / zar düğmesine ayrıldı
+  for (let t = 0; t < 40; t++){
+    const x0 = (Math.random() * 2 - 1) * 150, y0 = -150 + Math.random() * 175;
+    const ang = Math.random() * Math.PI * 2, dist = 78 + Math.random() * 60;
+    const x1 = x0 + Math.cos(ang) * dist, y1 = y0 + Math.sin(ang) * dist;
+    if (Math.abs(x1) <= 175 && y1 >= -165 && y1 <= 40) return [[x0, y0], [x1, y1]];
+  }
+  return [[-60, -40], [50, -70]];
+}
 function emPaintDice(ui){
   const cubes = ui.root.querySelectorAll('.em-die');
   cubes.forEach((c, k) => {
     if (c._rolling) return;
     const n = ui.dice[k] || 1;
-    if (c._n !== n){
-      c._rz = c._rz === undefined ? (k ? 14 : -11) : c._rz;
-      c.style.transform = 'translate3d(' + (k ? 38 : -38) + 'px,' + (k ? 10 : -6) + 'px,0) ' + emDiceTransform(n, c._rz); c._n = n;
+    if (c._n !== n || !c._pos){
+      if (!c._pos) c._pos = k ? [50, -70] : [-55, -95];
+      if (c._rz === undefined) c._rz = k ? 14 : -11;
+      c.style.transform = 'translate3d(' + c._pos[0] + 'px,' + c._pos[1] + 'px,0) ' + emDiceTransform(n, c._rz); c._n = n;
     }
   });
 }
@@ -336,22 +356,30 @@ function emRollDice(ui, d){
   gameSound('dice');
   const cubes = [...ui.root.querySelectorAll('.em-die')];
   ui.dice = d.slice();
+  const land = emDicePos();
+  const side = Math.floor(Math.random() * 4), sgn = side % 2 ? 1 : -1;
   return Promise.all(cubes.map((c, k) => {
     c._rolling = true;
-    const rz = Math.round(Math.random() * 40 - 20);
-    const fx = k ? 38 : -38, fy = k ? 10 : -6;
-    const sx = (k ? 1 : -1) * 260 + Math.random() * 40, sy = 180 + Math.random() * 60;
+    const rz = Math.round(Math.random() * 360 - 180);
+    const [fx, fy] = land[k];
+    // zar tahtanın bir kenarından fırlatılır, 2 kez sekip kayarak durur
+    const ex = side < 2 ? sgn * 300 : (Math.random() * 2 - 1) * 240;
+    const ey = side < 2 ? (Math.random() * 2 - 1) * 240 : sgn * 300;
+    const dx = fx - ex, dy = fy - ey;
     const f = EM_FACE[d[k]];
-    const spin = (a, n) => a + 360 * n;
+    const rnd = () => Math.random() * 360;
+    const at = (t, z, rx, ry, r) => 'translate3d(' + (ex + dx * t) + 'px,' + (ey + dy * t) + 'px,' + z + 'px) rotateZ(' + r + 'deg) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
     const kf = [
-      { transform: 'translate3d(' + sx + 'px,' + sy + 'px,150px) rotateZ(0deg) rotateX(' + (Math.random() * 90) + 'deg) rotateY(' + (Math.random() * 90) + 'deg)' },
-      { transform: 'translate3d(' + (fx + (sx - fx) * 0.35) + 'px,' + (fy + (sy - fy) * 0.35) + 'px,90px) rotateZ(' + (rz * 2) + 'deg) rotateX(' + spin(f[0], 2) + 'deg) rotateY(' + spin(f[1], 1) + 'deg)', offset: 0.55 },
-      { transform: 'translate3d(' + (fx - 10 * (k ? 1 : -1)) + 'px,' + (fy + 6) + 'px,26px) rotateZ(' + rz + 'deg) rotateX(' + spin(f[0], 2) + 'deg) rotateY(' + spin(f[1], 2) + 'deg)', offset: 0.8 },
-      { transform: 'translate3d(' + fx + 'px,' + fy + 'px,0) ' + emDiceTransform(d[k], rz) }
+      { transform: at(0, 170, rnd(), rnd(), rnd()), offset: 0 },
+      { transform: at(0.45, 0, rnd() + 360, rnd() + 360, rz + 200), offset: 0.38 },
+      { transform: at(0.7, 62, rnd() + 720, rnd() + 360, rz + 120), offset: 0.55 },
+      { transform: at(0.88, 0, f[0] + 720, f[1] + 720, rz + 40), offset: 0.74 },
+      { transform: at(0.97, 16, f[0] + 720, f[1] + 720, rz + 10), offset: 0.88 },
+      { transform: 'translate3d(' + fx + 'px,' + fy + 'px,0) ' + emDiceTransform(d[k], rz), offset: 1 }
     ];
-    c._rz = rz; c._n = d[k];
-    const an = c.animate(kf, { duration: 1050 + k * 120, easing: 'cubic-bezier(.25,.6,.35,1)', fill: 'forwards' });
-    return new Promise(res => { an.onfinish = () => { c.style.transform = kf[3].transform; an.cancel(); c._rolling = false; res(); }; });
+    c._rz = rz; c._n = d[k]; c._pos = [fx, fy];
+    const an = c.animate(kf, { duration: 1350 + k * 140, easing: 'cubic-bezier(.3,.55,.4,1)', fill: 'forwards' });
+    return new Promise(res => { an.onfinish = () => { c.style.transform = kf[5].transform; an.cancel(); c._rolling = false; res(); }; });
   }));
 }
 
@@ -609,6 +637,24 @@ function emPaintBanner(ui){
     };
   }
   emTick(ui);
+}
+
+// tahtanın ortasındaki "sıra kimde" yazısı ve zar atma düğmesi
+function emPaintCenter(ui){
+  const v = ui.v, box = ui.root.querySelector('.em-cturn');
+  if (!box) return;
+  const act = EmlakCore.actor(v), mine = ui.seat >= 0 && act === ui.seat;
+  const canRoll = !ui.busy && mine && v.phase === 'roll';
+  const sig = [v.phase, act, canRoll, v.again, ui.busy, emName(ui, act)].join('|');
+  if (box._sig === sig) return;
+  box._sig = sig;
+  if (v.phase === 'over'){ box.innerHTML = '<div class="ct-pill">🏆 Oyun bitti</div>'; return; }
+  const col = emColor(act);
+  const who = mine ? 'Sıra sende' : 'Sıra ' + emEsc(emName(ui, act)) + '\'de';
+  box.innerHTML = '<div class="ct-pill" style="--pc:' + col + '"><i></i>' + who + '</div>' +
+    (canRoll ? '<button type="button" class="ct-roll">🎲 ' + (v.again ? 'Tekrar at' : 'Zar at') + '</button>' : '');
+  const b = box.querySelector('.ct-roll');
+  if (b) b.onclick = () => { if (ui.busy) return; emAct({ type: 'roll' }); };
 }
 
 // tapu kartı
