@@ -1,0 +1,109 @@
+/* ===== Kızma Panpi (kz- önekli) ===== */
+.kz{position:relative;display:grid;grid-template-columns:250px minmax(0,1fr);grid-template-areas:"left center";gap:14px;width:100%;flex:1;min-height:0;align-items:start;user-select:none;-webkit-user-select:none;height:var(--kzh,auto);max-height:var(--kzh,none);overflow:hidden}
+.kz-left{grid-area:left;min-width:0;display:flex;flex-direction:column;gap:12px;max-height:100%;min-height:0}
+.kz-center{grid-area:center;min-width:0;display:flex;flex-direction:column;gap:10px;max-height:100%}
+.kz-players{display:flex;flex-direction:column;gap:9px}
+.kz-pl{--pc:#888;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;padding:9px 11px;border-radius:14px;background:var(--panel);border:1px solid var(--line);position:relative;transition:box-shadow .2s,transform .2s}
+.kz-pl.turn{box-shadow:0 0 0 2px var(--pc),0 0 22px color-mix(in srgb,var(--pc) 45%,transparent);transform:translateX(3px)}
+.kz-pl-av{width:30px;height:42px;grid-row:span 2}
+.kz-pl-av .kz-svg{width:100%;height:100%}
+.kz-pl-nm{display:flex;flex-direction:column;min-width:0}
+.kz-pl-nm b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.kz-pl-nm small,.kz-pl-st small{color:var(--muted);font-size:11.5px}
+.kz-pl-st{display:flex;flex-direction:column;gap:3px}
+.kz-pl-st .dots{display:flex;gap:5px}
+.kz-pl-st .dots i{width:11px;height:11px;border-radius:50%;border:2px solid var(--cc);box-sizing:border-box}
+.kz-pl-st .dots i.h{background:var(--cc)}
+.kz-pl-st .dots i.r{background:color-mix(in srgb,var(--cc) 45%,transparent)}
+.kz-log{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto;min-height:0;flex:1 1 auto;max-height:300px}
+.kz-log-h{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.kz-ll{font-size:13px;line-height:1.35;border-left:2px solid var(--line);padding-left:8px}
+.kz-banner{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:12px;background:var(--panel);border:1px solid var(--line);min-height:44px;flex-wrap:wrap}
+.kz-turn{font-size:15px}
+.kz-timer{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+.kz-timer.warn{color:var(--danger,#ff6b6b);font-weight:700}
+.kz-bsp{flex:1}
+.kz-lite-btn{border:1px solid var(--line);background:var(--panel-2);color:var(--fg);border-radius:99px;padding:5px 12px;font-size:12.5px;cursor:pointer}
+
+/* tahta */
+.kz-fit{position:relative;width:100%;overflow:hidden;touch-action:manipulation}
+.kz-scaler{position:absolute;left:0;top:0;transform-origin:0 0}
+.kz-stage{width:704px;height:704px;perspective:2400px;perspective-origin:50% 50%}
+.kz-board{position:relative;width:704px;height:704px;transform-style:preserve-3d;transform:rotateX(var(--tilt,40deg));transform-origin:50% 50%;
+  background:radial-gradient(circle at 50% 45%,#f6ecd0,#e7d7aa 70%,#d8c58f);border-radius:10px;box-shadow:0 0 0 12px #6a4424,0 0 0 15px #2f1b0c}
+.kz.lite .kz-board{box-shadow:0 0 0 9px #6a4424,0 0 0 11px #2f1b0c}
+.kz-board::before{content:"";position:absolute;inset:-15px;border-radius:16px;background:linear-gradient(135deg,#9a6a38,#5b3718 55%,#7d5428);transform:translateZ(-2px)}
+.kz-slab{position:absolute;left:-15px;top:719px;width:734px;height:30px;transform-origin:50% 0;transform:rotateX(-90deg);background:linear-gradient(#5b3718,#24140a);border-radius:0 0 8px 8px;box-shadow:inset 0 2px 0 rgb(255 255 255 / .18)}
+.kz.lite .kz-slab{display:none}
+.kz-board::after{content:"";position:absolute;left:30px;right:30px;top:40px;bottom:-100px;background:rgb(0 0 0 / .45);filter:blur(30px);transform:translateZ(-60px);border-radius:40px;z-index:-1}
+.kz.lite .kz-board::after{display:none}
+.kz-cells,.kz-stand{position:absolute;left:0;top:0;width:704px;height:704px}
+.kz-stand{transform-style:preserve-3d;transform:translateZ(1px);pointer-events:none}
+.kc{position:absolute;width:64px;height:64px;box-sizing:border-box;padding:7px}
+.kc::before{content:"";display:block;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#efe6cb);box-shadow:inset 0 -3px 5px rgb(0 0 0 / .18),0 1px 2px rgb(0 0 0 / .4)}
+.kc.start::before{background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--cc) 45%,#fff),var(--cc));box-shadow:inset 0 -3px 5px rgb(0 0 0 / .3),0 1px 2px rgb(0 0 0 / .5)}
+.kc.lane::before{background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--cc) 40%,#fff),var(--cc));box-shadow:inset 0 -3px 5px rgb(0 0 0 / .3),0 1px 2px rgb(0 0 0 / .5)}
+.kz-house{position:absolute;border-radius:50%;background:radial-gradient(circle at 40% 35%,color-mix(in srgb,var(--cc) 55%,#fff),var(--cc) 70%);box-shadow:inset 0 -6px 12px rgb(0 0 0 / .3),0 2px 4px rgb(0 0 0 / .4);border-radius:26px}
+.kz-nest{position:absolute;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgb(0 0 0 / .32),rgb(0 0 0 / .14));box-shadow:inset 0 3px 6px rgb(0 0 0 / .5),0 1px 0 rgb(255 255 255 / .3)}
+.kz-hub{position:absolute;display:grid;place-items:center}
+.kz-hub svg{position:absolute;inset:0;width:100%;height:100%}
+.kz-hubd{position:relative;display:grid;place-items:center;width:62px;height:62px;border-radius:50%;background:#fff;color:#222;font:900 38px/1 var(--display);box-shadow:0 3px 8px rgb(0 0 0 / .5);font-style:normal}.kz-hubd:empty{display:none}
+
+/* taşlar (zeminde yer değiştirir, kendisi ayakta durur) */
+.kz-pawn{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;pointer-events:none;will-change:transform}
+.kz-lift{position:absolute;left:0;top:0;transform-style:preserve-3d}
+.kz-in{position:absolute;left:-19px;top:-58px;width:38px;height:55px;transform-origin:50% 100%;transform:rotateX(calc(var(--tilt,40deg) * -1));filter:drop-shadow(0 3px 2px rgb(0 0 0 / .35))}
+.kz-svg{width:100%;height:100%;display:block;overflow:visible}
+.kz-ring{display:none;position:absolute;left:-26px;top:-26px;width:52px;height:52px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 14px 4px rgb(255 255 255 / .8);animation:kz-pulse 1s ease-in-out infinite}
+.kz-pawn.can{pointer-events:auto;cursor:pointer}
+.kz-pawn.can .kz-ring{display:block}
+.kz-pawn.can .kz-in{animation:kz-bob .9s ease-in-out infinite}
+@keyframes kz-pulse{50%{transform:scale(1.15);opacity:.7}}
+@keyframes kz-bob{50%{translate:0 -6px}}
+
+/* zar tepsisi + eylem */
+.kz-actions{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px 14px;display:flex;gap:16px;align-items:center}
+.kz-tray{position:relative;flex:none;width:200px;height:112px;border-radius:14px;background:radial-gradient(ellipse at 50% 40%,#2c7a5c,#1a5340 75%,#134031);box-shadow:inset 0 0 0 4px #0e2f24,inset 0 0 26px rgb(0 0 0 / .55);perspective:520px;overflow:hidden}
+.kz-shadow{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgb(0 0 0 / .6);filter:blur(8px);opacity:0}
+.kz-die{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;transform-style:preserve-3d;opacity:.35}
+.kz-die .f{position:absolute;inset:0;border-radius:9px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:7px;background:linear-gradient(145deg,#fff,#e3dfd2);box-shadow:inset 0 0 7px rgb(0 0 0 / .22)}
+.kz-die .f i{display:block;margin:auto;width:8px;height:8px;border-radius:50%}
+.kz-die .f i.on{background:radial-gradient(circle at 35% 30%,#555,#0c0c0c)}
+.kz-die .f1{transform:translateZ(25px)}
+.kz-die .f6{transform:rotateY(180deg) translateZ(25px)}
+.kz-die .f3{transform:rotateY(90deg) translateZ(25px)}
+.kz-die .f4{transform:rotateY(-90deg) translateZ(25px)}
+.kz-die .f2{transform:rotateX(90deg) translateZ(25px)}
+.kz-die .f5{transform:rotateX(-90deg) translateZ(25px)}
+.kz-die .f1 i.on{background:radial-gradient(circle at 35% 30%,#ff5a4a,#a3170e);width:12px;height:12px}
+.kz-ctl{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.kz-msg{font-size:14.5px;line-height:1.4}
+.kz-roll{cursor:pointer;border:0;border-radius:99px;padding:13px 38px;font:900 24px/1 var(--display);color:#fff;text-shadow:0 2px 0 rgb(120 50 0 / .7);background:linear-gradient(#ff9a3c,#e8610a);box-shadow:0 7px 0 #9a3d00,0 12px 22px rgb(0 0 0 / .45);animation:kz-rpulse 1.3s ease-in-out infinite}
+.kz-roll:active{transform:translateY(4px);box-shadow:0 3px 0 #9a3d00}
+@keyframes kz-rpulse{50%{filter:brightness(1.12)}}
+.kz.busy .kz-roll{display:none}
+
+/* efekt ve bitiş */
+.kz-fx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:30}
+.kz-float{position:absolute;left:50%;top:38%;font:800 20px/1 var(--display);padding:6px 14px;border-radius:99px;background:rgb(10 14 20 / .85);border:2px solid var(--pc,#fff);white-space:nowrap;opacity:0}
+.kz-float.good{color:#7ff0b8}
+.kz-float.bad{color:#ff9d9d}
+.kz-over{position:absolute;inset:0;z-index:40;display:grid;place-items:center;background:rgb(5 8 12 / .6)}
+.kz-over[hidden]{display:none}
+.kz-over-card{background:var(--panel);border:3px solid var(--pc);border-radius:20px;padding:22px 30px;text-align:center;box-shadow:0 20px 60px rgb(0 0 0 / .6);display:flex;flex-direction:column;gap:8px;align-items:center}
+.kz-over-av{width:56px;height:80px}
+.kz-over-card h3{margin:0;font-size:24px}
+.kz-over-b{display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap;justify-content:center}
+
+@media (max-width:900px){
+  .kz{align-content:start;grid-template-columns:minmax(0,1fr);grid-template-areas:"left" "center";gap:8px;height:auto;max-height:none;overflow:visible}
+  .kz-players{flex-direction:row;overflow-x:auto;padding-bottom:6px}
+  .kz-pl{min-width:170px;flex:none;grid-template-columns:auto 1fr}
+  .kz-pl.turn{transform:none}
+  .kz-pl-st{display:none}
+  .kz-log{display:none}
+  .kz-actions{position:sticky;bottom:0;z-index:5;box-shadow:0 -12px 26px rgb(0 0 0 / .55);padding:8px 10px;gap:10px}
+  .kz-tray{width:132px;height:96px}
+  .kz-roll{padding:12px 24px;font-size:20px}
+}
+@media (prefers-reduced-motion:reduce){.kz-roll,.kz-pawn.can .kz-in,.kz-ring{animation:none}}

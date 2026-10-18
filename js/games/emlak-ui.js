@@ -177,13 +177,22 @@ function emFit(ui){
   const center = root.querySelector('.em-center');
   const w = center.clientWidth || 600;
   const deck = root.closest('.deck') || root.parentElement;
+  const shell = root.closest('.game-shell');
   const dh = deck ? deck.clientHeight : 800;
-  const banner = root.querySelector('.em-banner').offsetHeight, act = root.querySelector('.em-actions').offsetHeight;
+  const barH = shell && shell.querySelector('.gs-bar') ? shell.querySelector('.gs-bar').offsetHeight + 10 : 0;
+  const emh = Math.max(420, dh - barH - 4);
+  root.style.setProperty('--emh', narrow ? 'auto' : emh + 'px');
+  const banner = root.querySelector('.em-banner').offsetHeight;
+  // eylem paneli yüksekliği değişse de tahta zıplamasın: görülen en büyük yüksekliği (en çok 230) ayırıyoruz
+  const actNow = root.querySelector('.em-actions').offsetHeight;
+  if (!ui.actMax || ui.actW !== w) ui.actMax = 0;
+  ui.actW = w; ui.actMax = Math.min(230, Math.max(ui.actMax, actNow, 120));
+  const act = ui.actMax;
   const rad = tilt * Math.PI / 180, cs = Math.cos(rad), sn = Math.sin(rad), PP = 2800;
   const far = 450 * cs * (PP / (PP + 450 * sn)), near = 450 * cs * (PP / (PP - 450 * sn));
   const topV = ui.lite ? 0 : 450 - far - 78, botV = ui.lite ? EMB : 450 + near + 46;
   const extX = ui.lite ? EMB + 30 : EMB * (PP / (PP - 450 * sn)) + 30;
-  let availH = narrow ? 99999 : dh - banner - act - 44;
+  let availH = narrow ? 99999 : emh - banner - act - 30;
   availH = Math.max(300, availH);
   const s = Math.max(0.28, Math.min(w / extX, availH / (botV - topV), 1.3));
   fit.style.height = Math.round((botV - topV) * s) + 'px';
@@ -749,13 +758,11 @@ function emPaintActions(ui){
   const pos = P.pos, t = T[pos];
   if (v.phase === 'roll'){
     if (P.j){
-      msg.innerHTML = '⛓ Cezaevindesin (' + P.j + '/3). Çift at, ya da ' + emMoney(EmlakCore.JAIL_FINE) + ' öde' + (P.jcs.length ? ' / kartını kullan' : '') + '.';
-      main.append(emBtn('🎲 Zar at', 'primary big', () => emAct({ type: 'roll' })));
+      msg.innerHTML = '⛓ Cezaevindesin (' + P.j + '/3). Ortadaki ZAR AT ile çift atmayı dene, ya da ' + emMoney(EmlakCore.JAIL_FINE) + ' öde' + (P.jcs.length ? ' / kartını kullan' : '') + '.';
       main.append(emBtn('₺' + EmlakCore.JAIL_FINE + ' öde', '', () => emAct({ type: 'payjail' }), P.m < EmlakCore.JAIL_FINE));
       if (P.jcs.length) main.append(emBtn('🔑 Kartı kullan', '', () => emAct({ type: 'usecard' })));
     } else {
-      msg.innerHTML = v.again ? '<b>Çift attın!</b> Tekrar zar at.' : 'Sıra sende. Zar at!';
-      main.append(emBtn('🎲 Zar at', 'primary big', () => emAct({ type: 'roll' })));
+      msg.innerHTML = v.again ? '<b>Çift attın!</b> Tahtanın ortasındaki ZAR AT\'a bas.' : 'Sıra sende. Tahtanın ortasındaki <b>ZAR AT</b>\'a bas.';
     }
   } else if (v.phase === 'buy'){
     msg.innerHTML = '<b>' + emEsc(t.n) + '</b> sahipsiz · ' + emMoney(t.price) + (T[pos].g ? ' · ' + EmlakCore.GRP[t.g].n + ' seri' : '');

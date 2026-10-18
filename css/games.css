@@ -303,7 +303,10 @@
 /* ---------- ⛶ Oyun tam ekran ---------- */
 .tam-btn.on{border-color:var(--accent)}
 .room.oyun-tam .top,.room.oyun-tam .chan-panel,.room.oyun-tam .chat,.room.oyun-tam .people-area{display:none!important}
-.room.oyun-tam{grid-template-rows:minmax(0,1fr) auto}
+.room.oyun-tam{grid-template-rows:minmax(0,1fr)}
+/* tam ekranda alttaki mikrofon / ses çubuğu gizlenir; ekranın en altına fare götürülünce çıkar */
+.room.oyun-tam .bar{position:fixed;left:0;right:0;bottom:0;z-index:60;transform:translateY(calc(100% - 5px));transition:transform .2s;box-shadow:0 -10px 30px rgb(0 0 0 / .5)}
+.room.oyun-tam .bar:hover,.room.oyun-tam .bar:focus-within{transform:none}
 .room.oyun-tam .layout{grid-template-columns:minmax(0,1fr)}
 .room.oyun-tam .stage{padding:6px 8px;grid-template-columns:minmax(0,1fr)}
 .room.oyun-tam .deck{max-width:none}

@@ -106,6 +106,23 @@
         ];
       } },
 
+    { id: 'kizma', tur: 'masa', ikon: '🎲', ad: 'Kızma Panpi', kisi: '2-4 kişi · bot eklenebilir',
+      amac: 'Dört taşını da tahtayı bir tur dolaştırıp kendi rengindeki eve sokan ilk oyuncu olmak.',
+      adim: [
+        'Masayı aç, 2-4 kişi otursun (boş koltuğa 🤖 bot ekleyebilirsin). Herkesin bir rengi ve 4 taşı var; taşlar köşedeki kendi evinde başlar. Başlayan kurayla belirlenir.',
+        'Sıran gelince tahtanın altındaki turuncu “🎲 ZAR AT” düğmesine basarsın.',
+        'Taşını oyuna sokmak için 6 atmalısın. 6 gelince bir taşını evinden çıkarıp kendi renginde olan başlangıç karesine koyarsın.',
+        'Hiç taşın oyunda değilken (hepsi evdeyse) üst üste 3 kez zar atma hakkın var; 6 gelirse taşını çıkarırsın.',
+        'Oyundaki taşını zar kadar ilerletirsin: parlayan taşlardan birine dokun. Yalnız bir taşın oynayabiliyorsa oyun onu kendiliğinden oynatır. Taşlar saat yönünde ilerler.',
+        '6 attığında hamleni yaptıktan sonra bir kez daha zar atarsın.',
+        'Rakibin taşının bulunduğu kareye gelirsen o taşı vurursun: taş kendi evine geri döner ve yeniden 6 beklemesi gerekir. Kendi taşının üstüne gelemezsin.',
+        'Zorunlu kurallar: başlangıç karen kendi taşınla doluysa ve evinde bekleyen taş varsa önce o taşı oynatmalısın. 6 atınca ve evinde taş varsa taş çıkarmak zorundasın.',
+        'Bir tur dolaştıktan sonra taşın kendi rengindeki 4 kareli eve girer. Eve tam zarla girilir: fazla gelirse o taş oynayamaz. Taşlar evin en dibinden başlayarak dolar.',
+        'Dört taşını da eve sokan oyunu kazanır.'
+      ],
+      puan: 'Puan yok: ilk bitiren kazanır.',
+      ipucu: ['Rakibin taşına 1-6 kare yakınsan vurulma ihtimalin vardır; mümkünse taşını güvenli yere çek.', 'Zar tepsisindeki zar her atışta farklı yere düşer; atış sonucu tahtanın ortasında da görünür.', 'Telefonun yavaşsa üstteki “⚡ Hafif mod” ile 3 boyutlu görünümü kapatabilirsin.', 'Sıran gelince 60 saniye hamle yapmazsan oyun senin yerine oynar.'] },
+
     { id: 'okey', tur: 'masa', ikon: '🀄', ad: 'Okey', kisi: '4 kişi · bot eklenebilir',
       amac: 'Bütün taşlarını per (aynı renk sıralı: 3-4-5) ya da grup (aynı sayı, farklı renk: 7-7-7) yapıp elini bitirmek.',
       adim: [

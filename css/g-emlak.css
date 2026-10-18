@@ -1,5 +1,5 @@
 /* ===== Emlak Oyunu (em- önekli): 3 boyutlu tahta, piyonlar, paneller ===== */
-.em{position:relative;display:grid;grid-template-columns:236px minmax(0,1fr) 292px;grid-template-areas:"left center right";gap:14px;width:100%;flex:1;min-height:0;align-items:start;user-select:none;-webkit-user-select:none}
+.em{position:relative;display:grid;grid-template-columns:236px minmax(0,1fr) 292px;grid-template-areas:"left center right";gap:14px;width:100%;flex:1;min-height:0;align-items:start;user-select:none;-webkit-user-select:none;height:var(--emh,auto);max-height:var(--emh,none);overflow:hidden}
 .em-left{grid-area:left;min-width:0}
 .em-center{grid-area:center;min-width:0;display:flex;flex-direction:column;gap:10px}
 .em-right{grid-area:right;display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -152,7 +152,7 @@
 .tapu.plain .tp-note{margin:4px 2px;font-size:13px;line-height:1.4}
 
 /* günlük */
-.em-log{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto}
+.em-log{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto;min-height:0}
 .em-log-h{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .em-ll{font-size:13px;line-height:1.35;padding-left:10px;border-left:3px solid var(--line)}
 .em-ll:first-of-type{border-left-color:var(--accent)}
@@ -236,3 +236,11 @@
 @media (prefers-reduced-motion:reduce){.ct-roll{animation:none}}
 .ti-name.long{font-size:9.2px;letter-spacing:0}
 .ct-roll.wait{pointer-events:none;animation:none;opacity:.85;padding:10px 32px;font-size:22px;box-shadow:0 5px 0 #9a3d00,0 10px 18px rgb(0 0 0 / .45)}
+
+/* geniş ekranda yan sütunlar sayfayı uzatmasın */
+@media (min-width:1061px){
+  .em-left{max-height:100%;overflow:auto}
+  .em-right{max-height:100%;min-height:0}
+  .em-right .em-log{flex:1 1 auto;max-height:none}
+  .em-center{max-height:100%}
+}
