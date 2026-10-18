@@ -114,10 +114,11 @@ function kzBuildBoard(root){
   KZ_RING.forEach((c, i) => { const k = i % 10 === 0 ? i / 10 : -1; put(c[0], c[1], 'ring' + (k >= 0 ? ' start' : ''), k >= 0 ? KZ_COL[k][0] : ''); });
   KZ_LANE.forEach((l, k) => l.forEach(c => put(c[0], c[1], 'lane', KZ_COL[k][0])));
   // ok işaretleri: başlangıç karelerinin yönü
-  const hub = kzEl('div', 'kz-hub'); hub.style.cssText = 'left:' + 4 * KZC + 'px;top:' + 4 * KZC + 'px;width:' + 3 * KZC + 'px;height:' + 3 * KZC + 'px';
+  // orta göbek: yalnızca ortadaki tek kare (çevresindeki oynanan karelerin üstünü kapatmaz)
+  const hub = kzEl('div', 'kz-hub'); hub.style.cssText = 'left:' + 5 * KZC + 'px;top:' + 5 * KZC + 'px;width:' + KZC + 'px;height:' + KZC + 'px';
   hub.innerHTML = '<svg viewBox="0 0 3 3"><polygon points="0,0 3,0 1.5,1.5" fill="' + KZ_COL[1][0] + '"/><polygon points="3,0 3,3 1.5,1.5" fill="' + KZ_COL[2][0] + '"/><polygon points="0,3 3,3 1.5,1.5" fill="' + KZ_COL[3][0] + '"/><polygon points="0,0 0,3 1.5,1.5" fill="' + KZ_COL[0][0] + '"/>' +
-    '<polygon points="0,0 3,0 3,3 0,3" fill="none" stroke="rgb(0 0 0 / .25)" stroke-width=".04"/></svg><b class="kz-hubd"></b>';
-  box.append(hub);
+    '<polygon points="0,0 3,0 3,3 0,3" fill="none" stroke="rgb(0 0 0 / .25)" stroke-width=".06"/></svg><b class="kz-hubd"></b>';
+  box.prepend(hub);
 }
 
 // ================== sığdırma ==================
@@ -182,6 +183,8 @@ function kzPawnEl(ui, k, i, create){
     el = kzEl('div', 'kz-pawn'); el.dataset.k = k + '-' + i; el.dataset.s = k; el.dataset.i = i;
     el.innerHTML = '<div class="kz-lift"><div class="kz-in">' + kzPawnSvg(k) + '</div></div><i class="kz-ring"></i>';
     el.onclick = () => kzPawnClick(ui, k, i);
+    el.onmouseenter = () => { if (el.classList.contains('can')) kzShowDest(ui, k, i); };
+    el.onmouseleave = () => { if (ui.pick !== i) kzShowDest(ui, -1); };
     stand.append(el); el._fresh = true;
   }
   return el;
@@ -189,11 +192,30 @@ function kzPawnEl(ui, k, i, create){
 function kzPawnClick(ui, k, i){
   const v = ui.v;
   if (ui.busy || ui.seat !== k || v.turn !== k || v.phase !== 'move' || !v.legal.includes(i)) return;
+  // dokunmatik ekranda ilk dokunuş nereye gideceğini gösterir, ikinci dokunuş oynatır
+  const touch = window.matchMedia('(hover:none)').matches;
+  if (touch && ui.pick !== i){ ui.pick = i; kzShowDest(ui, k, i); return; }
+  ui.pick = null; kzShowDest(ui, -1);
   tableAct({ type: 'move', pw: i });
+}
+// seçilen taşın zarla gideceği kareyi işaretle
+function kzShowDest(ui, k, i){
+  const stand = ui.root.querySelector('.kz-stand');
+  let m = stand.querySelector('.kz-dest');
+  if (k < 0 || ui.v.phase !== 'move' || ui.v.turn !== k){ if (m) m.remove(); stand.querySelectorAll('.kz-pawn.pick').forEach(e => e.classList.remove('pick')); return; }
+  const p = ui.v.P[k].pw[i], d = ui.v.d, to = p === -1 ? 0 : p + d;
+  const t = kzXY(k, to, i);
+  if (!m){ m = kzEl('div', 'kz-dest'); stand.append(m); }
+  m.style.transform = 'translate3d(' + t.x + 'px,' + t.y + 'px,3px)';
+  m.style.setProperty('--dc', KZ_COL[k][0]);
+  m.innerHTML = '<i></i><b>' + (to >= 40 ? '🏠' : p === -1 ? '▶' : '+' + d) + '</b>';
+  stand.querySelectorAll('.kz-pawn.pick').forEach(e => e.classList.remove('pick'));
+  const el = kzPawnEl(ui, k, i); if (el) el.classList.add('pick');
 }
 function kzPaintPawns(ui){
   const v = ui.v, vis = ui.vis;
   const myMove = !ui.busy && ui.seat >= 0 && v.turn === ui.seat && v.phase === 'move';
+  if (!myMove && (ui.pick != null || ui.root.querySelector('.kz-dest'))){ ui.pick = null; kzShowDest(ui, -1); }
   for (let k = 0; k < 4; k++){
     if (!v.P[k].on){ ui.root.querySelectorAll('.kz-pawn[data-s="' + k + '"]').forEach(e => e.remove()); continue; }
     for (let i = 0; i < 4; i++){
@@ -411,7 +433,7 @@ function kzPaintActions(ui){
     b.onclick = () => { if (ui.busy) return; tableAct({ type: 'roll' }); };
     btns.append(b);
   } else {
-    msg.innerHTML = '<b>' + v.d + '</b> attın. Parlayan taşlardan birine dokun' + (v.legal.length === 1 ? ' (tek hamle var)' : '') + '.';
+    msg.innerHTML = '<b>' + v.d + '</b> attın. Hangi taşı oynatacağını sen seç: parlayan bir taşın üstüne gel (telefonda bir kez dokun), gideceği kare görünür; oynatmak için tıkla' + (window.matchMedia('(hover:none)').matches ? ' (ikinci dokunuş)' : '') + '.';
   }
   void canRoll;
 }

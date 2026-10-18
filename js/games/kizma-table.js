@@ -52,8 +52,10 @@
         });
         return;
       }
-      // insan: tek hamle varsa kendiliğinden oynanır (animasyon bitince)
-      if (g.phase === 'move' && g.legal.length === 1){
+      // insan: yalnızca oyunda tek taşı varken ve tek hamle varken kendiliğinden oynanır;
+      // iki ya da daha fazla taşı oyundayken hangisini oynayacağını kendisi seçer
+      const onBoard = g.P[seat].pw.filter(p => p >= 0 && p < 40).length;
+      if (g.phase === 'move' && g.legal.length === 1 && onBoard <= 1){
         later(o, 700 + Math.min(4000, g.ms || 0), () => {
           if (g.eid + ':' + g.phase !== key || g.phase === 'over') return;
           doAct(o, seat, { type: 'move', pw: g.legal[0] });

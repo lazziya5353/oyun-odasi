@@ -34,7 +34,8 @@ function newGame(opts, active, seed){
   return s;
 }
 
-// bu zar değeriyle hangi taşlar oynayabilir (zorunlu kurallar dahil)
+// bu zar değeriyle hangi taşlar oynayabilir. Hangisini oynayacağını oyuncu seçer
+// (6 gelince taş çıkarmak ya da başlangıç karesini boşaltmak zorunlu değil).
 function movesFor(s, seat, d){
   const P = s.P[seat], pw = P.pw;
   const out = [];
@@ -45,16 +46,6 @@ function movesFor(s, seat, d){
     else { np = p + d; if (np > 43) continue; }
     if (pw.some((q, j) => j !== i && q === np)) continue;   // kendi taşının üstüne konamaz
     out.push(i);
-  }
-  if (!out.length) return out;
-  const hasBase = pw.some(p => p === -1);
-  const startI = pw.indexOf(0);
-  // başlangıç karesi dolu ve evde taş varsa önce o taş yürür
-  if (hasBase && startI >= 0 && out.includes(startI)) return [startI];
-  // 6 atınca ve evde taş varsa taş çıkarmak zorunlu
-  if (d === 6 && hasBase){
-    const outs = out.filter(i => pw[i] === -1);
-    if (outs.length) return [outs[0]];
   }
   return out;
 }

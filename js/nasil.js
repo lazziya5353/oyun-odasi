@@ -113,10 +113,10 @@
         'Sıran gelince tahtanın altındaki turuncu “🎲 ZAR AT” düğmesine basarsın.',
         'Taşını oyuna sokmak için 6 atmalısın. 6 gelince bir taşını evinden çıkarıp kendi renginde olan başlangıç karesine koyarsın.',
         'Hiç taşın oyunda değilken (hepsi evdeyse) üst üste 3 kez zar atma hakkın var; 6 gelirse taşını çıkarırsın.',
-        'Oyundaki taşını zar kadar ilerletirsin: parlayan taşlardan birine dokun. Yalnız bir taşın oynayabiliyorsa oyun onu kendiliğinden oynatır. Taşlar saat yönünde ilerler.',
+        'Oyundaki taşını zar kadar ilerletirsin. Hangi taşı oynatacağını sen seçersin: parlayan bir taşın üstüne gelince (telefonda bir kez dokununca) gideceği kare işaretlenir, tıklayınca (telefonda ikinci dokunuşta) oynar. Oyunda tek taşın varsa ve başka hamle yoksa o taş kendiliğinden oynar. Taşlar saat yönünde ilerler.',
         '6 attığında hamleni yaptıktan sonra bir kez daha zar atarsın.',
         'Rakibin taşının bulunduğu kareye gelirsen o taşı vurursun: taş kendi evine geri döner ve yeniden 6 beklemesi gerekir. Kendi taşının üstüne gelemezsin.',
-        'Zorunlu kurallar: başlangıç karen kendi taşınla doluysa ve evinde bekleyen taş varsa önce o taşı oynatmalısın. 6 atınca ve evinde taş varsa taş çıkarmak zorundasın.',
+        '6 attığında yeni taş çıkarmak ya da oyundaki bir taşını ilerletmek senin seçimin. Kendi taşının üstüne gelemezsin; başlangıç karende kendi taşın duruyorsa yeni taş çıkaramazsın.',
         'Bir tur dolaştıktan sonra taşın kendi rengindeki 4 kareli eve girer. Eve tam zarla girilir: fazla gelirse o taş oynayamaz. Taşlar evin en dibinden başlayarak dolar.',
         'Dört taşını da eve sokan oyunu kazanır.'
       ],

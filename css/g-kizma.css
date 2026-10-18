@@ -45,9 +45,9 @@
 .kc.lane::before{background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--cc) 40%,#fff),var(--cc));box-shadow:inset 0 -3px 5px rgb(0 0 0 / .3),0 1px 2px rgb(0 0 0 / .5)}
 .kz-house{position:absolute;border-radius:50%;background:radial-gradient(circle at 40% 35%,color-mix(in srgb,var(--cc) 55%,#fff),var(--cc) 70%);box-shadow:inset 0 -6px 12px rgb(0 0 0 / .3),0 2px 4px rgb(0 0 0 / .4);border-radius:26px}
 .kz-nest{position:absolute;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgb(0 0 0 / .32),rgb(0 0 0 / .14));box-shadow:inset 0 3px 6px rgb(0 0 0 / .5),0 1px 0 rgb(255 255 255 / .3)}
-.kz-hub{position:absolute;display:grid;place-items:center}
+.kz-hub{position:absolute;display:grid;place-items:center;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgb(0 0 0 / .35)}
 .kz-hub svg{position:absolute;inset:0;width:100%;height:100%}
-.kz-hubd{position:relative;display:grid;place-items:center;width:62px;height:62px;border-radius:50%;background:#fff;color:#222;font:900 38px/1 var(--display);box-shadow:0 3px 8px rgb(0 0 0 / .5);font-style:normal}.kz-hubd:empty{display:none}
+.kz-hubd{position:relative;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#fff;color:#222;font:900 22px/1 var(--display);box-shadow:0 3px 8px rgb(0 0 0 / .5);font-style:normal}.kz-hubd:empty{display:none}
 
 /* taşlar (zeminde yer değiştirir, kendisi ayakta durur) */
 .kz-pawn{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;pointer-events:none;will-change:transform}
@@ -109,3 +109,10 @@
 @media (prefers-reduced-motion:reduce){.kz-roll,.kz-pawn.can .kz-in,.kz-ring{animation:none}}
 .kz.cmp{grid-template-columns:205px minmax(0,1fr)}
 .kz.cmp .kz-pl{padding:8px 9px}
+
+/* seçilen taşın gideceği kare */
+.kz-dest{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:2000;transform-style:preserve-3d}
+.kz-dest i{position:absolute;left:-27px;top:-27px;width:54px;height:54px;border-radius:50%;border:4px dashed var(--dc,#fff);background:color-mix(in srgb,var(--dc,#fff) 30%,transparent);box-shadow:0 0 16px var(--dc,#fff);animation:kz-pulse 1s ease-in-out infinite}
+.kz-dest b{position:absolute;left:50%;top:-58px;transform:translateX(-50%) rotateX(calc(var(--tilt,40deg) * -1));padding:3px 8px;border-radius:99px;background:var(--dc,#333);color:#fff;font:800 15px/1 var(--display);white-space:nowrap;box-shadow:0 3px 8px rgb(0 0 0 / .45)}
+.kz-pawn.pick .kz-ring{border-color:#ffe27a;box-shadow:0 0 18px 6px rgb(255 226 122 / .9)}
+.kz-cells,.kz-cells *{pointer-events:none}
