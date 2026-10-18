@@ -244,3 +244,8 @@
   .em-right .em-log{flex:1 1 auto;max-height:none}
   .em-center{max-height:100%}
 }
+
+/* oda içinde dar alan: sağ sütun gizli, tahta büyük */
+.em.cmp{grid-template-columns:210px minmax(0,1fr);grid-template-areas:"left center"}
+.em.cmp .em-right{display:none}
+.em.cmp .em-pl{padding:8px 9px;gap:2px 8px}

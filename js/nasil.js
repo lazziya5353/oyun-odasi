@@ -123,6 +123,23 @@
       puan: 'Puan yok: ilk bitiren kazanır.',
       ipucu: ['Rakibin taşına 1-6 kare yakınsan vurulma ihtimalin vardır; mümkünse taşını güvenli yere çek.', 'Zar tepsisindeki zar her atışta farklı yere düşer; atış sonucu tahtanın ortasında da görünür.', 'Telefonun yavaşsa üstteki “⚡ Hafif mod” ile 3 boyutlu görünümü kapatabilirsin.', 'Sıran gelince 60 saniye hamle yapmazsan oyun senin yerine oynar.'] },
 
+    { id: 'tekkart', tur: 'masa', ikon: '🟥', ad: 'Tek Kart', kisi: '2-6 kişi · bot eklenebilir',
+      amac: 'Elindeki bütün kartları ilk bitiren olmak. Puanlı oyunda eli bitiren, rakiplerin elinde kalan kartların puanını alır; hedef puana ilk ulaşan kazanır.',
+      adim: [
+        'Masayı aç, 2-6 kişi otursun (boş koltuğa 🤖 bot ekleyebilirsin). Destede 108 kart var: 4 renk (kırmızı, sarı, yeşil, mavi) × 0-9 sayılar, Pas, Yön değiştir ve +2 kartları; bir de 4 Joker ve 4 Joker +4.',
+        'Herkese 7 kart dağıtılır, destenin üstündeki kart yere açılır. Dağıtanın solundaki oyuncu başlar.',
+        'Sıran gelince yerdeki kartla aynı renkte, aynı sayıda ya da aynı sembolde bir kart atarsın. Joker her zaman atılabilir. Atabileceğin kartlar parlak görünür.',
+        'Atacak kartın yoksa (ya da atmak istemezsen) desteden 1 kart çekersin. Çektiğin kart uyuyorsa hemen oynayabilir ya da elinde tutabilirsin; uymuyorsa sıra geçer.',
+        '⊘ Pas: sıradaki oyuncu oynayamaz. ⇄ Yön değiştir: oyun ters yöne döner (iki kişide Pas gibi çalışır). +2: sıradaki oyuncu 2 kart çeker ve sırası geçer.',
+        'Joker: istediğin rengi seçersin. Joker +4: rengi seçersin, sıradaki oyuncu 4 kart çeker ve sırası geçer. Ama Joker +4 yalnızca elinde yerdeki renkten kart yokken atılabilir.',
+        'Joker +4 gelen oyuncu itiraz edebilir: atan kişi kuralsız attıysa 4 kartı o çeker ve itiraz eden normal oynar; kuralsız değilse itiraz eden 6 kart çeker ve sırası geçer.',
+        'Sondan bir önceki kartını atarken “📣 TEK!” demelisin (kartı atmadan önce TEK düğmesine bas). Demezsen ve sıradaki oyuncu oynamadan biri “🚨 Yakala” derse 2 kart ceza çekersin.',
+        'Elindeki son kartı atan eli bitirir. Son kart +2 ya da Joker +4 ise sıradaki oyuncu yine de kartları çeker.',
+        'Desteden kart bitince yerdeki kartlar (en üstteki hariç) karıştırılıp yeni deste yapılır. +2 ya da +4 üst üste eklenmez.'
+      ],
+      puan: 'Eli bitiren, rakiplerinin elinde kalan kartların puanını toplar: sayılar kendi değeri (0-9), Pas · Yön · +2 = 20 puan, Joker · Joker +4 = 50 puan. “Tek el” seçilirse ilk bitiren kazanır; 250 ya da 500 puan seçilirse o puana ilk ulaşan oyunu kazanır.',
+      ipucu: ['Jokerleri sona sakla: renk sana uymadığında kurtarır.', 'Sıradaki oyuncunun az kartı kaldıysa Pas, +2 ve Yön kartlarıyla onu durdur.', 'Rakibin tek kartı kalıp “TEK!” demediyse hızlı ol: Yakala düğmesi sıradaki oyuncu oynayana kadar durur.', 'Sıran gelince 45 saniye içinde oynamazsan oyun senin yerine oynar.'] },
+
     { id: 'okey', tur: 'masa', ikon: '🀄', ad: 'Okey', kisi: '4 kişi · bot eklenebilir',
       amac: 'Bütün taşlarını per (aynı renk sıralı: 3-4-5) ya da grup (aynı sayı, farklı renk: 7-7-7) yapıp elini bitirmek.',
       adim: [

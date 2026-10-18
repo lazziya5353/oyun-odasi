@@ -107,3 +107,5 @@
   .kz-roll{padding:12px 24px;font-size:20px}
 }
 @media (prefers-reduced-motion:reduce){.kz-roll,.kz-pawn.can .kz-in,.kz-ring{animation:none}}
+.kz.cmp{grid-template-columns:205px minmax(0,1fr)}
+.kz.cmp .kz-pl{padding:8px 9px}

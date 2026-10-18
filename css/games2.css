@@ -177,3 +177,10 @@
 }
 
 .lb-uye{display:inline-grid;place-items:center;width:15px;height:15px;margin-left:5px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:10px;font-weight:800;vertical-align:1px}
+
+/* telefonda sayfa kayar ve oyun alanının kendi yüksekliği olmaz: tahtası boyuna göre ölçülen oyunlar
+   (2048, Hafıza, Mayın, Yılan, Ördek Avı) sıfır yükseklikte kalmasın diye oyun alanı ekran boyunda tutulur */
+@media (max-width:860px){
+  .solo-shell{min-height:calc(100dvh - 200px)}
+  .solo-body{grid-template-rows:minmax(0,1fr)}
+}

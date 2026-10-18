@@ -126,6 +126,7 @@ function kzFit(ui){
   const fit = root.querySelector('.kz-fit'), sc = root.querySelector('.kz-scaler');
   root.classList.toggle('lite', ui.lite);
   const narrow = window.matchMedia('(max-width:900px)').matches;
+  root.classList.toggle('cmp', !narrow && root.clientWidth < 1060);
   const tilt = ui.lite ? 0 : (narrow ? 34 : 40);
   ui.tilt = tilt;
   root.style.setProperty('--tilt', tilt + 'deg');
@@ -133,6 +134,9 @@ function kzFit(ui){
   const w = center.clientWidth || 600;
   const deck = root.closest('.deck') || root.parentElement;
   const shell = root.closest('.game-shell');
+  // üst çubuk (Masadan kalk vb. düğmeler sonradan eklenince) boyu değişirse yeniden sığdır
+  const gbar = shell && shell.querySelector('.gs-bar');
+  if (gbar && ui.barEl !== gbar && typeof ResizeObserver === 'function'){ ui.barEl = gbar; new ResizeObserver(() => requestAnimationFrame(() => { if (root.isConnected) kzFit(ui); })).observe(gbar); }
   const dh = deck ? deck.clientHeight : 800;
   const barH = shell && shell.querySelector('.gs-bar') ? shell.querySelector('.gs-bar').offsetHeight + 10 : 0;
   const emh = Math.max(420, dh - barH - 4);
@@ -146,7 +150,7 @@ function kzFit(ui){
   const topV = ui.lite ? -46 : H - far - 70, botV = ui.lite ? KZB : H + near + 34;
   const extX = ui.lite ? KZB + 24 : KZB * (PP / (PP - H * sn)) + 24;
   let availH = narrow ? 99999 : emh - banner - ui.actMax - 30;
-  availH = Math.max(300, availH);
+  availH = Math.max(200, availH);
   const s = Math.max(0.28, Math.min(w / extX, availH / (botV - topV), 1.4));
   fit.style.height = Math.round((botV - topV) * s) + 'px';
   sc.style.cssText = 'width:' + KZB + 'px;height:' + KZB + 'px;transform:translate(' + Math.round((w - KZB * s) / 2) + 'px,' + Math.round(-topV * s) + 'px) scale(' + s + ');';

@@ -103,7 +103,7 @@ function emBuild(ui){
   root.querySelector('.em-tiles').addEventListener('click', e => {
     const t = e.target.closest('.ti'); if (!t) return;
     ui.sel = +t.dataset.i;
-    if (window.matchMedia('(max-width:1060px)').matches) ui.modal = { type: 'tile', i: ui.sel };
+    if (window.matchMedia('(max-width:1060px)').matches || root.classList.contains('cmp')) ui.modal = { type: 'tile', i: ui.sel };
     emPaint(ui);
   });
   ui.timerIv = setInterval(() => { if (!root.isConnected){ clearInterval(ui.timerIv); return; } emTick(ui); }, 500);
@@ -171,6 +171,8 @@ function emFit(ui){
   const fit = root.querySelector('.em-fit'), sc = root.querySelector('.em-scaler');
   root.classList.toggle('lite', ui.lite);
   const narrow = window.matchMedia('(max-width:1060px)').matches;
+  // oda içinde yan paneller yer kaplıyorsa sağ sütun (tapu + günlük) gizlenir; tapu kareye tıklayınca pencerede açılır
+  root.classList.toggle('cmp', !narrow && root.clientWidth < 1060);
   const tilt = ui.lite ? 0 : (narrow ? 44 : 52);
   ui.tilt = tilt;
   root.style.setProperty('--tilt', tilt + 'deg');
@@ -178,6 +180,9 @@ function emFit(ui){
   const w = center.clientWidth || 600;
   const deck = root.closest('.deck') || root.parentElement;
   const shell = root.closest('.game-shell');
+  // üst çubuk (Masadan kalk vb. düğmeler sonradan eklenince) boyu değişirse yeniden sığdır
+  const gbar = shell && shell.querySelector('.gs-bar');
+  if (gbar && ui.barEl !== gbar && typeof ResizeObserver === 'function'){ ui.barEl = gbar; new ResizeObserver(() => requestAnimationFrame(() => { if (root.isConnected) emFit(ui); })).observe(gbar); }
   const dh = deck ? deck.clientHeight : 800;
   const barH = shell && shell.querySelector('.gs-bar') ? shell.querySelector('.gs-bar').offsetHeight + 10 : 0;
   const emh = Math.max(420, dh - barH - 4);
@@ -193,7 +198,7 @@ function emFit(ui){
   const topV = ui.lite ? 0 : 450 - far - 78, botV = ui.lite ? EMB : 450 + near + 46;
   const extX = ui.lite ? EMB + 30 : EMB * (PP / (PP - 450 * sn)) + 30;
   let availH = narrow ? 99999 : emh - banner - act - 30;
-  availH = Math.max(300, availH);
+  availH = Math.max(200, availH);
   const s = Math.max(0.28, Math.min(w / extX, availH / (botV - topV), 1.3));
   fit.style.height = Math.round((botV - topV) * s) + 'px';
   fit.style.width = '100%';

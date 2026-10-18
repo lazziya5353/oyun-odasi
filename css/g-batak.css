@@ -96,7 +96,7 @@
 .bt-status.mine::before{content:"● ";color:var(--accent)}
 
 /* elim */
-.bt-hand{grid-area:hand;position:relative;height:calc(var(--ch,94px) + 30px);min-width:0}
+.bt-hand{grid-area:hand;position:relative;height:calc(var(--ch,94px) + 46px);min-width:0}
 .bt-hand .bt-card.inhand{position:absolute;top:12px;width:var(--cw,66px);height:var(--ch,94px);transform:translateY(var(--y,0)) rotate(var(--rot,0));transform-origin:50% 120%;
   transition:transform .15s ease,filter .15s,box-shadow .15s}
 .bt-hand .bt-card.legal{transform:translateY(calc(var(--y,0) - 10px)) rotate(var(--rot,0));cursor:pointer;box-shadow:0 0 0 2px var(--accent),0 4px 10px rgb(0 0 0 / .35)}

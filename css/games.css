@@ -247,7 +247,13 @@
   .ok-rack{grid-template-columns:repeat(13,minmax(0,1fr));grid-auto-rows:48px;padding:8px 6px 12px}
   .tile{width:30px;height:42px;font-size:16px}
   .slot .tile{max-width:30px}
-  .ok-seat.r1 .ok-info,.ok-seat.r3 .ok-info{display:none}
+  .ok-seat.r1,.ok-seat.r3{min-width:0;max-width:70px;overflow:hidden;padding:6px 4px;gap:3px}
+  .ok-seat.r1 .ok-info,.ok-seat.r3 .ok-info{display:grid;max-width:62px;text-align:center}
+  .ok-seat.r1 .ok-info b,.ok-seat.r3 .ok-info b{font-size:11px;max-width:62px}
+  .ok-seat.r1 .ok-info .note,.ok-seat.r3 .ok-info .note{display:none}
+  .ok-seat.r1 .ok-backs i,.ok-seat.r3 .ok-backs i{display:none}
+  .ok-seat.r1 .ok-backs span,.ok-seat.r3 .ok-backs span{margin:0;padding:1px 7px;border-radius:99px;background:rgb(255 255 255 / .15)}
+  .ok-seat.r1 .ok-backs span::before,.ok-seat.r3 .ok-backs span::before{content:"🀫 "}
   .ok-finish{width:60px;height:60px}
   .tv-board,.tv-player{width:100%}
 }

@@ -1,6 +1,6 @@
 /* Kelime Bul – tüm sınıflar kelime- önekli; doğru = --accent, var = amber, yok = sönük panel */
 .kelime-wrap{--k-ok:var(--accent);--k-ok-ink:var(--accent-ink);--k-in:#e2b33c;--k-in-ink:#2a1f00;
-  --t:var(--kelime-tile,clamp(36px,min(15vw,calc((100dvh - 380px) / 6.1)),58px));
+  --t:var(--kelime-tile,clamp(34px,min(15vw,calc((100dvh - 445px) / 6.1)),58px));
   display:grid;gap:10px;justify-items:center;width:100%;max-width:520px;margin:0 auto;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 .kelime-bar{display:flex;justify-content:space-between;align-items:center;width:calc(var(--t) * 5 + 24px);font-variant-numeric:tabular-nums}
 .kelime-info,.kelime-timer{padding:4px 10px;border-radius:99px;background:var(--panel-2);font-size:14px;font-weight:600}
