@@ -11,7 +11,7 @@ const tables = new Map();       // id → özet
 const owned = new Map();        // benim yönettiğim masalar: id → { sum, state, watchers:Set, timer }
 const lastViews = new Map();    // id → bana gelen son görünüm
 let openTable = null;           // şu an ekranda açık masa
-const BOT_NAMES = ['Hüseyin Amca', 'Fadime Teyze', 'Kahveci Rıza', 'Okeyci Cemal', 'Zarcı Nuri', 'Saadet Hanım'];
+const BOT_NAMES = ['Hüseyin Amca', 'Fadime Teyze', 'Kahveci Rıza', 'Okeyci Cemal', 'Zarcı Nuri', 'Saadet Hanım', 'Bakkal Şevket', 'Nazmiye Abla', 'Simitçi Cafer', 'Hayriye Nine'];
 const GAME_INFO = {
   tavla: { name: 'Tavla', icon: '🎲', seats: 2 },
   okey: { name: 'Okey', icon: '🀄', seats: 4 }
@@ -88,15 +88,22 @@ function ownerStand(o, who){
     if (tdef(s).onLeave) tdef(s).onLeave(o, k);
   } else if (s.status === 'playing'){
     const leaver = s.seats[k].name;
-    s.seats[k] = { id: 'bot' + k, name: 'Bot ' + BOT_NAMES[k % BOT_NAMES.length], bot: true };
+    s.seats[k] = null;
+    s.seats[k] = { id: 'bot' + k, name: botAdi(s, k % BOT_NAMES.length), bot: true };
     addSys('🤖 ' + leaver + ' masadan kalktı, yerine ' + s.seats[k].name + ' oynuyor');
   } else s.seats[k] = null;
   pushSum(o); sendViews(o); pump(o);
 }
+// masadaki botlar aynı adı almasın: sıradaki boş adı ver
+function botAdi(s, i){
+  const dolu = new Set(s.seats.filter(Boolean).map(x => x.name));
+  for (let n = 0; n < BOT_NAMES.length; n++, i = (i + 1) % BOT_NAMES.length) if (!dolu.has('Bot ' + BOT_NAMES[i])) return 'Bot ' + BOT_NAMES[i];
+  return 'Bot ' + BOT_NAMES[i % BOT_NAMES.length];
+}
 function ownerBot(o, seat, add){
   const s = o.sum;
   if (s.status === 'playing' || (tdef(s) && tdef(s).bots === false)) return;
-  if (add && !s.seats[seat]) s.seats[seat] = { id: 'bot' + seat, name: 'Bot ' + BOT_NAMES[(seat + s.id.length) % BOT_NAMES.length], bot: true };
+  if (add && !s.seats[seat]) s.seats[seat] = { id: 'bot' + seat, name: botAdi(s, (seat + s.id.length) % BOT_NAMES.length), bot: true };
   if (!add && s.seats[seat] && s.seats[seat].bot) s.seats[seat] = null;
   pushSum(o);
 }

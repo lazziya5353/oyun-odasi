@@ -20,7 +20,9 @@ function setChannels(list){
     if (typeof c.id !== 'string' || !/^[a-z0-9-]{1,24}$/.test(c.id)) return;
     if (clean.some(x => x.id === c.id)) return;
     const type = ['voice', 'music', 'film', 'game', 'ders'].includes(c.type) ? c.type : 'voice';
-    clean.push({ id: c.id, name: clip(c.name, 24) || 'Kanal', icon: clip(c.icon, 4) || '🎮', type });
+    // canlı TV kaldırıldı: "Film ve Televizyon Odası" adıyla gelen kanal eski adına döner
+    const tvAdi = c.id === 'film' && c.name === 'Film ve Televizyon Odası';
+    clean.push({ id: c.id, name: tvAdi ? 'Film Odası' : (clip(c.name, 24) || 'Kanal'), icon: tvAdi ? '🎬' : (clip(c.icon, 4) || '🎮'), type });
   });
   // eksik varsayılan kanal (oda sahibinin sitesi eskiyse): baştaki sırasına yerleşsin, en üste değil
   DEFAULT_CHANNELS.forEach((d, i) => { if (!clean.some(c => c.id === d.id)) clean.splice(Math.min(i, clean.length), 0, Object.assign({}, d)); });
