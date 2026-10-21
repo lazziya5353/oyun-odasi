@@ -114,8 +114,14 @@ function ownerStart(o){
     const n = s.seats.filter(Boolean).length;
     if (n < d.minPlayers){ toast('Başlamak için en az ' + d.minPlayers + ' oyuncu gerekli (' + n + ' kişi oturdu)'); return; }
   } else if (s.seats.some(x => !x)) { toast('Önce bütün koltuklar dolmalı (boş koltuğa bot ekleyebilirsin)'); return; }
+  // oyun başlatılamazsa (ör. sayfa eski sürümle açık kalmış, oyun dosyası eksik) masa "Oyun yükleniyor…"da takılı kalmasın
   s.status = 'playing';
-  if (d) o.state = d.start(o);
+  if (d){
+    let st = null;
+    try { st = d.start(o); } catch(e){ console.error('oyun başlatılamadı', e); }
+    if (!st){ s.status = 'waiting'; o.state = null; pushSum(o); toast('Oyun başlatılamadı. Sayfayı yenileyip (Ctrl+F5) tekrar dene.'); return; }
+    o.state = st;
+  }
   else if (s.game === 'tavla') o.state = TavlaCore.newGame({ target: s.opts.target });
   else o.state = OkeyGame.newMatch(s.opts);
   o.events = [];

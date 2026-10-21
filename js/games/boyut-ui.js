@@ -487,8 +487,11 @@ function byMasaSigdir(ui){
   if (bar && ui.barEl !== bar && typeof ResizeObserver === 'function'){ ui.barEl = bar; new ResizeObserver(() => requestAnimationFrame(() => byMasaSigdir(ui))).observe(bar); }
   if (!ui.pencere){ ui.pencere = () => byMasaSigdir(ui); window.addEventListener('resize', ui.pencere); }
   const dar = window.matchMedia('(max-width:760px)').matches;
-  const barH = bar ? bar.offsetHeight + 10 : 0;
-  const h = dar ? Math.max(460, window.innerHeight - 24) : Math.max(380, (deck ? deck.clientHeight : 700) - barH - 4);
+  // ekranda oyunun başladığı yer (kaydırma hesaba katılmadan) ile alttaki mikrofon çubuğu arasında kalan alan
+  const ustY = root.getBoundingClientRect().top + (deck ? deck.scrollTop : 0) + window.scrollY;
+  const alt = document.querySelector('.room footer.bar');
+  const altH = alt ? alt.offsetHeight : 0;
+  const h = dar ? Math.max(460, window.innerHeight - 24) : Math.max(380, Math.floor(window.innerHeight - ustY - altH - 12));
   root.style.setProperty('--byh', h + 'px');
 }
 function byMasaKilit(ui){
