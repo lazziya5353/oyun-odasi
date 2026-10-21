@@ -20,7 +20,8 @@ const GAMES = {
   mayin: { better: 'low', daily: false, levels: ['kolay', 'orta', 'zor'], min: 1, max: 86400 },
   adam: { better: 'high', daily: false, levels: [''], min: 0, max: 100000 },
   ikibin: { better: 'high', daily: false, levels: [''], min: 0, max: 1500000 },
-  hafiza: { better: 'low', daily: false, levels: ['kolay', 'orta', 'zor'], min: 2, max: 5999 }
+  hafiza: { better: 'low', daily: false, levels: ['kolay', 'orta', 'zor'], min: 2, max: 5999 },
+  boyut: { better: 'high', daily: true, levels: ['gunluk', 'uzun'], min: 0, max: 1000 }
 };
 const TOP = 100;
 

@@ -140,6 +140,19 @@
       puan: 'Eli bitiren, rakiplerinin elinde kalan kartların puanını toplar: sayılar kendi değeri (0-9), Pas · Yön · +2 = 20 puan, Joker · Joker +4 = 50 puan. “Tek el” seçilirse ilk bitiren kazanır; 250 ya da 500 puan seçilirse o puana ilk ulaşan oyunu kazanır.',
       ipucu: ['Jokerleri sona sakla: renk sana uymadığında kurtarır.', 'Sıradaki oyuncunun az kartı kaldıysa Pas, +2 ve Yön kartlarıyla onu durdur.', 'Rakibin tek kartı kalıp “TEK!” demediyse hızlı ol: Yakala düğmesi sıradaki oyuncu oynayana kadar durur.', 'Sıran gelince 45 saniye içinde oynamazsan oyun senin yerine oynar.'] },
 
+    { id: 'boyut', tur: 'masa', ikon: '📏', ad: 'Boyut Bilmece', kisi: '1-8 kişi · tek başına da oynanır · bot eklenebilir',
+      amac: 'Bir şeyin gerçek boyunu, yanındaki bilinen bir şeye bakarak tahmin etmek. Siyah silüetin ölçüsü yazılıdır; beyaz silüeti ona göre büyütüp küçültürsün. Gerçeğe ne kadar yakınsan o kadar puan.',
+      adim: [
+        'Ekranda iki silüet var: siyah olan referans (adı ve gerçek ölçüsü altında yazar), beyaz olan tahmin edeceğin şey.',
+        'Beyaz silüeti alttaki kaydırıcıyla, fare tekerleğiyle, köşedeki ⤢ tutamağı çekerek ya da + / - tuşlarıyla boyutlandır. Silüeti sürükleyip referansın yanına koyabilirsin.',
+        'Emin olunca “🔒 Kilitle”ye bas (Enter da olur). Gerçek boyu kırmızıyla açılır; tahminin, sapman ve kısa bir bilgi görünür.',
+        'Tek başına: Oyun Salonu’ndaki “Boyut Bilmece” kartından aç. Günlük 5 ya da 10 soru herkes için aynıdır ve skor tablosuna yazılır; sonra istediğin konuda serbest oynayabilirsin.',
+        'Masada “Toplu”: herkes aynı soruyu aynı anda tahmin eder (40 sn). Herkes kilitleyince tahminler oyuncu renkleriyle üst üste açılır.',
+        'Masada “Sıralı”: sırayla oynanır, herkes sıradakinin silüeti nasıl büyütüp küçülttüğünü canlı izler. Her oyuncu kendi sorusunu alır (45 sn).'
+      ],
+      puan: 'Her soru en fazla 100 puan. %5’e kadar sapma tam puan; yarısı ya da iki katı tahmin 45 puan alır, uzaklaştıkça puan düşer. Masada en çok puanı toplayan kazanır.',
+      ipucu: ['Önce birimlere bak: boy mu, uzunluk mu, kanat açıklığı mı soruluyor?', 'Referansı aklında “kaç tane yan yana/üst üste” diye düşün: zürafa kaç insan boyu?', 'Süre biterken kilitlemediysen o anki tahminin otomatik kilitlenir.'] },
+
     { id: 'okey', tur: 'masa', ikon: '🀄', ad: 'Okey', kisi: '4 kişi · bot eklenebilir',
       amac: 'Bütün taşlarını per (aynı renk sıralı: 3-4-5) ya da grup (aynı sayı, farklı renk: 7-7-7) yapıp elini bitirmek.',
       adim: [
