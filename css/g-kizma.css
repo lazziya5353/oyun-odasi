@@ -28,16 +28,16 @@
 /* tahta */
 .kz-fit{position:relative;width:100%;overflow:hidden;touch-action:manipulation}
 .kz-scaler{position:absolute;left:0;top:0;transform-origin:0 0}
-.kz-stage{width:704px;height:704px;perspective:2400px;perspective-origin:50% 50%}
-.kz-board{position:relative;width:704px;height:704px;transform-style:preserve-3d;transform:rotateX(var(--tilt,40deg));transform-origin:50% 50%;
+.kz-stage{width:var(--kzb,704px);height:var(--kzb,704px);perspective:2400px;perspective-origin:50% 50%}
+.kz-board{position:relative;width:var(--kzb,704px);height:var(--kzb,704px);transform-style:preserve-3d;transform:rotateX(var(--tilt,40deg));transform-origin:50% 50%;
   background:radial-gradient(circle at 50% 45%,#f6ecd0,#e7d7aa 70%,#d8c58f);border-radius:10px;box-shadow:0 0 0 12px #6a4424,0 0 0 15px #2f1b0c}
 .kz.lite .kz-board{box-shadow:0 0 0 9px #6a4424,0 0 0 11px #2f1b0c}
 .kz-board::before{content:"";position:absolute;inset:-15px;border-radius:16px;background:linear-gradient(135deg,#9a6a38,#5b3718 55%,#7d5428);transform:translateZ(-2px)}
-.kz-slab{position:absolute;left:-15px;top:719px;width:734px;height:30px;transform-origin:50% 0;transform:rotateX(-90deg);background:linear-gradient(#5b3718,#24140a);border-radius:0 0 8px 8px;box-shadow:inset 0 2px 0 rgb(255 255 255 / .18)}
+.kz-slab{position:absolute;left:-15px;top:calc(var(--kzb,704px) + 15px);width:calc(var(--kzb,704px) + 30px);height:30px;transform-origin:50% 0;transform:rotateX(-90deg);background:linear-gradient(#5b3718,#24140a);border-radius:0 0 8px 8px;box-shadow:inset 0 2px 0 rgb(255 255 255 / .18)}
 .kz.lite .kz-slab{display:none}
 .kz-board::after{content:"";position:absolute;left:30px;right:30px;top:40px;bottom:-100px;background:rgb(0 0 0 / .45);filter:blur(30px);transform:translateZ(-60px);border-radius:40px;z-index:-1}
 .kz.lite .kz-board::after{display:none}
-.kz-cells,.kz-stand{position:absolute;left:0;top:0;width:704px;height:704px}
+.kz-cells,.kz-stand{position:absolute;left:0;top:0;width:var(--kzb,704px);height:var(--kzb,704px)}
 .kz-stand{transform-style:preserve-3d;transform:translateZ(1px);pointer-events:none}
 .kc{position:absolute;width:64px;height:64px;box-sizing:border-box;padding:7px}
 .kc::before{content:"";display:block;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#efe6cb);box-shadow:inset 0 -3px 5px rgb(0 0 0 / .18),0 1px 2px rgb(0 0 0 / .4)}
@@ -116,3 +116,30 @@
 .kz-dest b{position:absolute;left:50%;top:-58px;transform:translateX(-50%) rotateX(calc(var(--tilt,40deg) * -1));padding:3px 8px;border-radius:99px;background:var(--dc,#333);color:#fff;font:800 15px/1 var(--display);white-space:nowrap;box-shadow:0 3px 8px rgb(0 0 0 / .45)}
 .kz-pawn.pick .kz-ring{border-color:#ffe27a;box-shadow:0 0 18px 6px rgb(255 226 122 / .9)}
 .kz-cells,.kz-cells *{pointer-events:none}
+
+/* ===== Ahşap Ludo tahtası ===== */
+.kz.ludo .kz-board{border-radius:6px;
+  background:
+    repeating-linear-gradient(91deg,rgb(90 45 10 / .07) 0 2px,transparent 2px 7px,rgb(255 230 190 / .05) 7px 9px,transparent 9px 17px),
+    repeating-linear-gradient(89deg,transparent 0 40px,rgb(80 40 10 / .06) 40px 43px,transparent 43px 97px),
+    radial-gradient(ellipse at 30% 20%,#d9a065,#c4884b 45%,#b0743a 80%,#9c6330);
+  box-shadow:0 0 0 14px #8a4f22,0 0 0 16px #4a2a10,inset 0 0 40px rgb(80 40 10 / .35)}
+.kz.ludo .kz-board::before{background:linear-gradient(135deg,#b46c33,#7a4219 55%,#9c5a28)}
+.ld-yard,.ld-hole,.ld-badge,.ld-sq,.ld-mid,.ld-logo{position:absolute;box-sizing:border-box}
+.ld-yard{border-radius:50%;background:radial-gradient(circle at 40% 35%,color-mix(in srgb,var(--cc) 70%,#fff),var(--cc) 62%,var(--cd));border:3px solid #2b1a0c;box-shadow:inset 0 -8px 16px rgb(0 0 0 / .25),0 2px 3px rgb(0 0 0 / .35)}
+.ld-hole{border-radius:50%;background:radial-gradient(circle at 50% 45%,rgb(0 0 0 / .45),rgb(0 0 0 / .2));box-shadow:inset 0 3px 5px rgb(0 0 0 / .55),0 1px 0 rgb(255 255 255 / .35)}
+.ld-badge{display:grid;place-items:center;border-radius:50%;border:2px solid #2b1a0c;background:var(--cc);color:#2b1a0c;font:900 22px/1 Arial,sans-serif;font-style:normal}
+.ld-logo{display:grid;place-items:center;color:#3a2412;font:900 22px/1 "Arial Black",Arial,sans-serif;letter-spacing:.06em;opacity:.8;font-style:normal}
+.ld-sq{display:grid;place-items:center;background:#f6efe2;border:1.5px solid #2b1a0c;color:#8a7a62;font:700 26px/1 Arial,sans-serif;font-style:normal;box-shadow:inset 0 -2px 3px rgb(0 0 0 / .08)}
+.ld-sq.lane{background:var(--cc);box-shadow:inset 0 -3px 5px rgb(0 0 0 / .2)}
+.ld-sq.start{background:color-mix(in srgb,var(--cc) 75%,#fff);color:#fff;text-shadow:0 1px 2px rgb(0 0 0 / .5)}
+.ld-sq.star{color:#b58a2c}
+.ld-sq.ok{background:transparent;border-color:transparent;box-shadow:none;color:var(--cc);font-size:20px;text-shadow:0 1px 0 rgb(0 0 0 / .4);place-items:center}
+.ld-mid{overflow:hidden}
+.ld-mid svg{width:100%;height:100%;display:block}
+.kz.ludo .ld-hub{background:transparent;box-shadow:none}
+.kz.ludo .kz-hubd{width:30px;height:30px;font-size:19px}
+.kz.ludo .kz-in{transform:rotateX(calc(var(--tilt,40deg) * -1)) scale(.8)}
+.kz.ludo .kz-ring{left:-21px;top:-21px;width:42px;height:42px;border-width:3px}
+.kz.ludo .kz-dest i{left:-21px;top:-21px;width:42px;height:42px;border-width:3px}
+.kz.ludo .kz-dest b{top:-50px}
