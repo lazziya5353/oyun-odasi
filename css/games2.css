@@ -184,3 +184,37 @@
   .solo-shell{min-height:calc(100dvh - 200px)}
   .solo-body{grid-template-rows:minmax(0,1fr)}
 }
+
+/* İsim-Şehir: harf zarı ve sıkı denetim */
+.is-zaryer{flex:none;width:72px;height:72px;perspective:420px;display:grid;place-items:center}
+.is-zar{width:58px;height:58px}
+.is-kup{position:relative;width:58px;height:58px;transform-style:preserve-3d;transform:rotateX(0) rotateY(0)}
+.is-kup .y{position:absolute;inset:0;display:grid;place-items:center;border-radius:12px;font:700 32px/1 var(--display);color:var(--accent-ink);
+  background:linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 50%,#7aa2ff));box-shadow:inset 0 0 0 2px rgb(255 255 255 / .35),inset 0 -6px 10px rgb(0 0 0 / .18);backface-visibility:hidden}
+.is-kup .y1{transform:translateZ(29px)}
+.is-kup .y2{transform:rotateY(180deg) translateZ(29px)}
+.is-kup .y3{transform:rotateY(90deg) translateZ(29px)}
+.is-kup .y4{transform:rotateY(-90deg) translateZ(29px)}
+.is-kup .y5{transform:rotateX(90deg) translateZ(29px)}
+.is-kup .y6{transform:rotateX(-90deg) translateZ(29px)}
+.is-zar.atiliyor .is-kup{animation:is-zar-don .9s linear infinite}
+.is-zar.dur .is-kup{animation:is-zar-in .85s cubic-bezier(.2,.9,.3,1.25)}
+@keyframes is-zar-don{0%{transform:rotateX(0) rotateY(0) rotateZ(0)}100%{transform:rotateX(360deg) rotateY(720deg) rotateZ(180deg)}}
+@keyframes is-zar-in{0%{transform:translateY(-26px) rotateX(400deg) rotateY(250deg) scale(.8)}70%{transform:translateY(4px) rotateX(-12deg) rotateY(8deg) scale(1.08)}100%{transform:none}}
+.is-used{font-size:12px;color:var(--muted);letter-spacing:.06em;min-height:15px}
+.is-kural{font-size:12.5px;margin:0}
+.is-field .ok{font-size:12.5px;white-space:nowrap}
+.is-lejant{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.is-lejant .k{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.is-lejant .k.ok{background:var(--accent)}.is-lejant .k.soru{background:var(--warn,#f2c230)}.is-lejant .k.no{background:var(--danger)}
+.is-table .cell{min-width:130px;border-left:3px solid transparent}
+.is-table .cell.good{border-left-color:var(--accent)}
+.is-table .cell.wait{border-left-color:var(--warn,#f2c230)}
+.is-table .cell.bad{border-left-color:var(--danger)}
+.is-table .cell.wait .t{color:var(--fg)}
+.is-table .cell .oy{display:block;margin-top:4px}
+.is-oy{border:1px solid var(--line);background:var(--panel-2);color:var(--fg);border-radius:99px;padding:3px 9px;font-size:11.5px;cursor:pointer}
+.is-oy.it:hover,.is-oy.it.on{border-color:var(--danger);color:var(--danger)}
+.is-oy.ka:hover,.is-oy.ka.on{border-color:var(--accent);color:var(--accent)}
+.is-oy.on{font-weight:700}
+@media (prefers-reduced-motion:reduce){.is-zar.atiliyor .is-kup,.is-zar.dur .is-kup{animation:none}}

@@ -198,6 +198,10 @@ if (typeof registerTableGame === 'function') (function(){
       if (drawer && a.type === 'geri'){ st.strokes.pop(); sendEvent(o, { k: 'geri' }, who); return; }
       if (!drawer && a.type === 'tahmin' && typeof a.text === 'string'){
         const text = clip(a.text, 40); if (!text) return;
+        // art arda yüzlerce tahmin göndererek kelimeyi bulmak olmasın: kişi başı en az 0,7 sn ara
+        o.czSon = o.czSon || {};
+        if (Date.now() - (o.czSon[who] || 0) < 700) return;
+        o.czSon[who] = Date.now();
         const name = nameOf(st, who);
         st.names[who] = o.sum.seats[seat].name;
         if (st.guessed[who] != null) return;

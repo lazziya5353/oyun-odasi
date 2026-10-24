@@ -143,6 +143,7 @@ function ownerAct(o, who, a){
   const s = o.sum;
   if (!o.state || !a || typeof a !== 'object') return;
   const seat = s.seats.findIndex(x => x && !x.bot && x.id === who);
+  if (a.type === 'ceza'){ cezaUygula(o, who, a); return; }
   if (tdef(s)){ tdef(s).act(o, seat, a, who); return; }
   if (s.game === 'tavla') tavlaOwnerAct(o, seat, a, who);
   else okeyOwnerAct(o, seat, a, who);
@@ -238,14 +239,164 @@ function sendViews(o){
   const s = o.sum;
   if (!o.state) return;
   o.vseq = (o.vseq || 0) + 1;
+  cezaGuncelle(o);
+  const ceza = cezaGorunum(o);
   const sent = new Set();
   s.seats.forEach((x, k) => {
     if (!x || x.bot) return;
     sent.add(x.id);
-    deliverView(x.id, { t: 'tb-view', id: s.id, seat: k, vseq: o.vseq, v: viewFor(o, k) });
+    deliverView(x.id, { t: 'tb-view', id: s.id, seat: k, vseq: o.vseq, v: viewFor(o, k), ceza });
   });
-  o.watchers.forEach(w => { if (!sent.has(w)) deliverView(w, { t: 'tb-view', id: s.id, seat: -1, vseq: o.vseq, v: viewFor(o, -1) }); });
-  if (!sent.has(peer.id) && openTable === s.id) deliverView(peer.id, { t: 'tb-view', id: s.id, seat: -1, vseq: o.vseq, v: viewFor(o, -1) });
+  o.watchers.forEach(w => { if (!sent.has(w)) deliverView(w, { t: 'tb-view', id: s.id, seat: -1, vseq: o.vseq, v: viewFor(o, -1), ceza }); });
+  if (!sent.has(peer.id) && openTable === s.id) deliverView(peer.id, { t: 'tb-view', id: s.id, seat: -1, vseq: o.vseq, v: viewFor(o, -1), ceza });
+}
+
+// ---------- kazananın hakkı: oyun bitince kazanan, masadaki birine tokat / tekme… atar; herkes görür ----------
+const CEZALAR = {
+  tokat: { ico: '👋', ad: 'Tokat at', fiil: 'tokat attı' },
+  tekme: { ico: '🦵', ad: 'Tekme at', fiil: 'tekme attı' },
+  fiske: { ico: '🤏', ad: 'Fiske vur', fiil: 'fiske vurdu' },
+  yastik: { ico: '🛏️', ad: 'Yastıkla vur', fiil: 'yastıkla vurdu' },
+  pasta: { ico: '🥧', ad: 'Pasta fırlat', fiil: 'pasta fırlattı' },
+  domates: { ico: '🍅', ad: 'Domates at', fiil: 'domates attı' },
+  su: { ico: '💦', ad: 'Su sıçrat', fiil: 'su sıçrattı' }
+};
+// "Ayşe" → "Ayşe'ye", "Kaan" → "Kaan'a", "Mert" → "Mert'e"
+function yonelme(ad){
+  const t = String(ad || 'Oyuncu').trim(), sesli = 'aeıioöuüâîûAEIİOÖUÜÂÎÛ';
+  const son = [...t].reverse().find(ch => sesli.includes(ch)) || 'e';
+  const kalin = 'aıouâûAIOUÂÛ'.includes(son);
+  return t + '\'' + (sesli.includes(t.slice(-1)) ? 'y' : '') + (kalin ? 'a' : 'e');
+}
+// oyun bittiyse kazanan(lar)ın oyuncu kimlikleri
+function kazananBul(o){
+  const s = o.sum, g = o.state;
+  if (!g || s.status !== 'playing') return null;
+  const sid = k => s.seats[k] ? s.seats[k].id : null;
+  const enCok = obj => { const ids = Object.keys(obj || {}); if (!ids.length) return null; const en = Math.max(...ids.map(i => obj[i] || 0)); return ids.filter(i => (obj[i] || 0) === en); };
+  let ids = null;
+  try {
+    switch (s.game){
+      case 'tavla': ids = g.phase === 'matchover' && g.winner != null ? [sid(g.winner)] : null; break;
+      case 'okey':
+        if (g.phase !== 'gameover') break;
+        if (g.variant === '101'){ const en = Math.min(...g.scores); ids = [0, 1, 2, 3].filter(q => g.scores[q] === en).map(sid); }
+        else if (g.team){ const w = g.scores[0] > g.scores[1] ? 0 : 1; ids = [sid(w), sid(w + 2)]; }
+        else { const en = Math.max(...g.scores); ids = [0, 1, 2, 3].filter(q => g.scores[q] === en).map(sid); }
+        break;
+      case 'kizma': case 'tekkart': case 'emlak': ids = g.phase === 'over' && g.win >= 0 ? [sid(g.win)] : null; break;
+      case 'batak': ids = g.phase === 'gameover' && g.winners ? g.winners.map(sid) : null; break;
+      case 'boyut': if (g.phase === 'over'){ const en = Math.max(...g.order.map(k => g.pts[k])); ids = g.order.filter(k => g.pts[k] === en).map(sid); } break;
+      case 'isimsehir': case 'ciz': ids = g.phase === 'bitti' ? enCok(g.scores) : null; break;
+      case 'tabu':
+        if (g.phase !== 'bitti') break;
+        if (g.mode === 'takim'){ const w = g.tscores.A === g.tscores.B ? null : g.tscores.A > g.tscores.B ? 'A' : 'B'; ids = w ? g.teams[w].slice() : null; }
+        else ids = enCok(g.scores);
+        break;
+      case 'vampir': ids = g.phase === 'bitti' && g.winner ? g.order.filter(id => g.roles[id] === g.winner.taraf) : null; break;
+      default: ids = tdef(s) && tdef(s).kazanan ? tdef(s).kazanan(o) : null;
+    }
+  } catch(e){ ids = null; }
+  ids = (ids || []).filter(Boolean);
+  return ids.length ? [...new Set(ids)] : null;
+}
+function cezaAd(o, id){
+  const x = o.sum.seats.find(y => y && y.id === id); if (x) return x.name;
+  const g = o.state, n = g && g.names && !Array.isArray(g.names) ? g.names[id] : null;
+  return n || (peers.get(id) && peers.get(id).name) || 'Oyuncu';
+}
+function cezaGuncelle(o){
+  const k = kazananBul(o);
+  if (!k){ o.ceza = null; return; }
+  if (o.ceza && o.ceza.st === o.state) return;
+  const hedef = o.sum.seats.filter(x => x && !k.includes(x.id)).map(x => x.id);
+  if (!hedef.length){ o.ceza = null; return; }
+  o.ceza = { st: o.state, gid: 'c' + rid(), kaz: k, yapan: {} };
+  // bot kazandıysa kendisi seçer
+  k.forEach(id => {
+    const x = o.sum.seats.find(y => y && y.id === id);
+    if (!x || !x.bot) return;
+    const c = o.ceza;
+    setTimeout(() => {
+      if (o.ceza !== c || owned.get(o.sum.id) !== o) return;
+      const hs = cezaHedefler(o), ey = Object.keys(CEZALAR);
+      if (hs.length) cezaUygula(o, id, { hedef: hs[Math.floor(Math.random() * hs.length)], eylem: ey[Math.floor(Math.random() * ey.length)] });
+    }, 2500 + Math.random() * 3000);
+  });
+}
+const cezaHedefler = o => o.sum.seats.filter(x => x && !o.ceza.kaz.includes(x.id)).map(x => x.id);
+function cezaGorunum(o){
+  if (!o.ceza) return null;
+  return { gid: o.ceza.gid,
+    kaz: o.ceza.kaz.map(id => ({ id, ad: cezaAd(o, id) })),
+    hedef: cezaHedefler(o).map(id => ({ id, ad: cezaAd(o, id) })),
+    yapan: Object.keys(o.ceza.yapan).map(id => ({ id, ad: cezaAd(o, id), hedefAd: o.ceza.yapan[id].hedefAd, eylem: o.ceza.yapan[id].eylem })) };
+}
+function cezaUygula(o, who, a){
+  const c = o.ceza;
+  if (!c || c.st !== o.state || !c.kaz.includes(who) || c.yapan[who] || !CEZALAR[a.eylem] || !cezaHedefler(o).includes(a.hedef)) return;
+  const hedefAd = cezaAd(o, a.hedef), ad = cezaAd(o, who);
+  c.yapan[who] = { hedef: a.hedef, hedefAd, eylem: a.eylem };
+  const msg = { t: 'ceza-ev', id: o.sum.id, ad, hedef: a.hedef, hedefAd, eylem: a.eylem, oyun: o.sum.game };
+  broadcast(msg);
+  cezaOlay(msg);
+  sendViews(o);
+}
+// herkeste: sohbete yaz, ekranda göster (hedefe ayrıca sarsıntı)
+function cezaOlay(d){
+  const e = CEZALAR[d.eylem]; if (!e) return;
+  const ad = clip(d.ad, 24) || 'Oyuncu', hedefAd = clip(d.hedefAd, 24) || 'Oyuncu';
+  const oyun = GAME_INFO[d.oyun] ? ' (' + GAME_INFO[d.oyun].name + ' kazananı)' : '';
+  addSys(e.ico + ' ' + ad + oyun + ', ' + yonelme(hedefAd) + ' ' + e.fiil + '!');
+  const bana = typeof peer !== 'undefined' && peer && d.hedef === peer.id;
+  const fx = document.createElement('div'); fx.className = 'ceza-fx ceza-' + d.eylem + (bana ? ' bana' : '');
+  fx.innerHTML = '<div class="ceza-ico"></div><div class="ceza-pat">' + (d.eylem === 'su' ? 'ŞAPIRT!' : d.eylem === 'pasta' || d.eylem === 'domates' ? 'ŞLAP!' : 'PAT!') + '</div><div class="ceza-yazi"><b></b><span></span></div>';
+  fx.querySelector('.ceza-ico').textContent = e.ico;
+  fx.querySelector('.ceza-yazi b').textContent = bana ? ad + ' sana ' + e.fiil + '!' : ad + ', ' + yonelme(hedefAd) + ' ' + e.fiil + '!';
+  fx.querySelector('.ceza-yazi span').textContent = bana ? 'Kaybedenin kaderi… 😵' : '🏆 Kazananın hakkı';
+  document.body.append(fx);
+  if (typeof gameSound === 'function') gameSound(d.eylem === 'su' ? 'su' : 'tokat');
+  if (bana && !reducedMotion()){ const r = document.getElementById('room'); if (r && r.animate) r.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-14px,6px) rotate(-1deg)' }, { transform: 'translate(12px,-5px) rotate(1deg)' }, { transform: 'translate(-8px,3px)' }, { transform: 'translate(0,0)' }], { duration: 520 }); }
+  setTimeout(() => fx.remove(), 3800);
+}
+// masa ekranında kazananın seçim kutusu / sonuç satırları
+const cezaSec = { gid: '', hedef: null, eylem: null, kapali: new Set() };
+function cezaCiz(sh, s, lv){
+  let box = sh.querySelector('.ceza-kutu');
+  const c = lv && lv.ceza;
+  if (!c || cezaSec.kapali.has(c.gid)){ if (box) box.remove(); return; }
+  if (cezaSec.gid !== c.gid){ cezaSec.gid = c.gid; cezaSec.hedef = null; cezaSec.eylem = null; }
+  const ben = typeof peer !== 'undefined' && peer ? peer.id : '';
+  const benKaz = c.kaz.some(k => k.id === ben), yaptim = c.yapan.some(y => y.id === ben);
+  const sig = JSON.stringify(c) + '|' + cezaSec.hedef + '|' + cezaSec.eylem;
+  if (box && box._sig === sig) return;
+  if (!box){ box = document.createElement('div'); box.className = 'ceza-kutu'; sh.append(box); }
+  box._sig = sig; box.innerHTML = '';
+  const kapat = document.createElement('button'); kapat.type = 'button'; kapat.className = 'ceza-x'; kapat.textContent = '✕'; kapat.title = 'Kapat';
+  kapat.onclick = () => { cezaSec.kapali.add(c.gid); box.remove(); };
+  box.append(kapat);
+  const h = document.createElement('h4'); box.append(h);
+  if (benKaz && !yaptim){
+    h.textContent = '🏆 Kazandın! Kazananın hakkı: birine ceza ver';
+    const p1 = document.createElement('p'); p1.className = 'ceza-adim'; p1.textContent = '1) Kime?'; box.append(p1);
+    const hs = document.createElement('div'); hs.className = 'ceza-sec';
+    c.hedef.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'ceza-chip' + (cezaSec.hedef === t.id ? ' on' : ''); b.textContent = t.ad; b.onclick = () => { cezaSec.hedef = t.id; cezaCiz(sh, s, lv); }; hs.append(b); });
+    box.append(hs);
+    const p2 = document.createElement('p'); p2.className = 'ceza-adim'; p2.textContent = '2) Ne yapacaksın?'; box.append(p2);
+    const es = document.createElement('div'); es.className = 'ceza-sec';
+    Object.keys(CEZALAR).forEach(k => { const e = CEZALAR[k]; const b = document.createElement('button'); b.type = 'button'; b.className = 'ceza-chip ey' + (cezaSec.eylem === k ? ' on' : ''); b.textContent = e.ico + ' ' + e.ad; b.onclick = () => { cezaSec.eylem = k; cezaCiz(sh, s, lv); }; es.append(b); });
+    box.append(es);
+    const go = document.createElement('button'); go.type = 'button'; go.className = 'btn primary ceza-go';
+    const ht = c.hedef.find(t => t.id === cezaSec.hedef);
+    go.textContent = ht && cezaSec.eylem ? CEZALAR[cezaSec.eylem].ico + ' ' + yonelme(ht.ad) + ' ' + CEZALAR[cezaSec.eylem].ad.toLocaleLowerCase('tr-TR') + '!' : 'Önce kişiyi ve cezayı seç';
+    go.disabled = !(ht && cezaSec.eylem);
+    go.onclick = () => { go.disabled = true; tableAct({ type: 'ceza', hedef: cezaSec.hedef, eylem: cezaSec.eylem }); };
+    box.append(go);
+  } else {
+    const bekleyen = c.kaz.filter(k => !c.yapan.some(y => y.id === k.id));
+    h.textContent = bekleyen.length ? '🏆 ' + bekleyen.map(k => k.ad).join(', ') + ' ceza seçiyor…' : '🏆 Kazananın hakkı kullanıldı';
+  }
+  c.yapan.forEach(y => { const e = CEZALAR[y.eylem]; if (!e) return; const r = document.createElement('p'); r.className = 'ceza-satir'; r.textContent = e.ico + ' ' + y.ad + ', ' + yonelme(y.hedefAd) + ' ' + e.fiil + '!'; box.append(r); });
 }
 // masa sahibi: anlık olay (çizim çizgisi, tahmin…) masadaki herkese; isteğe bağlı biri hariç
 function sendEvent(o, ev, except){
@@ -306,6 +457,11 @@ function gamesOnData(id, d){
       if (s && s.owner === id && tdef(s) && tdef(s).onEvent && openTable === d.id) tdef(s).onEvent(d.ev, s);
       return true;
     }
+    case 'ceza-ev': {
+      const s = tables.get(d.id);
+      if (s && s.owner === id) cezaOlay(d);
+      return true;
+    }
     case 'tb-err': if (tables.get(d.id) && tables.get(d.id).owner === id){ toast('⚠ ' + clip(d.err, 120)); gameSound('err'); } return true;
   }
   return false;
@@ -313,7 +469,7 @@ function gamesOnData(id, d){
 function onView(d){
   const prevV = lastViews.get(d.id);
   if (prevV && d.vseq && prevV.vseq && d.vseq < prevV.vseq && prevV.owner === tables.get(d.id).owner) return;
-  lastViews.set(d.id, { v: d.v, seat: d.seat, vseq: d.vseq, owner: tables.get(d.id) && tables.get(d.id).owner, prev: prevV && prevV.v });
+  lastViews.set(d.id, { v: d.v, seat: d.seat, vseq: d.vseq, owner: tables.get(d.id) && tables.get(d.id).owner, prev: prevV && prevV.v, ceza: d.ceza || null });
   if (openTable === d.id) renderOpenTable();
   notifyTurn(d);
 }
@@ -389,7 +545,7 @@ function renderGameDeck(d){
   $('room').classList.remove('gaming');
   d.innerHTML = '';
   const head = document.createElement('div'); head.className = 'salon-head';
-  head.innerHTML = '<div class="salon-ust"><h2 class="deck-title">🎲 Oyun Salonu</h2><button type="button" class="btn small nasil-btn" data-nasil>❓ Nasıl oynanır?</button></div><p class="note">Masa aç, arkadaşların boş koltuklara otursun; eksik koltuğa bot oturtabilirsin. Tek kişilik oyunlarda skor tablosunda yarışırsınız. Oyun sırasında konuşma ve radyo devam eder.</p>';
+  head.innerHTML = '<div class="salon-ust"><h2 class="deck-title">🎲 Oyun Salonu</h2><button type="button" class="btn small nasil-btn" data-nasil>❓ Nasıl oynanır?</button></div><p class="note">Masa aç, arkadaşların boş koltuklara otursun; eksik koltuğa bot oturtabilirsin. Tek kişilik oyunlarda skor tablosunda yarışırsınız. Oyun sırasında konuşma ve radyo devam eder. Oyunu kazanan, masadakilerden birine 👋 tokat ya da 🦵 tekme atma hakkı kazanır!</p>';
   head.querySelector('[data-nasil]').onclick = () => { if (typeof nasilAc === 'function') nasilAc(); };
   d.append(head);
   // sekmeler: masa oyunları / tek kişilik oyunlar
@@ -560,6 +716,7 @@ function renderOpenTable(){
   if (tdef(s)) tdef(s).render(body, s, lv);
   else if (s.game === 'tavla') renderTavla(body, s, lv);
   else renderOkey(body, s, lv);
+  cezaCiz(sh, s, lv);
 }
 function tableAct(a){ if (openTable) toOwner(openTable, { t: 'tb-act', a }); }
 
@@ -582,6 +739,8 @@ function gameSound(kind){
     else if (kind === 'turn'){ tone([880, 1175], 0.1, 0.18, 0.08); }
     else if (kind === 'err'){ tone([300, 220], 0.09, 0.18, 0.08); }
     else if (kind === 'win'){ tone([523, 659, 784, 1047], 0.12, 0.35, 0.12); }
+    else if (kind === 'tokat'){ noise(0.09, 1400, 0.8, vol * 6); noise(0.05, 3200, 1.2, vol * 3, 0.01); }
+    else if (kind === 'su'){ for (let i = 0; i < 5; i++) noise(0.12, 600 + i * 500, 1.5, vol * 2.5, i * 0.03); }
   } catch(e){}
 }
 // kutlama konfetisi

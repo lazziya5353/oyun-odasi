@@ -31,17 +31,20 @@
       ipucu: ['Telefonda parmağınla çizebilirsin.', 'Yanlış tahminler sohbet gibi görünür, bol bol dene.'] },
 
     { id: 'isimsehir', tur: 'masa', ikon: '📝', ad: 'İsim-Şehir', kisi: '2-8 kişi',
-      amac: 'Çıkan harfle başlayan isim, şehir, hayvan, bitki, eşya… kutularını herkesten hızlı ve farklı doldurmak.',
+      amac: 'Zarla çıkan harfle başlayan isim, şehir, hayvan, bitki, eşya… kutularını doğru, hızlı ve herkesten farklı doldurmak.',
       adim: [
-        'Masaya oturun, masayı açan “Oyunu başlat”a bassın.',
-        'Her tur rastgele bir harf çıkar. Bütün kategorileri o harfle başlayan kelimelerle doldur.',
+        'Masaya oturun, masayı açan tur sayısını (3, 5, 10, 15 ya da 20) seçip “Oyunu başlat”a bassın.',
+        'Her tur 🎲 harf zarı atılır; zar hangi harfte durursa o harf oynanır. Bir oyunda aynı harf ikinci kez gelmez (çıkan harfler üstte yazar).',
+        'Bütün kategorileri tam o harfle başlayan kelimelerle doldur. Ç yerine C, Ş yerine S, İ yerine I sayılmaz.',
         'Hepsini dolduran “🛑 Bitirdim!”e basar; diğerlerine 5 saniye kalır. Süre biterse de tur kapanır.',
-        'Sonra herkesin cevabı açılır. Uymayan bir cevap görürsen üstüne tıklayıp 👎 itiraz et.',
-        'Diğer oyuncuların çoğunluğu itiraz ederse o cevap sayılmaz.',
-        'Masayı açan “Devam”a basınca yeni harf gelir.'
+        'Cevaplar sözlükle denetlenir: her kategorinin kendi listesi var (isimler, il ve ilçeler, dünya şehirleri, ülkeler, hayvanlar, bitkiler, eşyalar, meslekler, yemekler).',
+        'Aynı kelimeyi birden fazla kategoriye yazarsan (ör. her yere “Ali”) o kelimeden hiç puan alamazsın. Anlamsız harf yığınları da otomatik geçersiz.',
+        'Sözlükte olan cevaba itiraz edebilirsin (👎); diğer oyuncuların çoğunluğu itiraz ederse sayılmaz.',
+        'Sözlükte olmayan cevap ancak diğer oyuncuların çoğunluğu 👍 kabul ederse sayılır ve yarım puan alır.',
+        'Oyun bitince kazanan, masadaki birine 👋 tokat, 🦵 tekme gibi bir “ceza” verir; kime ne yaptığı herkesin ekranında ve sohbette görünür.'
       ],
-      puan: 'O kategoride geçerli cevabı olan tek kişiysen 20, cevabın kimseyle aynı değilse 10, başkasıyla aynıysa 5, boş ya da geçersizse 0.',
-      ipucu: ['Geniş seçenekte Ülke, Meslek ve Yemek de eklenir (8 kategori).', 'Herkesin aklına gelmeyecek cevaplar daha çok puan getirir.'] },
+      puan: 'O kategoride geçerli cevabı olan tek kişiysen 20, cevabın kimseyle aynı değilse 10, başkasıyla aynıysa 5; sözlükte olmayıp onay alan cevap bunların yarısı. Boş, harfi tutmayan, tekrar eden ya da itirazla düşen cevap 0.',
+      ipucu: ['Geniş seçenekte Ülke, Meslek ve Yemek de eklenir (8 kategori).', 'Herkesin aklına gelmeyecek ama sözlükte olan cevaplar en çok puanı getirir.', 'Türkçe karakterleri doğru yaz: “Çorum” Ç harfinde geçer, C harfinde geçmez.'] },
 
     { id: 'vampir', tur: 'masa', ikon: '🧛', ad: 'Vampir Köy', kisi: '3-10 kişi · sesli',
       amac: 'Köylüler: görevleri bitirmek ya da vampirleri bulup köyden kovmak. Vampirler: fark edilmeden köylüleri ısırmak.',

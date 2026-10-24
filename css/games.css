@@ -327,3 +327,32 @@
 .nasil-tablo th{position:sticky;top:0;text-align:left;color:var(--muted);font-weight:600;padding:5px 7px;border-bottom:1px solid var(--line);white-space:nowrap}
 .nasil-tablo td{padding:5px 7px;border-bottom:1px solid var(--line)}
 .nasil-tablo td:first-child{white-space:nowrap;font-weight:600}
+
+/* ===== Kazananın hakkı: tokat, tekme… ===== */
+.ceza-kutu{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:70;width:min(560px,calc(100vw - 24px));max-height:min(70vh,520px);overflow:auto;
+  background:var(--panel);border:2px solid var(--warn,#f2c230);border-radius:18px;padding:14px 16px 16px;box-shadow:0 24px 60px -16px rgb(0 0 0 / .7);animation:ceza-gir .35s cubic-bezier(.3,1.5,.5,1)}
+@keyframes ceza-gir{from{transform:translateX(-50%) scale(.6);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+.ceza-kutu h4{margin:0 26px 8px 0;font-size:16px}
+.ceza-x{position:absolute;right:10px;top:8px;border:0;background:transparent;color:var(--muted);font-size:16px;cursor:pointer}
+.ceza-adim{margin:8px 0 6px;font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.ceza-sec{display:flex;flex-wrap:wrap;gap:6px}
+.ceza-chip{border:1px solid var(--line);background:var(--panel-2);color:var(--fg);border-radius:99px;padding:7px 12px;font:600 13.5px/1 var(--body);cursor:pointer}
+.ceza-chip:hover{border-color:var(--accent)}
+.ceza-chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.ceza-go{margin-top:12px;width:100%;font-size:16px;padding:11px}
+.ceza-satir{margin:6px 0 0;font-weight:600}
+.ceza-fx{position:fixed;inset:0;z-index:9000;pointer-events:none;display:grid;place-items:center}
+.ceza-ico{position:absolute;left:50%;top:42%;font-size:150px;line-height:1;transform:translate(-50%,-50%);animation:ceza-uc 1s cubic-bezier(.2,.8,.3,1.2) forwards;filter:drop-shadow(0 10px 20px rgb(0 0 0 / .5))}
+.ceza-pat{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) rotate(-8deg) scale(0);font:900 64px/1 var(--display);color:#fff;-webkit-text-stroke:4px #d6402b;paint-order:stroke;text-shadow:0 6px 0 #8a1f12;animation:ceza-pat .5s .55s cubic-bezier(.3,1.8,.5,1) forwards}
+.ceza-yazi{position:absolute;left:50%;top:64%;transform:translateX(-50%);display:grid;gap:4px;text-align:center;padding:14px 22px;border-radius:18px;background:rgb(10 12 18 / .88);color:#fff;border:2px solid var(--warn,#f2c230);box-shadow:0 20px 50px rgb(0 0 0 / .6);animation:ceza-yazi 3.6s ease forwards;max-width:calc(100vw - 30px)}
+.ceza-yazi b{font:800 22px/1.25 var(--display)}
+.ceza-yazi span{font-size:13px;color:#ffe27a}
+.ceza-fx.bana{background:radial-gradient(circle,transparent 40%,rgb(214 64 43 / .35));animation:ceza-flas .6s ease 2}
+.ceza-fx.bana .ceza-ico{font-size:220px}
+.ceza-fx.ceza-su .ceza-pat{-webkit-text-stroke-color:#2b6fd6;text-shadow:0 6px 0 #173f80}
+@keyframes ceza-uc{0%{transform:translate(-180%,-50%) rotate(-40deg) scale(.6);opacity:0}55%{transform:translate(-50%,-50%) rotate(15deg) scale(1.15);opacity:1}70%{transform:translate(-50%,-50%) rotate(-6deg) scale(.95)}100%{transform:translate(-50%,-50%) rotate(0) scale(1);opacity:0}}
+@keyframes ceza-pat{0%{transform:translate(-50%,-50%) rotate(-8deg) scale(0)}60%{transform:translate(-50%,-50%) rotate(-8deg) scale(1.25)}100%{transform:translate(-50%,-50%) rotate(-8deg) scale(1);opacity:.95}}
+@keyframes ceza-yazi{0%{opacity:0;transform:translate(-50%,20px)}12%{opacity:1;transform:translate(-50%,0)}85%{opacity:1}100%{opacity:0}}
+@keyframes ceza-flas{50%{background-color:rgb(214 64 43 / .25)}}
+@media (prefers-reduced-motion:reduce){.ceza-ico,.ceza-pat,.ceza-yazi,.ceza-fx.bana{animation:none}.ceza-pat{transform:translate(-50%,-50%) rotate(-8deg)}}
+@media (max-width:640px){.ceza-kutu{bottom:84px}.ceza-ico{font-size:110px}.ceza-pat{font-size:46px}.ceza-yazi b{font-size:18px}}
