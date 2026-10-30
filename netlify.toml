@@ -1,34 +1,32 @@
-# Ehliyet Sınav Kampı - Netlify ayarları
-# Derleme yok; klasördeki dosyalar olduğu gibi yayınlanır.
+# Netlify ayarları: klasör olduğu gibi yayınlanır. Derleme adımı: replikler ve duvar-kagitlari klasörlerindeki videoların listesini çıkarmak.
 [build]
   publish = "."
+  command = "node scripts/replik-liste.mjs && node scripts/duvar-liste.mjs"
+  # Bildirim gönderen sunucu fonksiyonu (ek kurulum gerektirmez)
+  functions = "netlify/functions"
 
-# Bilinmeyen adreslerde ana sayfayı aç
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
+# Güncelleme yaptığımızda herkes yeni sürümü hemen alsın (tarayıcı eski dosyayı önbellekte tutmasın)
 [[headers]]
   for = "/*"
   [headers.values]
+    Cache-Control = "no-cache"
     X-Content-Type-Options = "nosniff"
-    X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-# Sayfa her açılışta güncel gelsin (soru eklenince telefonda eski sürüm kalmasın)
-[[headers]]
-  for = "/index.html"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
+# kısa yönetim adresi: /admin
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
 
+# replik videoları değişmez (aynı adla yeni dosya atılırsa ad değişsin): tarayıcı bir gün saklasın
 [[headers]]
-  for = "/icon-*.png"
+  for = "/replikler/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# video duvar kağıtları büyük dosyalar: tarayıcı bir hafta saklasın (her açılışta yeniden inmesin)
+[[headers]]
+  for = "/duvar-kagitlari/*"
   [headers.values]
     Cache-Control = "public, max-age=604800"
-
-# Uygulama güncellenince telefon yeni sürümü hemen alsın
-[[headers]]
-  for = "/sw.js"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
