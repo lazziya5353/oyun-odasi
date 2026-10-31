@@ -47,8 +47,14 @@ const MASA = (() => {
     const alan = document.querySelector('.people-area'); if (!alan) return null;
     const kok = document.createElement('div'); kok.className = 'masa-sahne'; kok.id = 'masaSahne'; kok.hidden = true;
     kok.innerHTML = '<div class="masa-ic"><img class="masa-oda" src="img/masa/oda.webp" alt="" draggable="false"><i class="masa-isik"></i><i class="masa-isik iki"></i>'
-      + '<div class="masa-kivilcim"></div><img class="masa-on" src="img/masa/masa-on.webp" alt="" draggable="false"></div>';
+      + '<div class="masa-kivilcim"></div><img class="masa-on" src="img/masa/masa-on.webp" alt="" draggable="false"></div>'
+      + '<div class="masa-cevir">📱↻ Daha büyük görmek için telefonu yan çevir</div><div class="masa-arac"><button type="button" class="masa-ab" data-mik title="Mikrofon">🎙</button><button type="button" class="masa-ab" data-ses title="Sesler">🔊</button><button type="button" class="masa-ab" data-tam title="Tam ekran">⛶</button></div>';
     alan.prepend(kok);
+    kok.querySelector('[data-tam]').onclick = e => { e.currentTarget.blur(); tamEkran(!kok.classList.contains('tam')); };
+    kok.querySelector('[data-mik]').onclick = e => { e.currentTarget.blur(); const b = document.getElementById('micBtn'); if (b) b.click(); };
+    kok.querySelector('[data-ses]').onclick = e => { e.currentTarget.blur(); const b = document.getElementById('deafBtn'); if (b) b.click(); };
+    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && kok.classList.contains('tam')) tamEkran(false, true); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && kok.classList.contains('tam') && !document.fullscreenElement) tamEkran(false); });
     S.kok = kok; S.ic = kok.querySelector('.masa-ic');
     const kv = kok.querySelector('.masa-kivilcim');
     for (let i = 0; i < 9; i++){ const e = document.createElement('i'); e.style.left = (46 + Math.random() * 8) + '%'; e.style.animationDelay = (Math.random() * 3).toFixed(2) + 's'; e.style.animationDuration = (2 + Math.random() * 1.6).toFixed(2) + 's'; kv.append(e); }
@@ -57,14 +63,30 @@ const MASA = (() => {
     return kok;
   }
   // görsel sahne kutuya sığdırılır; telefonda yanlar kırpılır, isimler okunur boyda kalır
+  // tam ekran: tarayıcı destekliyorsa gerçek tam ekran, değilse (iPhone) sayfayı kaplayan katman
+  function tamEkran(ac, disaridan){
+    const kok = S.kok; if (!kok) return;
+    kok.classList.toggle('tam', ac); document.documentElement.classList.toggle('masa-tam-acik', ac);
+    try {
+      if (ac && kok.requestFullscreen && !document.fullscreenElement) kok.requestFullscreen().catch(() => {});
+      if (!ac && !disaridan && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    } catch(e){}
+    const b = kok.querySelector('[data-tam]'); b.textContent = ac ? '✕' : '⛶'; b.title = ac ? 'Tam ekrandan çık' : 'Tam ekran';
+    setTimeout(olcekle, 60); setTimeout(olcekle, 400);
+  }
   function olcekle(){
     if (!S.kok || S.kok.hidden) return;
-    const dar = window.innerWidth < 700, kw = S.kok.clientWidth;
+    const tam = S.kok.classList.contains('tam'), kw = S.kok.clientWidth, kh = S.kok.clientHeight;
+    const dikEkran = tam && kh > kw * 1.1, dar = (window.innerWidth < 700 && !tam) || dikEkran;
     const pen = dar ? [150, 50, 1230, 768] : [0, 0, W, H];
     const pw = pen[2] - pen[0], ph = pen[3] - pen[1];
-    S.kok.style.aspectRatio = pw + ' / ' + ph;
-    const s = kw / pw; S.olc = s;
-    S.ic.style.transform = 'translate(' + (-pen[0] * s) + 'px,' + (-pen[1] * s) + 'px) scale(' + s + ')';
+    S.kok.style.aspectRatio = tam ? 'auto' : pw + ' / ' + ph;
+    // tam ekranda sahne ekranı kaplar (az taşan kenar kırpılır); telefon dikse sığdırılır, yan çevirme önerilir
+    const kap = Math.max(kw / pw, kh / ph), sig = Math.min(kw / pw, kh / ph);
+    const s = tam ? (kap / sig > 1.25 ? sig : kap) : kw / pw; S.olc = s;
+    S.kok.classList.toggle('dik', dikEkran);
+    const ox = tam ? (kw - pw * s) / 2 : 0, oy = tam ? (kh - ph * s) / 2 : 0;
+    S.ic.style.transform = 'translate(' + (ox - pen[0] * s) + 'px,' + (oy - pen[1] * s) + 'px) scale(' + s + ')';
     S.kok.style.setProperty('--ters', (1 / s).toFixed(4));
     S.kok.style.setProperty('--yazi', Math.max(11, Math.min(16, 15 * s)) + 'px');
   }
@@ -97,6 +119,11 @@ const MASA = (() => {
     dugmeGuncelle();
   }
   function dugmeGuncelle(){
+    if (S.kok){
+      const m = S.kok.querySelector('[data-mik]'), d = S.kok.querySelector('[data-ses]');
+      const mk = typeof micMuted !== 'undefined' && micMuted, dk = typeof deafened !== 'undefined' && deafened;
+      m.textContent = mk ? '🔇' : '🎙'; m.classList.toggle('kapali', mk); d.textContent = dk ? '🔈' : '🔊'; d.classList.toggle('kapali', dk);
+    }
     const b = document.getElementById('masaToggle');
     if (b){
       b.innerHTML = S.mod === 'masa' ? '🪪 <span class="lbl">Standart</span>' : '🪑 <span class="lbl">Masa</span>';
@@ -144,6 +171,7 @@ const MASA = (() => {
     const goster = acik();
     document.getElementById('room').classList.toggle('masa-modu', goster);
     if (kok.hidden === goster){ kok.hidden = !goster; if (goster){ olcekle(); S.hazir = false; } }
+    if (!goster && kok.classList.contains('tam')) tamEkran(false);
     if (!goster){ S.kisi.forEach(o => o.el.remove()); S.kisi.clear(); const ok = document.getElementById('masaKart'); if (ok) ok._geri(); return; }
     const ls = kisiler(), n = ls.length, var_ = new Set();
     ls.forEach((k, i) => {

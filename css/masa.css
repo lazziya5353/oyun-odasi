@@ -21,13 +21,16 @@
 .masa-kisi:not(.ben):hover .masa-av{filter:drop-shadow(0 10px 10px rgba(5,2,4,.7)) brightness(1.12)}
 .masa-kisi.konusuyor .masa-av{animation:masa-konus .5s ease-in-out infinite alternate;transform-origin:50% 90%}
 @keyframes masa-konus{from{transform:translateY(0)}to{transform:translateY(-1.5px) rotate(.4deg)}}
-/* koltuğun altında neon ses halkası */
+/* koltuğun altında neon ses halkası: sessizken ince, konuşurken parlak dolgu + yayılan dalgalar */
 .masa-halka{position:absolute;left:0;top:calc(var(--ha) - var(--hw) * .12);width:var(--hw);height:calc(var(--hw) * .32);transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:-1}
-.masa-halka::before,.masa-halka::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--c);opacity:.45;box-shadow:0 0 8px var(--c),inset 0 0 6px var(--c);transition:opacity .15s,box-shadow .15s}
-.masa-halka::after{inset:-8px;border:3px dashed var(--c);opacity:.28;box-shadow:none}
-.masa-kisi.konusuyor .masa-halka::before{opacity:1;box-shadow:0 0 calc(14px + var(--lv,0) * 40px) calc(3px + var(--lv,0) * 8px) var(--c),inset 0 0 14px var(--c);animation:masa-eq .3s ease-in-out infinite alternate}
-.masa-kisi.konusuyor .masa-halka::after{opacity:.9;animation:masa-eq2 .45s ease-in-out infinite alternate}
-@keyframes masa-eq{to{transform:scale(1.05)}}@keyframes masa-eq2{to{transform:scale(1.1)}}
+.masa-halka::before,.masa-halka::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--c);opacity:.55;box-shadow:0 0 10px var(--c),inset 0 0 8px var(--c);transition:opacity .12s,box-shadow .12s,background .12s}
+.masa-halka::after{inset:-9px;border:3px dashed var(--c);opacity:.3;box-shadow:none}
+.masa-kisi.konusuyor .masa-halka::before{opacity:1;border-width:5px;background:radial-gradient(ellipse,color-mix(in srgb,var(--c) 55%,transparent),color-mix(in srgb,var(--c) 18%,transparent) 60%,transparent 72%);box-shadow:0 0 calc(22px + var(--lv,0) * 60px) calc(6px + var(--lv,0) * 16px) var(--c),inset 0 0 22px var(--c);animation:masa-eq .28s ease-in-out infinite alternate}
+.masa-kisi.konusuyor .masa-halka::after{opacity:1;border-style:solid;border-width:3px;animation:masa-dalga 1s ease-out infinite}
+@keyframes masa-eq{from{transform:scale(1)}to{transform:scale(calc(1.06 + var(--lv,0) * .14))}}
+@keyframes masa-dalga{0%{transform:scale(1);opacity:.95}100%{transform:scale(1.55);opacity:0}}
+.masa-kisi.konusuyor .masa-av{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--c) 80%,transparent)) drop-shadow(0 10px 10px rgba(5,2,4,.7))}
+.masa-kisi.konusuyor .masa-plaka{box-shadow:0 0 22px var(--c),0 0 6px var(--c);border-color:var(--c)}
 .masa-kisi.sessiz .masa-halka::before{opacity:.25}
 /* isim plakası: cam, okunur boyda (sahne ölçeğinden bağımsız) */
 .masa-plaka{position:absolute;left:0;transform:translate(-50%,-100%);display:flex;align-items:center;gap:.35em;white-space:nowrap;padding:.32em .85em;border-radius:.7em;background:rgba(22,20,30,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid color-mix(in srgb,var(--c) 65%,transparent);box-shadow:0 0 14px color-mix(in srgb,var(--c) 35%,transparent);font:800 calc(var(--yazi,15px) * var(--ters,1))/1.2 system-ui,sans-serif;color:var(--c);pointer-events:none;z-index:5}
@@ -61,3 +64,16 @@
 .masa-av-profil>span{display:flex;flex-direction:column;gap:2px}
 @media (max-width:700px){.masa-sahne{max-width:100%;border-radius:12px}}
 @media (prefers-reduced-motion:reduce){.masa-isik,.masa-kivilcim i,.masa-kisi.konusuyor .masa-av,.masa-kisi.konusuyor .masa-halka::before,.masa-kisi.konusuyor .masa-halka::after{animation:none}}
+/* tam ekran ve sahne üstü düğmeler */
+.masa-arac{position:absolute;right:10px;top:10px;z-index:3050;display:flex;gap:6px}
+.masa-ab{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(12,10,16,.62);backdrop-filter:blur(6px);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.masa-ab:hover{background:rgba(30,26,40,.85)}
+.masa-ab.kapali{border-color:#ff5a6a;background:rgba(120,20,35,.6)}
+.masa-ab[data-mik],.masa-ab[data-ses]{display:none}
+.masa-sahne.tam .masa-ab{display:flex}
+.masa-sahne.tam{position:fixed!important;inset:0;z-index:9000;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;aspect-ratio:auto!important;border-radius:0!important;margin:0}
+.masa-sahne.tam .masa-plaka{font-size:calc(var(--yazi,15px) * var(--ters,1) * 1.1)}
+html.masa-tam-acik,html.masa-tam-acik body{overflow:hidden}
+.masa-cevir{display:none}
+.masa-sahne.tam.dik .masa-cevir{display:block;position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3050;padding:8px 14px;border-radius:12px;background:rgba(12,10,16,.7);color:#fff;font-size:14px;white-space:nowrap}
+.masa-sahne.tam{background:#0b0809}
