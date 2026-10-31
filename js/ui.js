@@ -519,6 +519,7 @@ $('deafBtn').onclick = () => {
   $('deafBtn').className = 'btn ' + (deafened ? 'off' : '');
   $('deafBtn').innerHTML = (deafened ? '🔇' : '🔊') + ' <span class="lbl">' + (deafened ? 'Sesler kapalı' : 'Sesler açık') + '</span>';
   applyAll();
+  broadcast({ t: 'state', deaf: deafened });
 };
 $('leaveBtn').onclick = leaveRoom;
 $('copyBtn').onclick = async () => {

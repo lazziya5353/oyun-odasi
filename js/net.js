@@ -394,7 +394,7 @@ function handleConn(conn){
   conn.on('open', () => {
     p.linked = true; p.failed = false; p.lastSeen = Date.now(); clearTimeout(p.linkTimer);
     if (!joined) enterRoom();
-    send(conn, { t: 'hello', name: myName, muted: micMuted, noMic, sharing: !!screenStream, channel: me.channel, foto: typeof myFoto !== 'undefined' ? myFoto : null, stil: typeof myStil !== 'undefined' ? myStil : null, vfx: typeof vfxId !== 'undefined' ? vfxId : 'normal', kam: 1 });
+    send(conn, { t: 'hello', name: myName, muted: micMuted, noMic, sharing: !!screenStream, channel: me.channel, foto: typeof myFoto !== 'undefined' ? myFoto : null, stil: typeof myStil !== 'undefined' ? myStil : null, vfx: typeof vfxId !== 'undefined' ? vfxId : 'normal', kam: 1, mav: typeof MASA !== 'undefined' ? MASA.benAv() : null, deaf: !!deafened });
     if (isHost){
       send(conn, { t: 'peers', ids: [...peers.values()].filter(o => o.linked && o.id !== conn.peer).map(o => o.id) });
       send(conn, Object.assign({ t: 'sync' }, makeSync()));
@@ -455,6 +455,7 @@ function onData(id, d){
       p.stil = typeof cleanStil === 'function' ? cleanStil(d.stil) : null;
       p.vfx = typeof VFX !== 'undefined' && VFX.some(v => v[0] === d.vfx) ? d.vfx : 'normal';
       p.kamDestek = !!d.kam;
+      p.mav = typeof MASA !== 'undefined' ? MASA.avTemiz(d.mav) : null; p.deaf = !!d.deaf;
       if (p.stil) p.color = colorFor(p.id);
       if (!p.helloed){
         p.helloed = true;
@@ -478,6 +479,7 @@ function onData(id, d){
     case 'state': {
       if ('muted' in d) p.muted = !!d.muted;
       if ('noMic' in d) p.noMic = !!d.noMic;
+      if ('deaf' in d) p.deaf = !!d.deaf;
       if ('sharing' in d){ p.sharing = !!d.sharing; if (!p.sharing) dropScreen(p); }
       if ('channel' in d){
         const old = p.channel;
@@ -534,6 +536,7 @@ function onData(id, d){
   if (ikramOnData(id, d)) return;
   if (typeof sakaOnData === 'function' && sakaOnData(id, d)) return;
   if (typeof stilOnData === 'function' && stilOnData(id, d)) return;
+  if (typeof MASA !== 'undefined' && MASA.onData(id, d)) return;
   if (typeof vfxOnData === 'function' && vfxOnData(id, d)) return;
   if (chatOnData(id, d)) return;
   if (musicOnData(id, d)) return;

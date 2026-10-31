@@ -1,0 +1,63 @@
+/* Masa görünümü: ateşli yuvarlak masa, kişi sayısı kadar koltuk */
+.room.masa-modu #people,.room.masa-modu #emptyStage{display:none!important}
+.masa-toggle[hidden]{display:none}
+.masa-sahne{position:relative;width:100%;max-width:min(1240px,calc((100vh - 220px) * 1.79));aspect-ratio:1376/768;border-radius:16px;overflow:hidden;background:#0b0809;box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06);user-select:none;-webkit-user-select:none}
+.masa-sahne[hidden]{display:none}
+.masa-sahne::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 55%,transparent 58%,rgba(0,0,0,.4));z-index:3000}
+.masa-ic{position:absolute;left:0;top:0;width:1376px;height:768px;transform-origin:0 0}
+.masa-oda{position:absolute;inset:0;width:100%;height:100%;display:block}
+.masa-on{position:absolute;left:410px;top:305px;width:560px;height:223px;z-index:436;pointer-events:none}
+/* ateşin titreyen ışığı ve kıvılcımlar */
+.masa-isik{position:absolute;left:690px;top:398px;width:260px;height:120px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(255,160,60,.5),transparent 66%);mix-blend-mode:screen;z-index:437;pointer-events:none;animation:masa-titre 1.4s infinite}
+.masa-isik.iki{top:440px;width:1100px;height:520px;background:radial-gradient(ellipse,rgba(255,140,50,.14),transparent 62%);z-index:1;animation-duration:2.1s;animation-direction:reverse}
+@keyframes masa-titre{0%,100%{opacity:1}22%{opacity:.62}45%{opacity:.92}63%{opacity:.7}80%{opacity:.98}}
+.masa-kivilcim{position:absolute;left:600px;top:300px;width:180px;height:110px;z-index:437;pointer-events:none}
+.masa-kivilcim i{position:absolute;bottom:0;width:3px;height:3px;border-radius:50%;background:#ffd27a;box-shadow:0 0 6px 2px rgba(255,150,40,.8);opacity:0;animation:masa-kv 2.6s ease-out infinite}
+@keyframes masa-kv{0%{transform:translate(0,0);opacity:0}15%{opacity:1}100%{transform:translate(14px,-100px);opacity:0}}
+/* kişi */
+.masa-kisi{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
+.masa-kisi:not(.ben){cursor:pointer}
+.masa-av{position:absolute;display:block;pointer-events:auto;filter:drop-shadow(0 10px 10px rgba(5,2,4,.7));transition:filter .2s}
+.masa-kisi:not(.ben):hover .masa-av{filter:drop-shadow(0 10px 10px rgba(5,2,4,.7)) brightness(1.12)}
+.masa-kisi.konusuyor .masa-av{animation:masa-konus .5s ease-in-out infinite alternate;transform-origin:50% 90%}
+@keyframes masa-konus{from{transform:translateY(0)}to{transform:translateY(-1.5px) rotate(.4deg)}}
+/* koltuğun altında neon ses halkası */
+.masa-halka{position:absolute;left:0;top:calc(var(--ha) - var(--hw) * .12);width:var(--hw);height:calc(var(--hw) * .32);transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:-1}
+.masa-halka::before,.masa-halka::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--c);opacity:.45;box-shadow:0 0 8px var(--c),inset 0 0 6px var(--c);transition:opacity .15s,box-shadow .15s}
+.masa-halka::after{inset:-8px;border:3px dashed var(--c);opacity:.28;box-shadow:none}
+.masa-kisi.konusuyor .masa-halka::before{opacity:1;box-shadow:0 0 calc(14px + var(--lv,0) * 40px) calc(3px + var(--lv,0) * 8px) var(--c),inset 0 0 14px var(--c);animation:masa-eq .3s ease-in-out infinite alternate}
+.masa-kisi.konusuyor .masa-halka::after{opacity:.9;animation:masa-eq2 .45s ease-in-out infinite alternate}
+@keyframes masa-eq{to{transform:scale(1.05)}}@keyframes masa-eq2{to{transform:scale(1.1)}}
+.masa-kisi.sessiz .masa-halka::before{opacity:.25}
+/* isim plakası: cam, okunur boyda (sahne ölçeğinden bağımsız) */
+.masa-plaka{position:absolute;left:0;transform:translate(-50%,-100%);display:flex;align-items:center;gap:.35em;white-space:nowrap;padding:.32em .85em;border-radius:.7em;background:rgba(22,20,30,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid color-mix(in srgb,var(--c) 65%,transparent);box-shadow:0 0 14px color-mix(in srgb,var(--c) 35%,transparent);font:800 calc(var(--yazi,15px) * var(--ters,1))/1.2 system-ui,sans-serif;color:var(--c);pointer-events:none;z-index:5}
+.masa-plaka.alt{transform:translate(-50%,0)}
+.masa-plaka .pname:not([data-isim]){text-shadow:0 0 8px color-mix(in srgb,var(--c) 60%,transparent)}
+.masa-kisi.ben .masa-plaka{border-color:#ffb454}
+.masa-ik{display:none;font-size:.85em;line-height:1}
+.masa-ik.sus{position:relative}
+.masa-ik.sus::after{content:"";position:absolute;left:50%;top:-10%;width:2px;height:120%;background:#ff4d4d;transform:rotate(45deg);box-shadow:0 0 4px #ff4d4d}
+.masa-kisi.sessiz .masa-ik.sus,.masa-kisi.sagir .masa-ik.sagir{display:inline-block}
+.masa-kisi.sessiz .masa-plaka{border-color:rgba(255,77,77,.7)}
+.masa-balon{position:absolute;left:50%;bottom:calc(100% + .3em);font-size:2.2em;animation:masa-balon 2.3s ease-out forwards;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.masa-plaka.alt .masa-balon{bottom:auto;top:calc(100% + .2em)}
+@keyframes masa-balon{0%{transform:translate(-50%,10px) scale(.3);opacity:0}15%{transform:translate(-50%,0) scale(1.2);opacity:1}75%{opacity:1}100%{transform:translate(-50%,-36px);opacity:0}}
+/* yeni gelen: altın parıltı */
+.masa-parilti{position:absolute;width:0;height:0;pointer-events:none}
+.masa-parilti::before{content:"";position:absolute;left:-130px;top:-130px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(255,210,100,.55),transparent 65%);animation:masa-isik 1.8s ease-out forwards}
+.masa-parilti i{position:absolute;width:5px;height:5px;border-radius:50%;background:#ffe08a;box-shadow:0 0 10px 2px #ffb800;opacity:0;animation:masa-kv2 1.5s ease-out forwards}
+@keyframes masa-isik{0%{opacity:0;transform:scale(.4)}25%{opacity:1}100%{opacity:0;transform:scale(1.3)}}
+@keyframes masa-kv2{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(.3)}}
+/* tıklanınca açılan kişi kartı */
+.masa-kart{position:absolute;right:12px;top:12px;z-index:3100;max-width:min(320px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.masa-kart .person{margin:0}
+.masa-kart-x{position:absolute;right:8px;top:8px;z-index:2}
+/* karakter seçimi */
+.masa-av-sec{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.masa-av-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--panel,#141924);border:2px solid var(--line,#263042);border-radius:12px;padding:4px 6px;cursor:pointer;color:inherit}
+.masa-av-btn img{width:64px;height:64px;object-fit:contain}
+.masa-av-btn.on{border-color:#5ee0b5;box-shadow:0 0 0 2px rgba(94,224,181,.25)}
+.masa-av-profil{display:flex;flex-direction:column;gap:6px}
+.masa-av-profil>span{display:flex;flex-direction:column;gap:2px}
+@media (max-width:700px){.masa-sahne{max-width:100%;border-radius:12px}}
+@media (prefers-reduced-motion:reduce){.masa-isik,.masa-kivilcim i,.masa-kisi.konusuyor .masa-av,.masa-kisi.konusuyor .masa-halka::before,.masa-kisi.konusuyor .masa-halka::after{animation:none}}

@@ -4,6 +4,45 @@
 (function(){
   const N = [
     // ---------- masa oyunları ----------
+    { id: 'hax', tur: 'masa', ikon: '🥅', ad: 'Canlı Futbol 1v1', kisi: '2 kişi ya da bota karşı',
+      amac: 'Yuvarlak oyuncunu sürüp topu rakip kaleye şutlamak. Süre bitince en çok golü atan kazanır.',
+      adim: [
+        'Masa açarken modu (bota karşı / iki kişi), süreyi (istersen kendin belirle) ve bot zorluğunu seç.',
+        'Bilgisayarda W A S D ya da yön tuşlarıyla hareket et, topun yanındayken SPACE ile şut çek.',
+        'Telefonda sol alttaki joystick ile hareket et, sağ alttaki ŞUT düğmesine bas.',
+        'Topa çarparak da sürebilirsin; şut tuşuna basılıyken oyuncun biraz yavaşlar ama sert vurur.',
+        'Sağdaki hızlı mesajlarla (bilgisayarda 1-6 tuşları) rakibine laf atabilirsin; mesaj oyuncunun üstünde balon olarak çıkar.',
+        'Gol olunca herkes yerine döner; santrada rakip yarı sahaya geçilmez.'
+      ],
+      puan: 'Her gol 1 puan. Süre bittiğinde eşitlik varsa ALTIN GOL: ilk golü atan kazanır.',
+      ipucu: ['Kendi kalen her zaman solda (telefon dik tutulunca altta) görünür; tuşlar ekrana göre çalışır.', 'Masayı açan kişinin sekmesi açık kalsın; oyunun fiziğini onun bilgisayarı hesaplar.'] },
+
+    { id: 'futbol', tur: 'masa', ikon: '⚽', ad: 'Taş Futbolu', kisi: '2 kişi ya da bota karşı',
+      amac: 'Taşlarınla topa vurup rakip kaleye sokmak. Belirlenen gol sayısına ilk ulaşan kazanır.',
+      adim: [
+        'Her takımın 5 yuvarlak taşı var: 🔴 Kırmızı solda, 🔵 Mavi sağda (kendi kalen her zaman solda ya da telefonda altta görünür).',
+        'Sıra sendeyken taşlarından birine bas, parmağını / fareni geriye doğru çek. Taşın yanında yeşilden kırmızıya dolan şiddet barı ve gideceği yönü gösteren noktalı çizgi çıkar.',
+        'Bırakınca taş fırlar; taşlar ve top birbirine çarpıp seker.',
+        'Bütün taşlar ve top durunca sıra rakibe geçer.',
+        'Her hamlenin bir süresi var; süre dolarsa sıran geçer.',
+        'Gol olunca taşlar yerine döner, golü yiyen takım başlar.'
+      ],
+      puan: 'Her gol 1 puan. Masa açarken seçilen gol sayısına (1, 3, 5, 7) ilk ulaşan kazanır.',
+      ipucu: ['Topa tam arkasından değil, biraz yanından vurursan açılı gider.', 'Duvarlardan sektirerek de gol atabilirsin.', 'Az çekip bırakırsan atış olmaz, taş seçili kalır.'] },
+
+    { id: 'hokey', tur: 'masa', ikon: '🏒', ad: 'Hava Hokeyi', kisi: '2 kişi ya da bota karşı',
+      amac: 'Tokmağınla pukı rakibin kalesine sokmak. Süre bitince en çok golü atan kazanır.',
+      adim: [
+        'Masa açarken modu seç: “Tek oyunculu” bota karşı hemen başlar, “Çok oyunculu”da arkadaşın mavi koltuğa oturur.',
+        'Süreyi sen belirle: 1, 2, 3, 5, 10 dakika ya da “Kendim belirleyeyim” ile istediğin süre (yarım dakikadan 30 dakikaya kadar).',
+        'Bilgisayarda fareyi oynat, tokmak peşinden gelir. Telefonda parmağınla sürükle.',
+        'Kendi yarı sahandan çıkamazsın. Kendi kalen her zaman solda (telefon dik tutulunca altta) görünür.',
+        'Pukı hızlı vurmak için tokmağı ona doğru hızla sür; duvarlardan sektirerek de gol atabilirsin.',
+        'Maç bitince masayı açan yeni maç başlatır; isterse süreyi ve modu değiştirir.'
+      ],
+      puan: 'Her gol 1 puan. Süre bittiğinde eşitlik varsa ALTIN GOL: ilk golü atan kazanır.',
+      ipucu: ['Bot zorluğunu masa açarken seçebilirsin: kolay, orta, zor.', 'Masayı açan kişinin sekmesi açık kalsın; oyunun fiziğini onun bilgisayarı hesaplar.', 'Sağ üstteki 🔊 düğmesiyle oyun seslerini kapatabilirsin.'] },
+
     { id: 'tabu', tur: 'masa', ikon: '🤐', ad: 'Tabu', kisi: '2-10 kişi · sesli',
       amac: 'Kartın üstündeki kelimeyi, altındaki yasaklı kelimeleri söylemeden anlatıp arkadaşlarına buldurmak.',
       adim: [
@@ -45,6 +84,19 @@
       ],
       puan: 'O kategoride geçerli cevabı olan tek kişiysen 20, cevabın kimseyle aynı değilse 10, başkasıyla aynıysa 5; sözlükte olmayıp onay alan cevap bunların yarısı. Boş, harfi tutmayan, tekrar eden ya da itirazla düşen cevap 0.',
       ipucu: ['Geniş seçenekte Ülke, Meslek ve Yemek de eklenir (8 kategori).', 'Herkesin aklına gelmeyecek ama sözlükte olan cevaplar en çok puanı getirir.', 'Türkçe karakterleri doğru yaz: “Çorum” Ç harfinde geçer, C harfinde geçmez.'] },
+
+    { id: 'dedektif', tur: 'masa', ikon: '🕵️', ad: 'Kara Dosyalar', kisi: '1-8 kişi · ortak',
+      amac: 'Ekip olarak bir cinayet vakasını çözmek: mekanları gezip delil toplayın, birbirinize anlatın ve doğru katili doğru kanıtlarla suçlayın.',
+      adim: [
+        'Masaya oturun, masayı açan başlatsın. Başta oylama yapılır: 👥 Toplu gezersiniz (biri bir mekana gidince herkes gider, bulunan her delil ortak) ya da 🧭 Ayrı gezersiniz (herkes kendi başına, bulduğunu ortak deftere asar).',
+        'Sahnedeki nesnelere tıkla (🔍 tuşu tıklanabilir yerleri gösterir). Belgeler okunur, kasetler dinlenir; bazı nesneleri kaydırıcıyla çevirip gizli yüzünü bulman gerekir.',
+        'Yeni mekanlar delil buldukça açılır: 🗺 Mekanlar’dan gidersin.',
+        'Sağdaki 📒 Ortak defter’e fikirlerini ve delilleri yaz; herkes 👍 / 👎 ile oylar. ✏️ Notlarım sadece senindir.',
+        'Takılırsanız 💡 İpucu: aynı aşamada ilk ipucu hafif bir dürtme, ikincisi delil bağlantısı, üçüncüsü tam çözüm. Her biri puandan düşer.',
+        'Hazır olunca ⚖️ Katili Suçla: herkes bir şüpheli ve en fazla 2 kanıt seçer, çoğunluğun kararı geçer.'
+      ],
+      puan: 'Ekip 1000 puanla başlar; ipuçları 30 / 60 / 120 düşer. Doğru katil + iki güçlü kanıt (farklı türden) = dava kapanır, puanın tamamı. Doğru katil ama zayıf kanıt = katil kaçar, puanın %40’ı. Yanlış kişi = 0.',
+      ipucu: ['Sesleri açık oynayın: bazı ipuçları kulakla bulunur.', 'Aynı türden iki kanıt tek kanıt sayılır; farklı yönlerden kanıt seçin.', 'Telefonda tıklanabilir yerler hafif yanıp sönen noktalarla gösterilir.'] },
 
     { id: 'vampir', tur: 'masa', ikon: '🧛', ad: 'Vampir Köy', kisi: '3-10 kişi · sesli',
       amac: 'Köylüler: görevleri bitirmek ya da vampirleri bulup köyden kovmak. Vampirler: fark edilmeden köylüleri ısırmak.',

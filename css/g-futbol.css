@@ -1,0 +1,34 @@
+/* Taş Futbolu */
+.tf{min-width:0;display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;user-select:none;-webkit-user-select:none}
+.tf-tabela{display:flex;align-items:stretch;border-radius:0 0 14px 14px;overflow:hidden;background:#1d2433;box-shadow:0 8px 22px rgba(0,0,0,.4);max-width:100%;flex-wrap:wrap;justify-content:center}
+.tf-skor{display:flex;align-items:center;gap:12px;padding:8px 18px;background:#222a3b}
+.tf-k,.tf-m{font-weight:900;font-size:16px;letter-spacing:.03em;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-bottom:3px solid}
+.tf-k{color:#ff5466;border-color:#e8273b}.tf-m{color:#4ea2ff;border-color:#1f6fe0}
+.tf-s{font-weight:900;font-size:26px;color:#fff;white-space:nowrap}
+.tf-sira{display:flex;flex-direction:column;justify-content:center;gap:5px;padding:8px 22px;min-width:190px;background:linear-gradient(90deg,#1f3a66,#1b2f52)}
+.tf-sira.k{background:linear-gradient(90deg,#5a1a24,#3d1520)}
+.tf-sira b{font-weight:900;font-size:17px;letter-spacing:.04em;color:#bfe0ff;text-align:center;white-space:nowrap}
+.tf-sira.k b{color:#ffc2c8}
+.tf-sira i{display:block;height:5px;border-radius:3px;background:rgba(255,255,255,.15);overflow:hidden}
+.tf-sira u{display:block;height:100%;width:0;background:#4ea2ff;box-shadow:0 0 8px #4ea2ff;text-decoration:none}
+.tf-sira.k u{background:#ff5466;box-shadow:0 0 8px #ff5466}
+.tf-sure{display:flex;align-items:center;gap:6px;padding:8px 18px;font-size:18px;color:#cfd6e6}
+.tf-sure b{font-weight:900;font-size:24px;color:#fff;font-variant-numeric:tabular-nums}
+.tf-sure.az b{color:#ff5466;animation:tf-yan .6s infinite}
+@keyframes tf-yan{50%{opacity:.4}}
+.tf-ses{background:none;border:0;border-left:1px solid #2f3a52;color:#fff;font-size:18px;padding:0 14px;cursor:pointer}
+.tf-saha{position:relative;display:flex;justify-content:center;width:100%;min-width:0;overflow:hidden}
+.tf-saha canvas{display:block;max-width:100%;touch-action:none;border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.tf-yazi{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font-weight:900;font-size:clamp(46px,10vw,120px);color:#fff;opacity:0;transform:scale(.5);transition:opacity .15s,transform .3s cubic-bezier(.2,1.6,.4,1);text-shadow:0 4px 0 rgba(0,0,0,.35),0 0 30px rgba(255,255,255,.6)}
+.tf-yazi.acik{opacity:1;transform:scale(1)}
+.tf-yazi[data-renk=k]{text-shadow:0 4px 0 #8e0f1c,0 0 34px #ff5466}
+.tf-yazi[data-renk=m]{text-shadow:0 4px 0 #0b357a,0 0 34px #4ea2ff}
+.tf-alt{min-height:26px;display:flex;justify-content:center;width:100%;text-align:center}
+.tf-bitti{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;padding:10px 16px;border-radius:14px;background:#121726;border:1px solid #2a3048}
+.tf-bitti b{font-size:18px}
+.game-futbol .gs-body{min-width:0;overflow-x:hidden}
+@media (max-width:700px){
+  .tf-skor{padding:6px 10px;gap:8px}.tf-k,.tf-m{font-size:12px;max-width:70px}.tf-s{font-size:20px}
+  .tf-sira{min-width:0;padding:6px 12px}.tf-sira b{font-size:13px}
+  .tf-sure{padding:6px 10px}.tf-sure b{font-size:18px}
+}
