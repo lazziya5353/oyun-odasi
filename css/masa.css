@@ -82,3 +82,19 @@ html.masa-tam-acik,html.masa-tam-acik body{overflow:hidden}
 .room.masa-dolu .people-area{padding:0;position:static}
 .masa-sahne.dolu:not(.tam){position:absolute;inset:0;width:100%;height:100%;max-width:none;aspect-ratio:auto!important;border-radius:0;box-shadow:none;z-index:2}
 .masa-sahne.dolu:not(.tam)::after{background:radial-gradient(ellipse at 50% 55%,transparent 62%,rgba(0,0,0,.35))}
+/* oda: canvas katmanları, lamba düğmeleri, ayar, kişi menüsü */
+.masa-cv{position:absolute;left:0;top:0;width:1376px;height:768px;pointer-events:none}
+.masa-cv.alt{z-index:2}.masa-cv.ust{z-index:2950}
+.masa-lamba{position:absolute;z-index:3;width:36px;height:52px;border:0;background:transparent;border-radius:12px;cursor:pointer}
+.masa-lamba[data-l="3"]{width:150px;height:50px;margin-left:-40px}
+.masa-lamba:hover{box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+.masa-oda-ayar{position:absolute;left:10px;top:10px;z-index:3050;display:flex;gap:6px;align-items:center}
+.masa-ab2{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(12,10,16,.62);backdrop-filter:blur(6px);color:#fff;font-size:18px;cursor:pointer}
+.masa-ab2.on{border-color:#ffd27a;background:rgba(60,45,10,.7)}
+.masa-ates{display:flex;align-items:center;gap:6px;height:40px;padding:0 10px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(12,10,16,.62);backdrop-filter:blur(6px);font-size:17px}
+.masa-ates input{width:80px;accent-color:#ff9a3c}
+.masa-menu{position:absolute;z-index:3200;display:flex;flex-direction:column;gap:3px;min-width:170px;padding:8px;border-radius:12px;background:rgba(18,16,26,.94);border:1px solid rgba(255,255,255,.15);box-shadow:0 12px 30px rgba(0,0,0,.6)}
+.masa-menu b{font-size:13px;padding:2px 6px 6px;color:#cfd6e6}
+.masa-menu button{text-align:left;background:rgba(255,255,255,.06);border:0;border-radius:8px;color:#fff;font:600 14px system-ui;padding:7px 10px;cursor:pointer}
+.masa-menu button:hover{background:rgba(255,255,255,.15)}
+@media (max-width:700px){.masa-ates input{width:56px}.masa-ab2,.masa-ates{height:34px}.masa-ab2{width:34px;font-size:15px}}

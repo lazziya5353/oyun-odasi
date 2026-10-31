@@ -13,6 +13,16 @@ const MASA = (() => {
     { a: 48.5, bb: [881, 434, 1080, 686], w: 199, cx: 981.1, cy: 576.8 }, { a: 76.8, bb: [698, 474, 894, 727], w: 196, cx: 795.2, cy: 619.3 },
     { a: 106.8, bb: [483, 469, 673, 722], w: 190, cx: 575.7, cy: 612.6 }, { a: 136.1, bb: [302, 423, 497, 671], w: 195, cx: 399.0, cy: 562.2 }
   ];
+  // her görünüşte başın üstü ve ağız (kesilmiş resim içinde, piksel); arkadan görünüşlerde ağız yok
+  const BAS = [[80, 4], [80, 4], [70, 4], [85, 4], [90, 4], [115, 4], [95, 4], [90, 6], [95, 6], [100, 6]];
+  const AGIZ = [[88, 47], [80, 48], [68, 47], [86, 48], [93, 47], [100, 47], null, null, null, null];
+  // oda eşyaları: lambalar (x, y, ışık yarıçapı, renk), ip ışıklar, hoparlörler
+  const LAMBA = [[93, 75, 60, '255,190,110'], [185, 207, 55, '220,120,255'], [115, 232, 55, '255,180,100'], [330, 118, 90, '190,90,255']];
+  const IP = [];
+  for (let i = 0; i < 26; i++) IP.push([205 + i * 12.5, 22 + Math.sin(i * 0.9) * 10 + i * 0.9]);
+  for (let i = 0; i < 14; i++) IP.push([460 + i * 14, 6 + Math.sin(i) * 6]);
+  const HOP = [[558, 72], [993, 104], [943, 84]];
+  const FIRLAT = [['🍅', 'Domates at'], ['📄', 'Kağıt top at'], ['🛏️', 'Yastık at'], ['🧦', 'Çorap at']];
   // seçilebilir karakterler (her biri img/masa/av/<id>/0..9.webp)
   const AVATARLAR = [{ id: 'turuncu', ad: 'Turuncu' }];
   const KEY = 'oyunodasi-gorunum-modu', KEYAV = 'oyunodasi-masa-avatar';
@@ -22,6 +32,9 @@ const MASA = (() => {
   // eski oturma görünümünü seçmiş olan masa ile açılır
   let ilk = al(KEY, null);
   if (ilk == null){ const eski = al('oyunodasi-oturma', 'kart'); ilk = eski && eski !== 'kart' ? 'masa' : 'standart'; }
+  const A = (() => { try { return Object.assign({ karanlik: false, ates: 0, lamba: [1, 1, 1, 1] }, JSON.parse(localStorage.getItem('oyunodasi-masa-oda') || '{}')); } catch(e){ return { karanlik: false, ates: 0, lamba: [1, 1, 1, 1] }; } })();
+  const aYaz = () => { try { localStorage.setItem('oyunodasi-masa-oda', JSON.stringify(A)); } catch(e){} };
+  const FX = [];   // kısa ömürlü efektler (ikram, fırlatma)
   const S = { mod: ilk === 'masa' ? 'masa' : 'standart', av: avTemiz(al(KEYAV, '')), kok: null, kisi: new Map(), hazir: false };
   const benAv = () => S.av || AVATARLAR[0].id;
   const avOf = p => avTemiz(p && p.mav) || AVATARLAR[Math.abs([...String(p && p.id || '')].reduce((h, c) => h * 31 + c.charCodeAt(0) | 0, 7)) % AVATARLAR.length].id;
@@ -47,9 +60,16 @@ const MASA = (() => {
     const alan = document.querySelector('.people-area'); if (!alan) return null;
     const kok = document.createElement('div'); kok.className = 'masa-sahne'; kok.id = 'masaSahne'; kok.hidden = true;
     kok.innerHTML = '<div class="masa-ic"><img class="masa-oda" src="img/masa/oda.webp" alt="" draggable="false"><i class="masa-isik"></i><i class="masa-isik iki"></i>'
-      + '<div class="masa-kivilcim"></div><img class="masa-on" src="img/masa/masa-on.webp" alt="" draggable="false"></div>'
+      + '<canvas class="masa-cv alt" width="1376" height="768"></canvas><div class="masa-kivilcim"></div><img class="masa-on" src="img/masa/masa-on.webp" alt="" draggable="false"><canvas class="masa-cv ust" width="1376" height="768"></canvas>'
+      + LAMBA.map((l, i) => '<button type="button" class="masa-lamba" data-l="' + i + '" style="left:' + (l[0] - 18) + 'px;top:' + (l[1] - 26) + 'px" title="Lambayı aç / kapat"></button>').join('') + '</div>'
+      + '<div class="masa-oda-ayar"><button type="button" class="masa-ab2" data-kar title="Odayı karart">🌙</button><label class="masa-ates" title="Ateş sesi">🔥<input type="range" min="0" max="100" aria-label="Ateş sesi"></label></div>'
       + '<div class="masa-cevir">📱↻ Daha büyük görmek için telefonu yan çevir</div><div class="masa-arac"><button type="button" class="masa-ab" data-mik title="Mikrofon">🎙</button><button type="button" class="masa-ab" data-ses title="Sesler">🔊</button><button type="button" class="masa-ab" data-tam title="Tam ekran">⛶</button></div>';
     alan.prepend(kok);
+    S.cvA = kok.querySelector('.masa-cv.alt').getContext('2d'); S.cvU = kok.querySelector('.masa-cv.ust').getContext('2d');
+    kok.querySelectorAll('.masa-lamba').forEach(b => b.onclick = e => { e.stopPropagation(); const i = +b.dataset.l; A.lamba[i] = A.lamba[i] ? 0 : 1; aYaz(); odaFiltre(); tikSes(); b.blur(); });
+    const kb = kok.querySelector('[data-kar]'); kb.onclick = () => { A.karanlik = !A.karanlik; aYaz(); odaFiltre(); kb.blur(); };
+    const ai = kok.querySelector('.masa-ates input'); ai.value = A.ates; ai.oninput = () => { A.ates = +ai.value; aYaz(); atesSes(); };
+    odaFiltre();
     kok.querySelector('[data-tam]').onclick = e => { e.currentTarget.blur(); tamEkran(!kok.classList.contains('tam')); };
     kok.querySelector('[data-mik]').onclick = e => { e.currentTarget.blur(); const b = document.getElementById('micBtn'); if (b) b.click(); };
     kok.querySelector('[data-ses]').onclick = e => { e.currentTarget.blur(); const b = document.getElementById('deafBtn'); if (b) b.click(); };
@@ -158,9 +178,9 @@ const MASA = (() => {
   function yeniKisi(k, gelis){
     const el = document.createElement('div'); el.className = 'masa-kisi' + (k.ben ? ' ben' : ''); el.dataset.id = k.id;
     el.innerHTML = '<i class="masa-halka"></i><img class="masa-av" alt="" draggable="false"><div class="masa-plaka"><span class="masa-ik sus" title="Mikrofonu kapalı">🎙️</span><span class="masa-ik sagir" title="Sesleri kapalı">🔇</span><span class="pname"></span></div>';
-    if (!k.ben){ el.title = 'Ses seviyesi ve mesaj için tıkla'; el.onclick = () => kartGoster(k.p); }
+    if (!k.ben){ el.title = 'Tıkla: bir şey fırlat ya da sesini ayarla'; el.onclick = ev => { const o2 = S.kisi.get(k.id); if (o2) kisiMenu(o2, ev); }; }
     S.ic.append(el);
-    const o = { id: k.id, el, img: el.querySelector('.masa-av'), plaka: el.querySelector('.masa-plaka'), ad: el.querySelector('.pname'), t: null, hedef: 90, r: gelis ? 1.45 : 1, op: gelis ? 0 : 1, g: null, gidiyor: false };
+    const o = { id: k.id, el, img: el.querySelector('.masa-av'), plaka: el.querySelector('.masa-plaka'), ad: el.querySelector('.pname'), t: null, sonKonus: performance.now(), hedef: 90, r: gelis ? 1.45 : 1, op: gelis ? 0 : 1, g: null, gidiyor: false };
     S.kisi.set(k.id, o);
     if (gelis){ el.classList.add('gelis'); setTimeout(() => { parilti(o); koltukSesi(); }, 380); setTimeout(() => el.classList.remove('gelis'), 2200); }
     return o;
@@ -175,7 +195,8 @@ const MASA = (() => {
     // sohbet kanalında (bilgisayarda) masa orta alanın tamamını kaplar; müzik / film / ders kanalında oynatıcının altında kalır
     const dolu = goster && window.innerWidth >= 700 && typeof myChan === 'function' && myChan().type === 'voice';
     if (kok.classList.contains('dolu') !== dolu){ kok.classList.toggle('dolu', dolu); document.getElementById('room').classList.toggle('masa-dolu', dolu); setTimeout(olcekle, 30); }
-    if (!goster){ S.kisi.forEach(o => o.el.remove()); S.kisi.clear(); const ok = document.getElementById('masaKart'); if (ok) ok._geri(); return; }
+    if (S._acikti !== goster){ S._acikti = goster; setTimeout(atesSes, 50); }
+    if (!goster){ kapatMenu(); S.kisi.forEach(o => o.el.remove()); S.kisi.clear(); const ok = document.getElementById('masaKart'); if (ok) ok._geri(); return; }
     const ls = kisiler(), n = ls.length, var_ = new Set();
     ls.forEach((k, i) => {
       var_.add(k.id);
@@ -212,6 +233,159 @@ const MASA = (() => {
     const arkadan = Math.sin(t) > 0.7 && Math.sin(t) < 0.97;   // en öndeki (ben) başının üstünde
     o.plaka.classList.toggle('alt', arkadan);
     o.plaka.style.top = (arkadan ? alt + 10 : T - 8) + 'px';
+  }
+  // ---------- oda: karanlık mod, lambalar ----------
+  function odaFiltre(){
+    if (!S.kok) return;
+    const kapali = A.lamba.filter(x => !x).length, b = (A.karanlik ? 0.62 : 1) * (1 - kapali * 0.09);
+    S.kok.querySelector('.masa-oda').style.filter = b < 0.999 ? 'brightness(' + b.toFixed(2) + ') saturate(' + (A.karanlik ? 0.88 : 1) + ')' : '';
+    const kb = S.kok.querySelector('[data-kar]'); kb.classList.toggle('on', A.karanlik); kb.title = A.karanlik ? 'Odayı aydınlat' : 'Odayı karart';
+    S.kok.querySelectorAll('.masa-lamba').forEach(x => x.classList.toggle('sonuk', !A.lamba[+x.dataset.l]));
+  }
+  function tikSes(){
+    if (typeof audioCtx === 'undefined' || !audioCtx || audioCtx.state !== 'running' || deafened) return;
+    try { const t = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = 'square'; o.frequency.value = 2200; g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.03); o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.04); } catch(e){}
+  }
+  // ateş çıtırtısı: sadece isteyen açar (masa görünümündeyken)
+  function atesSes(){
+    const ac = typeof audioCtx !== 'undefined' && audioCtx;
+    const ac2 = ac && ac.state === 'running';
+    const acik = ac2 && A.ates > 0 && S.kok && !S.kok.hidden && !deafened;
+    if (!acik){ if (S.ates){ S.ates.acik = false; S.ates.g.gain.setTargetAtTime(0, ac.currentTime, 0.3); } return; }
+    const v = A.ates / 100;
+    if (!S.ates){
+      const ana = ac.createGain(); ana.gain.value = 0; ana.connect(ac.destination);
+      const len = ac.sampleRate * 2, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0); let b = 0;
+      for (let i = 0; i < len; i++){ b = 0.985 * b + 0.015 * (Math.random() * 2 - 1); d[i] = b * 3; }
+      const src = ac.createBufferSource(); src.buffer = buf; src.loop = true; const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500;
+      src.connect(lp); lp.connect(ana); src.start();
+      S.ates = { g: ana, src, t: setInterval(() => {
+        if (!S.ates || !S.ates.acik || Math.random() > 0.6) return;
+        const t = ac.currentTime;
+        for (let k = 0, n = 1 + Math.floor(Math.random() * 3); k < n; k++){
+          const L = 250 + Math.floor(Math.random() * 900), b2 = ac.createBuffer(1, L, ac.sampleRate), dd = b2.getChannelData(0);
+          for (let i = 0; i < L; i++) dd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / L, 4);
+          const bs = ac.createBufferSource(); bs.buffer = b2; const hf = ac.createBiquadFilter(); hf.type = 'highpass'; hf.frequency.value = 900 + Math.random() * 2500;
+          const g = ac.createGain(); g.gain.value = 0.2 + Math.random() * 0.5; bs.connect(hf); hf.connect(g); g.connect(ana); bs.start(t + Math.random() * 0.25);
+        }
+      }, 230) };
+    }
+    S.ates.acik = true;
+    S.ates.g.gain.setTargetAtTime(v * 0.5 * (typeof masterVol !== 'undefined' ? Math.min(1, masterVol) : 1), ac.currentTime, 0.3);
+  }
+  // müzik / radyo çalıyor mu
+  const muzikVar = () => !!((typeof radio !== 'undefined' && radio && !radio.paused && !(typeof radioMuted !== 'undefined' && radioMuted)) || (typeof musicEl !== 'undefined' && musicEl && !musicEl.paused));
+  // kişinin baş / ağız noktası (sahne koordinatında)
+  function nokta(o, ne){
+    if (!o.g) return null;
+    const i = GORUNUS.indexOf(o.g), g = o.g, t = o.t * Math.PI / 180, x = C[0] + RX * o.r * Math.cos(t), y = C[1] + RY * o.r * Math.sin(t);
+    const s = (1 + (y - g.cy) / 900) * (S.kisi.size > 10 ? Math.sqrt(10 / S.kisi.size) : 1);
+    const q = ne === 'agiz' ? AGIZ[i] : BAS[i]; if (!q) return null;
+    return { x: x + (g.bb[0] + q[0] - g.cx) * s, y: y + (g.bb[1] + q[1] - g.cy) * s, s, x0: x, y0: y };
+  }
+  function odaCiz(now){
+    const a = S.cvA, u = S.cvU; if (!a) return;
+    a.clearRect(0, 0, W, H); u.clearRect(0, 0, W, H);
+    // lamba ve ip ışık parlaması (karanlıkta daha güçlü)
+    const k = A.karanlik ? 1.7 : 0.85;
+    a.save(); a.globalCompositeOperation = 'screen';
+    LAMBA.forEach(([x, y, r, c], i) => { if (!A.lamba[i]) return; const al = (0.26 + 0.06 * Math.sin(now / 900 + i)) * k, g = a.createRadialGradient(x, y, 2, x, y, r * k); g.addColorStop(0, 'rgba(' + c + ',' + al + ')'); g.addColorStop(1, 'rgba(' + c + ',0)'); a.fillStyle = g; a.fillRect(x - r * 2, y - r * 2, r * 4, r * 4); });
+    IP.forEach(([x, y], i) => { const al = (A.karanlik ? 0.95 : 0.4) * (0.55 + 0.45 * Math.abs(Math.sin(now / 500 + i * 1.7))), g = a.createRadialGradient(x, y, 0, x, y, A.karanlik ? 11 : 8); g.addColorStop(0, 'rgba(255,215,140,' + al + ')'); g.addColorStop(1, 'rgba(255,215,140,0)'); a.fillStyle = g; a.fillRect(x - 12, y - 12, 24, 24); });
+    a.restore();
+    // sönük lambaların kendisi karanlık
+    a.save(); a.fillStyle = 'rgba(8,5,12,.62)'; LAMBA.forEach(([x, y, r], i) => { if (A.lamba[i]) return; a.beginPath(); i === 3 ? a.ellipse(x, y, 62, 22, -0.25, 0, 6.283) : a.ellipse(x, y, r * 0.3, r * 0.48, 0, 0, 6.283); a.fill(); }); a.restore();
+    // hoparlörler müzikle
+    if (muzikVar()) HOP.forEach(([x, y], i) => {
+      const v = Math.abs(Math.sin(now / 230 + i));
+      a.save(); a.strokeStyle = 'rgba(120,200,255,' + (0.55 * v) + ')'; a.lineWidth = 1.6; for (let q = 0; q < 2; q++){ a.beginPath(); a.arc(x, y, 6 + q * 6 + v * 4, 0, 6.283); a.stroke(); } a.restore();
+      const n = (now / 1400 + i * 0.37) % 1; a.save(); a.globalAlpha = 1 - n; a.font = '16px system-ui'; a.fillStyle = '#bfe0ff'; a.fillText(['♪', '♫', '♪'][i], x + 8 + n * 14, y - 8 - n * 40); a.restore();
+    });
+    // kişiler: uyuklama (z z z) ve ağızda bant
+    S.kisi.forEach(o => {
+      if (o.op < 0.5 || !o.k) return;
+      const sessiz = o.k.ben ? !!micMuted : !!(o.k.p && o.k.p.muted);
+      if (sessiz){ const m = nokta(o, 'agiz'); if (m){ u.save(); u.translate(m.x, m.y); u.globalAlpha = o.op; const w = 20 * m.s, h = 7 * m.s;
+        [-0.26, 0.26].forEach(r => { u.save(); u.rotate(r); u.fillStyle = '#ece0c3'; u.shadowColor = 'rgba(0,0,0,.45)'; u.shadowBlur = 2; u.fillRect(-w / 2, -h / 2, w, h); u.shadowBlur = 0; u.strokeStyle = 'rgba(150,130,90,.6)'; u.lineWidth = 0.6; u.strokeRect(-w / 2, -h / 2, w, h); u.restore(); }); u.restore(); } }
+      if (now - (o.sonKonus || now) > 180000){ const b = nokta(o, 'bas'); if (b){ u.save(); u.globalAlpha = o.op; u.textAlign = 'center';
+        for (let q = 0; q < 3; q++){ const n = ((now / 2400) + q / 3) % 1; u.globalAlpha = o.op * (n < 0.2 ? n / 0.2 : 1 - (n - 0.2) / 0.8); u.font = '900 ' + Math.round((16 + q * 5) * (0.8 + n * 0.5) * b.s) + 'px system-ui'; u.fillStyle = '#d6e6ff'; u.shadowColor = '#6fa8ff'; u.shadowBlur = 8; u.fillText('z', b.x + 26 * b.s + n * 34 * b.s, b.y + 22 * b.s - n * 30 * b.s); }
+        u.restore(); } }
+    });
+    // ikram fincanları ve fırlatılanlar
+    for (let i = FX.length - 1; i >= 0; i--){ if (FX[i](u, now) === false) FX.splice(i, 1); }
+  }
+  // ikram: fincan masanın ortasından kişinin önüne kayar, buharı tüter
+  function ikramMasa(to, it){
+    const o = S.kisi.get(to); if (!o || !S.kok || S.kok.hidden) return;
+    const t0 = performance.now(), sure = 25000, e = it.svg ? '🍵' : it.emoji, sicak = it.hot;
+    FX.push((u, now) => {
+      const d = now - t0; if (d > sure || !S.kisi.has(to)) return false;
+      const p = S.kisi.get(to), t = p.t * Math.PI / 180;
+      const hx = C[0] + (RX * 0.55) * Math.cos(t), hy = C[1] - 30 + (RY * 0.62) * Math.sin(t);
+      const v = Math.min(1, d / 1500), e2 = 1 - Math.pow(1 - v, 3), x = C[0] + (hx - C[0]) * e2, y = C[1] - 30 + (hy - C[1] + 30) * e2;
+      u.save(); u.globalAlpha = d > sure - 1500 ? (sure - d) / 1500 : 1;
+      u.fillStyle = 'rgba(0,0,0,.35)'; u.beginPath(); u.ellipse(x + 2, y + 4, 15, 5, 0, 0, 6.283); u.fill();
+      u.font = '30px system-ui'; u.textAlign = 'center'; u.textBaseline = 'bottom'; u.fillText(e, x, y + 6);
+      if (sicak) for (let q = 0; q < 3; q++){ const n = ((now / 1100) + q / 3) % 1; u.globalAlpha *= 1; u.strokeStyle = 'rgba(255,255,255,' + ((1 - n) * 0.5 * e2) + ')'; u.lineWidth = 2.4; u.beginPath(); u.moveTo(x - 6 + q * 6, y - 24); u.bezierCurveTo(x - 12 + q * 6, y - 34 - n * 12, x + q * 6, y - 42 - n * 18, x - 6 + q * 6 + Math.sin(now / 300 + q) * 4, y - 52 - n * 22); u.stroke(); }
+      u.restore();
+    });
+  }
+  // fırlatma: gönderenden hedefin başına kavisli uçuş, başta patlar
+  function firlatCiz(from, to, e){
+    const A1 = S.kisi.get(from), B1 = S.kisi.get(to); if (!A1 || !B1 || !S.kok || S.kok.hidden) return;
+    const t0 = performance.now(), sure = 1300;
+    setTimeout(() => firlatSes(false), 0); setTimeout(() => firlatSes(true, e), sure);
+    FX.push((u, now) => {
+      const a = nokta(A1, 'bas'), b = nokta(B1, 'bas'); if (!a || !b) return false;
+      const v = (now - t0) / sure;
+      if (v <= 1){
+        const x = a.x + (b.x - a.x) * v, y = a.y + (b.y - a.y) * v - Math.sin(v * Math.PI) * 170;
+        u.save(); u.translate(x, y); u.rotate(v * 12); u.font = '36px system-ui'; u.textAlign = 'center'; u.textBaseline = 'middle'; u.shadowColor = 'rgba(0,0,0,.5)'; u.shadowBlur = 6; u.fillText(e, 0, 0); u.restore();
+        return;
+      }
+      const w = (now - t0 - sure) / 1400; if (w > 1) return false;
+      u.save(); u.globalAlpha = 1 - w; u.translate(b.x, b.y + 16 * b.s);
+      const renk = e === '🍅' ? '#e8321e' : e === '🛏️' ? '#f4f1ea' : e === '🧦' ? '#7aa2ff' : '#f5f2e8';
+      u.fillStyle = renk; for (let i = 0; i < 10; i++){ const a2 = i * 0.63, d = 12 + w * 34; u.beginPath(); u.arc(Math.cos(a2) * d, Math.sin(a2) * d * 0.6, (e === '🛏️' ? 2 : 4) + (i * 7) % 4, 0, 6.283); u.fill(); }
+      u.font = '40px system-ui'; u.textAlign = 'center'; u.textBaseline = 'middle'; u.fillText(e === '🛏️' ? '💨' : '💥', 0, 0); u.restore();
+    });
+  }
+  function firlatSes(carp, e){
+    if (typeof audioCtx === 'undefined' || !audioCtx || audioCtx.state !== 'running' || deafened) return;
+    try {
+      const ac = audioCtx, t = ac.currentTime;
+      if (!carp){ const o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(500, t); o.frequency.exponentialRampToValueAtTime(1300, t + 0.25); g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 0.32); return; }
+      const L = Math.floor(ac.sampleRate * 0.18), b = ac.createBuffer(1, L, ac.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < L; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / L, 2);
+      const s = ac.createBufferSource(); s.buffer = b; const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = e === '🛏️' ? 500 : 1400;
+      const g = ac.createGain(); g.gain.value = 0.5; s.connect(lp); lp.connect(g); g.connect(ac.destination); s.start(t);
+    } catch(x){}
+  }
+  // kişiye tıklayınca küçük menü: fırlat ya da kartını aç
+  function kisiMenu(o, ev){
+    kapatMenu();
+    const m = document.createElement('div'); m.className = 'masa-menu'; S.menu = m;
+    const ad = o.k && o.k.p ? o.k.p.name : '';
+    m.innerHTML = '<b></b>'; m.querySelector('b').textContent = ad;
+    FIRLAT.forEach(([e, t]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = e + ' ' + t; b.onclick = () => { kapatMenu(); firlatGonder(o.id, e); }; m.append(b); });
+    const k = document.createElement('button'); k.type = 'button'; k.textContent = '🎚 Ses ve mesaj'; k.onclick = () => { kapatMenu(); kartGoster(o.k.p); }; m.append(k);
+    S.kok.append(m);
+    const r = S.kok.getBoundingClientRect();
+    m.style.left = Math.min(r.width - 190, Math.max(8, ev.clientX - r.left + 8)) + 'px'; m.style.top = Math.min(r.height - m.offsetHeight - 8, Math.max(8, ev.clientY - r.top - 10)) + 'px';
+    setTimeout(() => document.addEventListener('pointerdown', disTik, true), 0);
+  }
+  function disTik(e){ if (S.menu && !S.menu.contains(e.target)) kapatMenu(); }
+  function kapatMenu(){ if (S.menu){ S.menu.remove(); S.menu = null; document.removeEventListener('pointerdown', disTik, true); } }
+  let sonAt = 0;
+  function firlatGonder(to, e){
+    const now = Date.now(); if (now - sonAt < 1500){ toast('Biraz nişan al, hemen atma 😄'); return; } sonAt = now;
+    if (typeof broadcast === 'function') broadcast({ t: 'masaAt', to, e });
+    firlatGoster(benId(), to, e);
+  }
+  function firlatGoster(from, to, e){
+    if (!FIRLAT.some(x => x[0] === e)) return;
+    firlatCiz(from, to, e);
+    const ad = id => id === benId() ? 'Sen' : ((peers.get(id) || {}).name || 'Biri');
+    if (to === benId() && typeof toast === 'function') toast(e + ' ' + ad(from) + ' sana ' + { '🍅': 'domates', '📄': 'kağıt top', '🛏️': 'yastık', '🧦': 'çorap' }[e] + ' attı!');
   }
   // ---------- efektler ----------
   function parilti(o){
@@ -273,11 +447,12 @@ const MASA = (() => {
       // konuşma: kartın ses ölçerinden
       const kart = o.k && (o.k.ben ? document.getElementById('selfCard') : o.k.p && o.k.p.card);
       const kon = !!(kart && kart.classList.contains('speaking'));
-      o.el.classList.toggle('konusuyor', kon);
+      o.el.classList.toggle('konusuyor', kon); if (kon) o.sonKonus = now;
       if (kon){ const a = kart.querySelector('.avatar'); o.el.style.setProperty('--lv', a ? (+a.style.getPropertyValue('--lv') || 0.3) : 0.3); }
       else o.el.style.setProperty('--lv', 0);
     });
     S.kisi.forEach((o, id) => { if (o.gidiyor && o.op < 0.03){ o.el.remove(); S.kisi.delete(id); } });
+    odaCiz(now);
   }
   requestAnimationFrame(dongu);
   setInterval(() => { if (typeof joined !== 'undefined' && joined) guncelle(); else if (S.kok && !S.kok.hidden) guncelle(); }, 400);
@@ -288,8 +463,18 @@ const MASA = (() => {
     const asil = showReaction;
     showReaction = function(e, name, card){ asil(e, name, card); tepki(e, card); };
   }
-  // ağdan gelen karakter seçimi
+  if (typeof showIkram === 'function'){
+    const asilI = showIkram;
+    showIkram = function(from, to, item, line){ asilI(from, to, item, line); try { const it = IKRAM_BY[item]; if (it) ikramMasa(to, it); } catch(e){} };
+  }
+  setInterval(() => { if (S._sagir !== deafened){ S._sagir = deafened; atesSes(); } }, 700);
+  // ağdan gelen karakter seçimi ve fırlatma
   function onData(id, d){
+    if (d.t === 'masaAt'){
+      const p = peers.get(id); if (!p || typeof d.to !== 'string') return true;
+      const now = Date.now(); if (now - (p._masaAt || 0) < 1000) return true; p._masaAt = now;
+      firlatGoster(id, d.to, d.e); return true;
+    }
     if (d.t !== 'masaAv') return false;
     const p = peers.get(id); if (p) p.mav = avTemiz(d.av);
     return true;
