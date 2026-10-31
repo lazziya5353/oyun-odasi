@@ -76,7 +76,7 @@ const MASA = (() => {
   }
   function olcekle(){
     if (!S.kok || S.kok.hidden) return;
-    const tam = S.kok.classList.contains('tam'), kw = S.kok.clientWidth, kh = S.kok.clientHeight;
+    const tam = S.kok.classList.contains('tam') || S.kok.classList.contains('dolu'), kw = S.kok.clientWidth, kh = S.kok.clientHeight;
     const dikEkran = tam && kh > kw * 1.1, dar = (window.innerWidth < 700 && !tam) || dikEkran;
     const pen = dar ? [150, 50, 1230, 768] : [0, 0, W, H];
     const pw = pen[2] - pen[0], ph = pen[3] - pen[1];
@@ -172,6 +172,9 @@ const MASA = (() => {
     document.getElementById('room').classList.toggle('masa-modu', goster);
     if (kok.hidden === goster){ kok.hidden = !goster; if (goster){ olcekle(); S.hazir = false; } }
     if (!goster && kok.classList.contains('tam')) tamEkran(false);
+    // sohbet kanalında (bilgisayarda) masa orta alanın tamamını kaplar; müzik / film / ders kanalında oynatıcının altında kalır
+    const dolu = goster && window.innerWidth >= 700 && typeof myChan === 'function' && myChan().type === 'voice';
+    if (kok.classList.contains('dolu') !== dolu){ kok.classList.toggle('dolu', dolu); document.getElementById('room').classList.toggle('masa-dolu', dolu); setTimeout(olcekle, 30); }
     if (!goster){ S.kisi.forEach(o => o.el.remove()); S.kisi.clear(); const ok = document.getElementById('masaKart'); if (ok) ok._geri(); return; }
     const ls = kisiler(), n = ls.length, var_ = new Set();
     ls.forEach((k, i) => {

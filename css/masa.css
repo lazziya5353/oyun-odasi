@@ -77,3 +77,8 @@ html.masa-tam-acik,html.masa-tam-acik body{overflow:hidden}
 .masa-cevir{display:none}
 .masa-sahne.tam.dik .masa-cevir{display:block;position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3050;padding:8px 14px;border-radius:12px;background:rgba(12,10,16,.7);color:#fff;font-size:14px;white-space:nowrap}
 .masa-sahne.tam{background:#0b0809}
+/* orta alanı tamamen kaplayan masa (arka plan görünmez) */
+.room.masa-dolu .stage{padding:0;overflow:hidden}
+.room.masa-dolu .people-area{padding:0;position:static}
+.masa-sahne.dolu:not(.tam){position:absolute;inset:0;width:100%;height:100%;max-width:none;aspect-ratio:auto!important;border-radius:0;box-shadow:none;z-index:2}
+.masa-sahne.dolu:not(.tam)::after{background:radial-gradient(ellipse at 50% 55%,transparent 62%,rgba(0,0,0,.35))}
