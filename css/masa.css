@@ -87,7 +87,7 @@ html.masa-tam-acik,html.masa-tam-acik body{overflow:hidden}
 .masa-cv.alt{z-index:2}.masa-cv.ust{z-index:2950}
 .masa-lamba{position:absolute;z-index:3;width:36px;height:52px;border:0;background:transparent;border-radius:12px;cursor:pointer}
 .masa-lamba[data-l="3"]{width:150px;height:50px;margin-left:-40px}
-.masa-lamba:hover{box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+.masa-lamba{outline:none;-webkit-tap-highlight-color:transparent}
 .masa-oda-ayar{position:absolute;left:10px;top:10px;z-index:3050;display:flex;gap:6px;align-items:center}
 .masa-ab2{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(12,10,16,.62);backdrop-filter:blur(6px);color:#fff;font-size:18px;cursor:pointer}
 .masa-ab2.on{border-color:#ffd27a;background:rgba(60,45,10,.7)}
@@ -98,3 +98,43 @@ html.masa-tam-acik,html.masa-tam-acik body{overflow:hidden}
 .masa-menu button{text-align:left;background:rgba(255,255,255,.06);border:0;border-radius:8px;color:#fff;font:600 14px system-ui;padding:7px 10px;cursor:pointer}
 .masa-menu button:hover{background:rgba(255,255,255,.15)}
 @media (max-width:700px){.masa-ates input{width:56px}.masa-ab2,.masa-ates{height:34px}.masa-ab2{width:34px;font-size:15px}}
+/* oda hâlleri, gerçek ateş, kumanda */
+.masa-oda.kat{opacity:0;transition:opacity 1.2s ease}
+.masa-oda.kat.on{opacity:1}
+.masa-on.kat{opacity:0;transition:opacity 1.2s ease}
+.masa-on.kat.on{opacity:1}
+.masa-on{transition:opacity 1.2s ease}
+.masa-sahne:not([data-h=ac]) .masa-on:not(.kat){opacity:0}
+.masa-ates-v{position:absolute;left:560px;top:250px;width:260px;height:200px;z-index:437;pointer-events:none;transition:opacity 1.4s ease;-webkit-mask-image:radial-gradient(ellipse 118px 58px at 130px 122px,#000 70%,transparent 100%);mask-image:radial-gradient(ellipse 118px 58px at 130px 122px,#000 70%,transparent 100%)}
+.masa-ates-v.ust{mix-blend-mode:lighten;-webkit-mask-image:radial-gradient(ellipse 60px 70px at 130px 70px,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 60px 70px at 130px 70px,#000 55%,transparent 100%)}
+.masa-sahne.isiksiz .masa-ates-v{filter:brightness(.95)}
+.masa-sahne.atessiz .masa-ates-v,.masa-sahne.atessiz .masa-isik,.masa-sahne.atessiz .masa-kivilcim{opacity:0}
+.masa-isik,.masa-kivilcim{transition:opacity 1.2s}
+.masa-av{transition:filter .9s}
+.masa-sahne.isiksiz .masa-av{filter:drop-shadow(0 10px 10px rgba(5,2,4,.7)) brightness(calc(.6 * var(--titre,1))) sepia(.2) saturate(1.1)}
+.masa-sahne.isiksiz.atessiz .masa-av{filter:drop-shadow(0 10px 10px rgba(5,2,4,.7)) brightness(.36) saturate(.6) hue-rotate(10deg)}
+.masa-sahne.atessiz:not(.isiksiz) .masa-av{filter:drop-shadow(0 10px 10px rgba(5,2,4,.7)) brightness(.9)}
+.masa-sahne.isiksiz .masa-kisi.konusuyor .masa-av{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--c) 80%,transparent)) brightness(calc(.68 * var(--titre,1))) sepia(.2)}
+.masa-lamba[hidden]{display:none}
+.masa-ab2.on{border-color:#ffd27a;background:rgba(60,45,10,.75)}
+.masa-kum{position:absolute;left:10px;top:58px;z-index:3150;width:290px;max-height:calc(100% - 70px);overflow:auto;padding:12px;border-radius:18px;background:linear-gradient(160deg,rgba(27,29,39,.96),rgba(14,15,21,.96));border:1px solid #2c3040;box-shadow:0 18px 44px rgba(0,0,0,.65);color:#e8ecf5;font:600 13px system-ui,sans-serif}
+.masa-kum[hidden]{display:none}
+.masa-kum-bas{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.masa-kum-bas b{font-size:14px;letter-spacing:.02em}
+.masa-kum-x{background:none;border:0;color:#9aa3b8;font-size:16px;cursor:pointer}
+.masa-kum-ikili{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.masa-kum-ikili button{padding:9px 4px;border-radius:11px;border:0;font:700 12.5px system-ui;cursor:pointer;background:#ffb347;color:#1a1000}
+.masa-kum-ikili button.kapali{background:#3b1f24;color:#ffc1c1}
+.masa-kum-kay{display:flex;align-items:center;gap:8px;margin-top:10px;color:#c9d0e2}
+.masa-kum-kay input{flex:1;accent-color:#ff9a3c}
+.masa-kum-lbl{font-size:10.5px;letter-spacing:.1em;color:#8b93a8;margin:12px 0 6px}
+.masa-sws{display:flex;flex-wrap:wrap;gap:6px}
+.masa-sw{width:26px;height:26px;border-radius:50%;border:0;background:var(--sw);cursor:pointer;box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
+.masa-sw.yazi{width:auto;padding:0 10px;border-radius:13px;font:700 11.5px system-ui;color:#111}
+.masa-sw[data-lr=""]{background:#2a2e3d;color:#e8ecf5}
+.masa-sw.on{box-shadow:0 0 0 2px #fff,0 0 10px rgba(255,255,255,.4)}
+.masa-kum-mod{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:8px}
+.masa-kum-mod button{padding:7px 2px;border-radius:9px;border:0;background:#22263a;color:#c9d0e2;font:600 11.5px system-ui;cursor:pointer}
+.masa-kum-mod button.on{background:linear-gradient(90deg,#ff9a3c,#ff4fd8);color:#fff;font-weight:800}
+.masa-kum-not{margin:12px 0 0;font:500 11.5px/1.4 system-ui;color:#8b93a8}
+.masa-kum-cb{display:flex;align-items:center;gap:8px;margin-top:8px;font:600 12px system-ui;color:#c9d0e2;cursor:pointer}.masa-kum-cb input{accent-color:#ff9a3c;width:16px;height:16px}

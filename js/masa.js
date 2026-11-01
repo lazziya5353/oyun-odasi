@@ -22,6 +22,10 @@ const MASA = (() => {
   for (let i = 0; i < 26; i++) IP.push([205 + i * 12.5, 22 + Math.sin(i * 0.9) * 10 + i * 0.9]);
   for (let i = 0; i < 14; i++) IP.push([460 + i * 14, 6 + Math.sin(i) * 6]);
   const HOP = [[558, 72], [993, 104], [943, 84]];
+  // eklenen ip ışık: sağ çalışma masasının üstündeki duvar, iki kavisle sarkar
+  const IP2 = (() => { const p = [], N = [[845, 36], [912, 40], [992, 34]]; for (let k = 1; k < N.length; k++) for (let i = k > 1 ? 1 : 0; i <= 20; i++){ const u = i / 20; p.push([N[k - 1][0] + (N[k][0] - N[k - 1][0]) * u, N[k - 1][1] + (N[k][1] - N[k - 1][1]) * u + Math.sin(u * Math.PI) * 15]); } return p; })();
+  const LAMBA_YAMA = [[41, 0], [137, 135], [67, 160], [120, 38]], LAMBA_CAM = [[56, 19], [151, 156], [81, 181], [183, 62]];
+  const hexRgb = h => { const n = parseInt(String(h).slice(1), 16); return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255); };
   const FIRLAT = [['🍅', 'Domates at'], ['📄', 'Kağıt top at'], ['🛏️', 'Yastık at'], ['🧦', 'Çorap at']];
   // seçilebilir karakterler (her biri img/masa/av/<id>/0..9.webp)
   const AVATARLAR = [{ id: 'turuncu', ad: 'Turuncu' }];
@@ -32,7 +36,8 @@ const MASA = (() => {
   // eski oturma görünümünü seçmiş olan masa ile açılır
   let ilk = al(KEY, null);
   if (ilk == null){ const eski = al('oyunodasi-oturma', 'kart'); ilk = eski && eski !== 'kart' ? 'masa' : 'standart'; }
-  const A = (() => { try { return Object.assign({ karanlik: false, ates: 0, lamba: [1, 1, 1, 1] }, JSON.parse(localStorage.getItem('oyunodasi-masa-oda') || '{}')); } catch(e){ return { karanlik: false, ates: 0, lamba: [1, 1, 1, 1] }; } })();
+  const A0 = { isik: true, ates: true, ipGece: false, atesSes: 0, lamba: [1, 1, 1, 1], ipRenk: 'sicak', ipMod: 'sabit', lambaRenk: '' };
+  const A = (() => { try { const o = JSON.parse(localStorage.getItem('oyunodasi-masa-oda') || '{}'); if (o.ates === undefined || typeof o.ates === 'number'){ o.atesSes = typeof o.ates === 'number' ? o.ates : 0; o.ates = true; } if ('karanlik' in o){ o.isik = !o.karanlik; delete o.karanlik; } return Object.assign({}, A0, o); } catch(e){ return Object.assign({}, A0); } })();
   const aYaz = () => { try { localStorage.setItem('oyunodasi-masa-oda', JSON.stringify(A)); } catch(e){} };
   const FX = [];   // kısa ömürlü efektler (ikram, fırlatma)
   const S = { mod: ilk === 'masa' ? 'masa' : 'standart', av: avTemiz(al(KEYAV, '')), kok: null, kisi: new Map(), hazir: false };
@@ -59,16 +64,27 @@ const MASA = (() => {
     if (S.kok) return S.kok;
     const alan = document.querySelector('.people-area'); if (!alan) return null;
     const kok = document.createElement('div'); kok.className = 'masa-sahne'; kok.id = 'masaSahne'; kok.hidden = true;
-    kok.innerHTML = '<div class="masa-ic"><img class="masa-oda" src="img/masa/oda.webp" alt="" draggable="false"><i class="masa-isik"></i><i class="masa-isik iki"></i>'
-      + '<canvas class="masa-cv alt" width="1376" height="768"></canvas><div class="masa-kivilcim"></div><img class="masa-on" src="img/masa/masa-on.webp" alt="" draggable="false"><canvas class="masa-cv ust" width="1376" height="768"></canvas>'
+    // dört oda hâli üst üste: ışık açık/kapalı × ateş yanıyor/sönük (Gemini görselleri); geçişler yumuşak
+    const ODA = [['ac', 'oda'], ['kc', 'oda-karanlik'], ['as', 'oda-atessiz'], ['ks', 'oda-sonuk']];
+    kok.innerHTML = '<div class="masa-ic">' + ODA.map(([k, f], i) => '<img class="masa-oda' + (i ? ' kat' : '') + '" data-h="' + k + '" src="img/masa/' + f + '.webp" alt="" draggable="false"' + (i ? ' loading="lazy"' : '') + '>').join('')
+      + '<i class="masa-isik"></i><i class="masa-isik iki"></i>'
+      + '<canvas class="masa-cv alt" width="1376" height="768"></canvas><div class="masa-kivilcim"></div>'
+      + ODA.map(([k, f]) => '<img class="masa-on' + (k === 'ac' ? '' : ' kat') + '" data-h="' + k + '" src="img/masa/' + f.replace('oda', 'masa-on') + '.webp" alt="" draggable="false">').join('')
+      + '<video class="masa-ates-v" muted loop playsinline autoplay preload="auto" aria-hidden="true"><source src="img/masa/ates.webm" type="video/webm"><source src="img/masa/ates.mp4" type="video/mp4"></video><video class="masa-ates-v ust" muted loop playsinline autoplay preload="auto" aria-hidden="true"><source src="img/masa/ates.webm" type="video/webm"><source src="img/masa/ates.mp4" type="video/mp4"></video>'
+      + '<canvas class="masa-cv ust" width="1376" height="768"></canvas>'
       + LAMBA.map((l, i) => '<button type="button" class="masa-lamba" data-l="' + i + '" style="left:' + (l[0] - 18) + 'px;top:' + (l[1] - 26) + 'px" title="Lambayı aç / kapat"></button>').join('') + '</div>'
-      + '<div class="masa-oda-ayar"><button type="button" class="masa-ab2" data-kar title="Odayı karart">🌙</button><label class="masa-ates" title="Ateş sesi">🔥<input type="range" min="0" max="100" aria-label="Ateş sesi"></label></div>'
+      + '<div class="masa-oda-ayar"><button type="button" class="masa-ab2" data-kum title="Işıklar ve ateş">💡</button><button type="button" class="masa-ab2" data-isik title="Oda ışıkları">🌙</button><button type="button" class="masa-ab2" data-atesb title="Ateşi söndür / yak">🔥</button></div><div class="masa-kum" hidden></div>'
       + '<div class="masa-cevir">📱↻ Daha büyük görmek için telefonu yan çevir</div><div class="masa-arac"><button type="button" class="masa-ab" data-mik title="Mikrofon">🎙</button><button type="button" class="masa-ab" data-ses title="Sesler">🔊</button><button type="button" class="masa-ab" data-tam title="Tam ekran">⛶</button></div>';
     alan.prepend(kok);
     S.cvA = kok.querySelector('.masa-cv.alt').getContext('2d'); S.cvU = kok.querySelector('.masa-cv.ust').getContext('2d');
     kok.querySelectorAll('.masa-lamba').forEach(b => b.onclick = e => { e.stopPropagation(); const i = +b.dataset.l; A.lamba[i] = A.lamba[i] ? 0 : 1; aYaz(); odaFiltre(); tikSes(); b.blur(); });
-    const kb = kok.querySelector('[data-kar]'); kb.onclick = () => { A.karanlik = !A.karanlik; aYaz(); odaFiltre(); kb.blur(); };
-    const ai = kok.querySelector('.masa-ates input'); ai.value = A.ates; ai.oninput = () => { A.ates = +ai.value; aYaz(); atesSes(); };
+    kok.querySelector('[data-isik]').onclick = e => { e.currentTarget.blur(); isikDegis(!A.isik); };
+    kok.querySelector('[data-atesb]').onclick = e => { e.currentTarget.blur(); atesDegis(!A.ates); };
+    kok.querySelector('[data-kum]').onclick = e => { e.currentTarget.blur(); const k2 = kok.querySelector('.masa-kum'); k2.hidden = !k2.hidden; if (!k2.hidden) kumandaCiz(); };
+    S.vid = [...kok.querySelectorAll('.masa-ates-v')];
+    setInterval(() => { const [v1, v2] = S.vid; if (v1 && v2 && !v1.paused && Math.abs(v1.currentTime - v2.currentTime) > 0.08) v2.currentTime = v1.currentTime; }, 2000);
+    S.lambaImg = [0, 1, 2, 3].map(i => { const im = new Image(); im.src = 'img/masa/lamba' + i + '.webp'; return im; });
+    S.camImg = [0, 1, 2, 3].map(i => { const im = new Image(); im.src = 'img/masa/lamba-cam' + i + '.webp'; return im; });
     odaFiltre();
     kok.querySelector('[data-tam]').onclick = e => { e.currentTarget.blur(); tamEkran(!kok.classList.contains('tam')); };
     kok.querySelector('[data-mik]').onclick = e => { e.currentTarget.blur(); const b = document.getElementById('micBtn'); if (b) b.click(); };
@@ -237,10 +253,50 @@ const MASA = (() => {
   // ---------- oda: karanlık mod, lambalar ----------
   function odaFiltre(){
     if (!S.kok) return;
-    const kapali = A.lamba.filter(x => !x).length, b = (A.karanlik ? 0.62 : 1) * (1 - kapali * 0.09);
-    S.kok.querySelector('.masa-oda').style.filter = b < 0.999 ? 'brightness(' + b.toFixed(2) + ') saturate(' + (A.karanlik ? 0.88 : 1) + ')' : '';
-    const kb = S.kok.querySelector('[data-kar]'); kb.classList.toggle('on', A.karanlik); kb.title = A.karanlik ? 'Odayı aydınlat' : 'Odayı karart';
-    S.kok.querySelectorAll('.masa-lamba').forEach(x => x.classList.toggle('sonuk', !A.lamba[+x.dataset.l]));
+    const h = (A.isik ? 'a' : 'k') + (A.ates ? 'c' : 's');
+    S.kok.dataset.h = h;
+    S.kok.querySelectorAll('.masa-oda.kat,.masa-on.kat').forEach(x => x.classList.toggle('on', x.dataset.h === h));
+    S.kok.classList.toggle('isiksiz', !A.isik); S.kok.classList.toggle('atessiz', !A.ates);
+    const ib = S.kok.querySelector('[data-isik]'); ib.classList.toggle('on', !A.isik); ib.textContent = A.isik ? '🌙' : '💡'; ib.title = A.isik ? 'Oda ışıklarını kapat' : 'Oda ışıklarını aç';
+    const ab = S.kok.querySelector('[data-atesb]'); ab.classList.toggle('on', !A.ates); ab.title = A.ates ? 'Ateşi söndür' : 'Ateşi yak';
+    S.kok.querySelectorAll('.masa-lamba').forEach(x => { x.classList.toggle('sonuk', !A.lamba[+x.dataset.l]); x.hidden = !A.isik; });
+    (S.vid || []).forEach(v => { if (A.ates){ const p = v.play(); if (p && p.catch) p.catch(() => {}); } });
+    const k = S.kok.querySelector('.masa-kum'); if (k && !k.hidden) kumandaCiz();
+  }
+  function isikDegis(ac){ A.isik = ac; aYaz(); odaFiltre(); tikSes(); }
+  function atesDegis(yan){
+    A.ates = yan; aYaz(); odaFiltre(); atesSes();
+    if (typeof audioCtx === 'undefined' || !audioCtx || audioCtx.state !== 'running' || deafened) return;
+    try { // söndürürken su fısıltısı, yakarken kibrit
+      const ac = audioCtx, t = ac.currentTime, L = Math.floor(ac.sampleRate * (yan ? 0.5 : 1.2)), b = ac.createBuffer(1, L, ac.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < L; i++){ const u = i / L; d[i] = (Math.random() * 2 - 1) * (yan ? (u < 0.08 ? u / 0.08 : Math.pow(1 - u, 2)) : Math.sin(Math.PI * u) * (1 - u)); }
+      const s2 = ac.createBufferSource(); s2.buffer = b; const f = ac.createBiquadFilter(); f.type = yan ? 'bandpass' : 'highpass'; f.frequency.value = yan ? 1800 : 2500;
+      const g = ac.createGain(); g.gain.value = yan ? 0.35 : 0.25; s2.connect(f); f.connect(g); g.connect(ac.destination); s2.start(t);
+    } catch(e){}
+  }
+  // kumanda: oda ışıkları, ateş, ip ışıklar, lambalar
+  const IP_RENK = [['sicak', 'Sıcak', '#ffd28c'], ['renkli', 'Renkli', 'linear-gradient(90deg,#ff4d4d,#ffd84a,#4dff88,#4da6ff,#d24dff)'], ['#ff4d6d', '', '#ff4d6d'], ['#ff9a3c', '', '#ff9a3c'], ['#4dff88', '', '#4dff88'], ['#2ff3ff', '', '#2ff3ff'], ['#5a7dff', '', '#5a7dff'], ['#c04dff', '', '#c04dff']];
+  const IP_MOD = [['sabit', 'Sabit'], ['yanip', 'Yanıp sönen'], ['kayan', 'Kayan'], ['nefes', 'Nefes'], ['muzik', 'Müziğe göre']];
+  const LAMBA_RENK = [['', 'Orijinal'], ['#ffb46a', ''], ['#ff4d6d', ''], ['#4dff88', ''], ['#2ff3ff', ''], ['#5a7dff', ''], ['#c04dff', ''], ['#ffffff', '']];
+  function kumandaCiz(){
+    const k = S.kok.querySelector('.masa-kum');
+    const sw = (ls, sec, attr) => ls.map(([v, ad, bg]) => '<button type="button" class="masa-sw' + (v === sec ? ' on' : '') + (ad ? ' yazi' : '') + '" data-' + attr + '="' + v + '" style="--sw:' + (bg || v || '#ffd28c') + '" title="' + (ad || v) + '">' + (ad || '') + '</button>').join('');
+    k.innerHTML = '<div class="masa-kum-bas"><b>💡 Işıklar ve ateş</b><button type="button" class="masa-kum-x" aria-label="Kapat">✕</button></div>'
+      + '<div class="masa-kum-ikili"><button type="button" data-k-isik class="' + (A.isik ? 'on' : 'kapali') + '">' + (A.isik ? '💡 Oda ışıkları açık' : '🌑 Oda ışıkları kapalı') + '</button><button type="button" data-k-ates class="' + (A.ates ? 'on' : 'kapali') + '">' + (A.ates ? '🔥 Ateşi söndür' : '🔥 Ateşi yak') + '</button></div>'
+      + '<label class="masa-kum-kay">🔥 Ateş sesi <input type="range" min="0" max="100" value="' + A.atesSes + '"></label>'
+      + '<div class="masa-kum-lbl">İP IŞIKLAR</div><div class="masa-sws">' + sw(IP_RENK, A.ipRenk, 'ip') + '</div>'
+      + '<label class="masa-kum-cb"><input type="checkbox" data-ipg' + (A.ipGece ? ' checked' : '') + '> Işıklar kapalıyken ip ışıklar yanık kalsın</label>'
+      + '<div class="masa-kum-mod">' + IP_MOD.map(([v, ad]) => '<button type="button" data-ipm="' + v + '" class="' + (v === A.ipMod ? 'on' : '') + '">' + ad + '</button>').join('') + '</div>'
+      + '<div class="masa-kum-lbl">LAMBALAR VE NEON</div><div class="masa-sws">' + sw(LAMBA_RENK, A.lambaRenk, 'lr') + '</div>'
+      + '<p class="masa-kum-not">Lambalara tıklayıp tek tek açıp kapatabilirsin. Ayarlar sadece senin ekranında.</p>';
+    k.querySelector('.masa-kum-x').onclick = () => { k.hidden = true; };
+    k.querySelector('[data-k-isik]').onclick = () => isikDegis(!A.isik);
+    k.querySelector('[data-k-ates]').onclick = () => atesDegis(!A.ates);
+    k.querySelector('.masa-kum-kay input').oninput = e => { A.atesSes = +e.target.value; aYaz(); atesSes(); };
+    k.querySelectorAll('[data-ip]').forEach(b => b.onclick = () => { A.ipRenk = b.dataset.ip; aYaz(); kumandaCiz(); });
+    k.querySelectorAll('[data-ipm]').forEach(b => b.onclick = () => { A.ipMod = b.dataset.ipm; aYaz(); kumandaCiz(); });
+    k.querySelector('[data-ipg]').onchange = e => { A.ipGece = e.target.checked; aYaz(); };
+    k.querySelectorAll('[data-lr]').forEach(b => b.onclick = () => { A.lambaRenk = b.dataset.lr; aYaz(); kumandaCiz(); });
   }
   function tikSes(){
     if (typeof audioCtx === 'undefined' || !audioCtx || audioCtx.state !== 'running' || deafened) return;
@@ -250,9 +306,9 @@ const MASA = (() => {
   function atesSes(){
     const ac = typeof audioCtx !== 'undefined' && audioCtx;
     const ac2 = ac && ac.state === 'running';
-    const acik = ac2 && A.ates > 0 && S.kok && !S.kok.hidden && !deafened;
+    const acik = ac2 && A.atesSes > 0 && A.ates && S.kok && !S.kok.hidden && !deafened;
     if (!acik){ if (S.ates){ S.ates.acik = false; S.ates.g.gain.setTargetAtTime(0, ac.currentTime, 0.3); } return; }
-    const v = A.ates / 100;
+    const v = A.atesSes / 100;
     if (!S.ates){
       const ana = ac.createGain(); ana.gain.value = 0; ana.connect(ac.destination);
       const len = ac.sampleRate * 2, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0); let b = 0;
@@ -283,17 +339,72 @@ const MASA = (() => {
     const q = ne === 'agiz' ? AGIZ[i] : BAS[i]; if (!q) return null;
     return { x: x + (g.bb[0] + q[0] - g.cx) * s, y: y + (g.bb[1] + q[1] - g.cy) * s, s, x0: x, y0: y };
   }
+  // lamba camının şekli seçilen renge boyanır (önbellekli)
+  const camOn = {};
+  function camBoya(i, renk){
+    const im = S.camImg && S.camImg[i]; if (!im || !im.complete || !im.naturalWidth) return null;
+    const k = i + renk; if (camOn[k]) return camOn[k];
+    const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+    const x = c.getContext('2d'); x.drawImage(im, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = renk; x.fillRect(0, 0, c.width, c.height);
+    return (camOn[k] = c);
+  }
+  function ipDeger(i, now){
+    const t2 = now / 1000, mz = A.ipMod === 'muzik' && muzikVar();
+    let v;
+    if (A.ipMod === 'yanip') v = (Math.floor(t2 * 2) + i) % 2 ? 1 : 0.15;
+    else if (A.ipMod === 'kayan') v = 0.2 + 0.8 * Math.pow(Math.max(0, Math.sin(i * 0.45 - t2 * 3)), 3);
+    else if (A.ipMod === 'nefes') v = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t2 * 1.8));
+    else if (A.ipMod === 'muzik') v = mz ? 0.2 + 0.8 * Math.abs(Math.sin(t2 * 7 + i * 0.6)) * Math.abs(Math.sin(t2 * 2.3 + i)) : 0.35;
+    else v = 0.75 + 0.25 * Math.abs(Math.sin(t2 * 2 + i * 1.7));
+    const rc = A.ipRenk === 'renkli' ? ['255,70,70', '255,216,74', '77,255,136', '77,166,255', '210,77,255'][i % 5] : A.ipRenk === 'sicak' ? '255,215,140' : hexRgb(A.ipRenk);
+    return [rc, v];
+  }
+  // ip ışık: kablo (eklenen için) ve ampul parıltıları; karanlıkta biraz daha belirgin
+  function ipCiz(a, now, yol, kablo, karanlik){
+    if (kablo){ a.save(); a.strokeStyle = 'rgba(25,18,12,.85)'; a.lineWidth = 1.3; a.beginPath(); yol.forEach((p, i) => i ? a.lineTo(p[0], p[1]) : a.moveTo(p[0], p[1])); a.stroke(); a.restore(); }
+    let acc = 99, n = 0;
+    for (let i = 0; i < yol.length; i++){
+      if (kablo){ if (i) acc += Math.hypot(yol[i][0] - yol[i - 1][0], yol[i][1] - yol[i - 1][1]); if (acc < 12) continue; acc = 0; }
+      const [x, y] = yol[i], [rc, v] = ipDeger(kablo ? n + 40 : i, now); n++;
+      a.save(); a.globalCompositeOperation = 'screen';
+      const r = karanlik ? 14 : 11, g = a.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(' + rc + ',' + ((karanlik ? 0.6 : 0.95) * v) + ')'); g.addColorStop(0.35, 'rgba(' + rc + ',' + (0.4 * v) + ')'); g.addColorStop(1, 'rgba(' + rc + ',0)');
+      a.fillStyle = g; a.fillRect(x - r, y - r, r * 2, r * 2); a.restore();
+      if (kablo){ a.fillStyle = 'rgba(' + rc + ',' + (0.5 + 0.5 * v) + ')'; a.beginPath(); a.arc(x, y + 1.5, 2.1, 0, 6.283); a.fill(); a.fillStyle = 'rgba(255,250,235,' + (0.4 + 0.55 * v) + ')'; a.beginPath(); a.arc(x, y + 1.2, 1.1, 0, 6.283); a.fill(); }
+    }
+  }
   function odaCiz(now){
     const a = S.cvA, u = S.cvU; if (!a) return;
     a.clearRect(0, 0, W, H); u.clearRect(0, 0, W, H);
-    // lamba ve ip ışık parlaması (karanlıkta daha güçlü)
-    const k = A.karanlik ? 1.7 : 0.85;
-    a.save(); a.globalCompositeOperation = 'screen';
-    LAMBA.forEach(([x, y, r, c], i) => { if (!A.lamba[i]) return; const al = (0.26 + 0.06 * Math.sin(now / 900 + i)) * k, g = a.createRadialGradient(x, y, 2, x, y, r * k); g.addColorStop(0, 'rgba(' + c + ',' + al + ')'); g.addColorStop(1, 'rgba(' + c + ',0)'); a.fillStyle = g; a.fillRect(x - r * 2, y - r * 2, r * 4, r * 4); });
-    IP.forEach(([x, y], i) => { const al = (A.karanlik ? 0.95 : 0.4) * (0.55 + 0.45 * Math.abs(Math.sin(now / 500 + i * 1.7))), g = a.createRadialGradient(x, y, 0, x, y, A.karanlik ? 11 : 8); g.addColorStop(0, 'rgba(255,215,140,' + al + ')'); g.addColorStop(1, 'rgba(255,215,140,0)'); a.fillStyle = g; a.fillRect(x - 12, y - 12, 24, 24); });
-    a.restore();
-    // sönük lambaların kendisi karanlık
-    a.save(); a.fillStyle = 'rgba(8,5,12,.62)'; LAMBA.forEach(([x, y, r], i) => { if (A.lamba[i]) return; a.beginPath(); i === 3 ? a.ellipse(x, y, 62, 22, -0.25, 0, 6.283) : a.ellipse(x, y, r * 0.3, r * 0.48, 0, 0, 6.283); a.fill(); }); a.restore();
+    // lambalar: kapalı olanın yerine gerçek sönük hâli (Gemini karanlık görselinden), açık olanlara renkli parıltı
+    if (A.isik){
+      LAMBA.forEach(([x, y, r, c], i) => {
+        if (!A.lamba[i]){ const im = S.lambaImg && S.lambaImg[i]; if (im && im.complete && im.naturalWidth) a.drawImage(im, LAMBA_YAMA[i][0], LAMBA_YAMA[i][1]); return; }
+        const rc = A.lambaRenk ? hexRgb(A.lambaRenk) : c, al = (0.22 + 0.05 * Math.sin(now / 900 + i)) * (A.lambaRenk ? 1.25 : 1);
+        a.save();
+        if (A.lambaRenk){ const t = camBoya(i, A.lambaRenk); if (t){ a.globalCompositeOperation = 'color'; a.drawImage(t, LAMBA_CAM[i][0], LAMBA_CAM[i][1]); a.drawImage(t, LAMBA_CAM[i][0], LAMBA_CAM[i][1]); } }
+        a.globalCompositeOperation = 'screen';
+        const g = a.createRadialGradient(x, y, 2, x, y, r * 1.1); g.addColorStop(0, 'rgba(' + rc + ',' + al + ')'); g.addColorStop(1, 'rgba(' + rc + ',0)'); a.fillStyle = g; a.fillRect(x - r * 2, y - r * 2, r * 4, r * 4);
+        a.restore();
+      });
+      ipCiz(a, now, IP, false);
+    }
+    if (A.isik || A.ipGece) ipCiz(a, now, IP2, true, !A.isik);
+    if (!A.isik && A.ipGece) ipCiz(a, now, IP, false, true);
+    // ışıklar kapalıyken: odayı ateş aydınlatır (titreyen sıcak ışık)
+    if (!A.isik && A.ates){
+      const f = 0.86 + 0.09 * Math.sin(now / 83) * Math.sin(now / 37) + 0.05 * Math.sin(now / 13);
+      a.save(); a.globalCompositeOperation = 'screen';
+      const g = a.createRadialGradient(690, 395, 10, 690, 430, 520 * f); g.addColorStop(0, 'rgba(255,150,60,' + (0.28 * f) + ')'); g.addColorStop(0.4, 'rgba(255,110,40,' + (0.1 * f) + ')'); g.addColorStop(1, 'rgba(255,80,20,0)');
+      a.fillStyle = g; a.fillRect(0, 0, W, H); a.restore();
+      S.kok.style.setProperty('--titre', f.toFixed(3));
+    }
+    // ateş sönükken közler kızarır
+    if (!A.ates){
+      u.save(); u.globalCompositeOperation = 'screen';
+      for (let i = 0; i < 16; i++){ const x = 640 + ((i * 53) % 100), y = 392 + ((i * 29) % 16), v = 0.3 + 0.5 * Math.abs(Math.sin(now / (500 + i * 41) + i)); const g = u.createRadialGradient(x, y, 0, x, y, 5); g.addColorStop(0, 'rgba(255,' + (70 + (i % 3) * 25) + ',20,' + v + ')'); g.addColorStop(1, 'rgba(255,60,10,0)'); u.fillStyle = g; u.fillRect(x - 5, y - 5, 10, 10); }
+      u.restore();
+      for (let i = 0; i < 6; i++){ const n = ((now / 5000) + i / 6) % 1, x = 690 + Math.sin(now / 1100 + i * 2) * 10 + n * 16, y = 386 - n * 90, r = 8 + n * 24; const g = u.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(190,195,205,' + ((1 - n) * 0.13) + ')'); g.addColorStop(1, 'rgba(190,195,205,0)'); u.fillStyle = g; u.fillRect(x - r, y - r, r * 2, r * 2); }
+    }
     // hoparlörler müzikle
     if (muzikVar()) HOP.forEach(([x, y], i) => {
       const v = Math.abs(Math.sin(now / 230 + i));
