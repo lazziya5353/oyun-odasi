@@ -16,12 +16,34 @@ const QUALITY = {
 };
 let shareQ = QUALITY[store.get('oyunodasi-q')] ? store.get('oyunodasi-q') : 'balanced';
 
-function tuneSender(call){
-  const pc = call && call.peerConnection; if (!pc) return;
+// Otomatik kalite (ABR): her izleyiciye giden yayın 2 sn'de bir ölçülür. İnternet daralınca (kayıp, gecikme,
+// "bant genişliği" sınırı) bit hızı hemen düşer ve gerekirse çözünürlük küçülür – görüntü donmak yerine kısa süre
+// biraz bulanıklaşır. Bağlantı düzelince yavaş yavaş geri çıkar. Bilgisayar zorlanırsa (cpu) önce çözünürlük düşer.
+const ABR_MIN = 300000;
+function abrHedef(){
   const q = QUALITY[shareQ];
   const viewers = Math.max(1, outScreen.size);
   // çok izleyici varsa yükleme hızın bölüşülür; her birine biraz daha az gönder
-  const br = Math.round(q.br * (viewers >= 4 ? 0.6 : viewers === 3 ? 0.8 : 1));
+  return Math.round(q.br * (viewers >= 4 ? 0.6 : viewers === 3 ? 0.8 : 1));
+}
+function abrDurum(call){
+  if (!call._abr){
+    const q = QUALITY[shareQ];
+    // kalabalıkta (3+ izleyici) "dengeli" 1080p yerine 720p başlar
+    const kucult = shareQ === 'balanced' && outScreen.size >= 3 ? 1.5 : 1;
+    call._abr = { cap: abrHedef(), scale: kucult, taban: kucult, iyi: 0, son: null, uyg: null };
+  }
+  return call._abr;
+}
+function tuneSender(call){
+  const pc = call && call.peerConnection; if (!pc) return;
+  const q = QUALITY[shareQ];
+  const a = abrDurum(call);
+  a.cap = Math.min(a.cap, abrHedef());
+  // izleyici sayısı değişince taban ölçek güncellenir (kalabalıkta dengeli 720p)
+  const taban = shareQ === 'balanced' && outScreen.size >= 3 ? 1.5 : 1;
+  if (a.taban !== taban){ if (a.scale === a.taban || a.scale < taban) a.scale = taban; a.taban = taban; }
+  const br = Math.max(ABR_MIN, Math.round(a.cap));
   pc.getSenders().forEach(s => {
     if (!s.track) return;
     try {
@@ -30,13 +52,77 @@ function tuneSender(call){
       if (s.track.kind === 'video'){
         prm.encodings[0].maxBitrate = br;
         prm.encodings[0].maxFramerate = q.fps;
+        prm.encodings[0].scaleResolutionDownBy = a.scale;
         prm.degradationPreference = q.deg;
+        a.uyg = { br, scale: a.scale };
       } else {
         prm.encodings[0].maxBitrate = 256000;   // oyun/film sesi: stereo, yüksek kalite
       }
       s.setParameters(prm).catch(() => {});
     } catch(e){}
   });
+}
+async function abrOlc(call){
+  const pc = call.peerConnection; if (!pc || pc.connectionState === 'closed') return null;
+  const rep = await pc.getStats();
+  const o = { aob: 0, rtt: 0, kayip: 0, sebep: '', bytes: 0, fps: 0 };
+  rep.forEach(r => {
+    if (r.type === 'outbound-rtp' && r.kind === 'video'){ o.bytes = r.bytesSent || 0; o.sebep = r.qualityLimitationReason || ''; o.fps = r.framesPerSecond || 0; }
+    else if (r.type === 'remote-inbound-rtp' && r.kind === 'video'){ o.kayip = r.fractionLost || 0; if (r.roundTripTime) o.rtt = r.roundTripTime; }
+    else if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded'){ if (r.availableOutgoingBitrate) o.aob = r.availableOutgoingBitrate; if (!o.rtt && r.currentRoundTripTime) o.rtt = r.currentRoundTripTime; }
+  });
+  return o;
+}
+function abrKarar(a, o, hedef, q){
+  // a: durum, o: ölçüm; durum değişti mi döner
+  const once = a.son; a.son = o;
+  const oncekiCap = a.cap, oncekiScale = a.scale;
+  const rttArtti = once && once.rtt && o.rtt > Math.max(0.35, once.rtt * 1.8);
+  const darBant = o.aob && o.aob < a.cap * 0.85;
+  const kotu = o.kayip > 0.05 || rttArtti || o.sebep === 'bandwidth' || darBant;
+  if (kotu){
+    a.iyi = 0;
+    let yeni = a.cap * (o.kayip > 0.1 ? 0.6 : 0.75);
+    // ölçülen boş hattın altına fazla inme: kayıp sürse de hattın yarısından aşağı düşmez
+    if (o.aob) yeni = Math.max(Math.min(yeni, o.aob * 0.8), Math.min(a.cap, o.aob * 0.5));
+    a.cap = Math.max(ABR_MIN, yeni);
+    // bit hızı çözünürlüğe yetmiyorsa çözünürlüğü de küçült (yazı modunda netlik korunur)
+    if (q.deg !== 'maintain-resolution'){
+      const piksel = (q.w * q.h) / (a.scale * a.scale) * q.fps;
+      if (a.cap / piksel < 0.03 && a.scale < 3) a.scale = Math.min(3, +(a.scale * 1.33).toFixed(2));
+    }
+  } else if (o.sebep === 'cpu'){
+    a.iyi = 0;
+    // kodlayıcının kendi uyumuna da zaman tanı: en fazla 6 sn'de bir küçült
+    a.cpu = (a.cpu || 0) + 1; a.cpuOldu = true;
+    if (a.cpu % 3 === 1 && a.scale < 3) a.scale = Math.min(3, +(a.scale * 1.33).toFixed(2));
+  } else if (o.kayip < 0.02 && o.sebep !== 'bandwidth'){
+    a.iyi++; a.cpu = 0;
+    // 2 ölçüm (4 sn) temizse her ölçümde biraz yüksel
+    if (a.iyi >= 2 && (a.cap < hedef || a.scale > a.taban)){
+      if (a.cap < hedef && (!o.aob || o.aob > a.cap * 1.2)) a.cap = Math.min(hedef, a.cap * 1.25);
+      if (a.scale > a.taban){
+        const piksel = (q.w * q.h) / Math.pow(a.scale / 1.33, 2) * q.fps;
+        if (a.cap / piksel >= 0.045 && a.iyi >= (a.cpuOldu ? 5 : 2)) a.scale = Math.max(a.taban, +(a.scale / 1.33).toFixed(2));
+      }
+    }
+  }
+  return Math.abs(a.cap - oncekiCap) > oncekiCap * 0.05 || a.scale !== oncekiScale;
+}
+let abrTimer = 0;
+function abrBaslat(){
+  clearInterval(abrTimer);
+  abrTimer = setInterval(async () => {
+    if (!screenStream){ clearInterval(abrTimer); return; }
+    const q = QUALITY[shareQ], hedef = abrHedef();
+    for (const call of outScreen.values()){
+      try {
+        const o = await abrOlc(call); if (!o) continue;
+        const a = abrDurum(call);
+        if (abrKarar(a, o, hedef, q)) tuneSender(call);
+      } catch(e){}
+    }
+  }, 2000);
 }
 function tuneSenderSoon(call){ [0, 1500, 4000].forEach(ms => setTimeout(() => tuneSender(call), ms)); }
 
@@ -103,6 +189,7 @@ function startShareWithStream(stream, info){
     vt.addEventListener('ended', () => { if (screenStream === stream) stopShare(); });
   }
   syncScreenOut();
+  abrBaslat();
   broadcast({ t: 'state', sharing: true });
   $('shareBtn').className = 'btn on'; $('shareBtn').innerHTML = '🖥 <span class="lbl">Paylaşımı durdur</span>';
   showLocalScreen();
@@ -113,6 +200,7 @@ function stopShare(){
   const info = shareInfo;
   screenStream.getTracks().forEach(t => t.stop());
   screenStream = null; shareInfo = null;
+  clearInterval(abrTimer);
   outScreen.forEach(c => { try { c.close(); } catch(e){} });
   outScreen.clear();
   broadcast({ t: 'state', sharing: false });
@@ -132,7 +220,7 @@ async function changeQuality(k){
     try { await vt.applyConstraints({ width: { max: q.w }, height: { max: q.h }, frameRate: { max: q.fps } }); } catch(e){}
   }
   if (vt) try { vt.contentHint = q.hint; } catch(e){}
-  outScreen.forEach(tuneSender);
+  outScreen.forEach(c => { c._abr = null; tuneSender(c); });
   toast('Kalite: ' + q.label);
 }
 
@@ -361,8 +449,8 @@ function watchSenderStats(tile){
       } catch(e){}
     }
     if (!n){ setStats(tile, ['İzleyen yok · ' + QUALITY[shareQ].label], ''); return; }
-    const warn = reason === 'bandwidth' ? '⚠ Yükleme hızın yetmiyor: “Zayıf internet” ya da “Oyun” kalitesini seç'
-      : reason === 'cpu' ? '⚠ Bilgisayarın zorlanıyor: kaliteyi düşür' : '';
+    const warn = reason === 'bandwidth' ? '⚠ Yükleme hızın dar: kalite otomatik ayarlanıyor (sürerse “Zayıf internet”i seç)'
+      : reason === 'cpu' ? '⚠ Bilgisayarın zorlanıyor: çözünürlük otomatik düşürüldü' : '';
     setStats(tile, ['Gönderiyor: ' + (h ? h + 'p · ' : '') + fps + ' fps · ' + n + ' izleyici · ' + bits.toFixed(1) + ' Mbps'], warn);
   }, 2000);
 }

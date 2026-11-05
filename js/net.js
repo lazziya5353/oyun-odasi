@@ -603,7 +603,7 @@ function attachCall(id, call, kind){
       // görüntüye tampon: ağdaki anlık dalgalanmalar donma yerine yumuşak geçsin (filmde daha büyük)
       try {
         call.peerConnection.getReceivers().forEach(r => {
-          if (r.track && 'jitterBufferTarget' in r) r.jitterBufferTarget = p.screenMode === 'film' ? 400 : 150;
+          if (r.track && 'jitterBufferTarget' in r) r.jitterBufferTarget = p.screenMode === 'film' ? 400 : p.screenMode === 'motion' ? 100 : 200;
         });
       } catch(e){}
       showScreen(p);
