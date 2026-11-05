@@ -85,7 +85,7 @@ const ROZET = (() => {
   function oyun(k, kazandi){
     if (!uye() || !/^[a-z0-9]{2,16}$/.test(k)) return;
     const x = bek.oyun[k] = bek.oyun[k] || [0, 0]; x[0]++; if (kazandi) x[1]++;
-    kaydet(); kontrol(); gonder();
+    kaydet(); kontrol();
   }
   async function gonder(kapanis){
     if (!uye() || bosMu() && !(kapanis && oturum)) return;
@@ -113,10 +113,11 @@ const ROZET = (() => {
     const saat = +new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Istanbul', hour: 'numeric', hourCycle: 'h23' }).format(new Date());
     if (saat < 5) bek.gece++;
     kaydet(); kontrol();
-    if (Date.now() - sonGonder > 5 * 60e3) gonder();
+    if (Date.now() - sonGonder > 60 * 60e3) gonder();   // saatte bir (çıkarken ayrıca gider)
   }, 60e3);
   window.addEventListener('pagehide', () => gonder(true));
-  document.addEventListener('visibilitychange', () => { if (document.hidden && !bosMu()) gonder(); });
+  // telefonda uygulamadan çıkınca: sık sık gidip gelmeye karşı en fazla 10 dakikada bir
+  document.addEventListener('visibilitychange', () => { if (document.hidden && !bosMu() && Date.now() - sonGonder > 10 * 60e3) gonder(); });
 
   // ---------- olaylara bağlan ----------
   if (typeof enterRoom === 'function'){ const e0 = enterRoom; enterRoom = function(){ const ilk = !joined; const r = e0.apply(this, arguments); if (ilk && isHost && !rejoining) ekle('oda'); return r; }; }
