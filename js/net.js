@@ -475,7 +475,7 @@ function onData(id, d){
     }
     case 'rozet': {
       p.rozet = typeof rozetTemiz === 'function' ? rozetTemiz(d.rozet) : null;
-      renderPeer(p);
+      if (p.helloed) renderPeer(p);
       return;
     }
     case 'profil': {

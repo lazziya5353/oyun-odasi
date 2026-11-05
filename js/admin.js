@@ -4,6 +4,7 @@
 const $ = id => document.getElementById(id);
 const API = '/api/uye/';
 let tok = sessionStorage.getItem('oyunodasi-admin') || '';
+try { if (tok && !localStorage.getItem('oyunodasi-yonetici')) localStorage.setItem('oyunodasi-yonetici', JSON.stringify({ token: tok, exp: Date.now() + 12 * 3600e3 })); } catch(e){}
 let users = [], tab = '', known = null, push = null, gunluk = null, muzik = null, adminBildirim = 0;
 let sig = '', tabSig = '', editing = null;
 const tmpPw = {}, fresh = new Set();
@@ -25,7 +26,7 @@ async function req(url, body){
   return d;
 }
 const api = (path, body) => req(API + path, body);
-function logout(){ tok = ''; sessionStorage.removeItem('oyunodasi-admin'); clearInterval(start.t); $('panel').hidden = true; $('loginCard').hidden = false; }
+function logout(){ tok = ''; sessionStorage.removeItem('oyunodasi-admin'); try { localStorage.removeItem('oyunodasi-yonetici'); } catch(e){} clearInterval(start.t); $('panel').hidden = true; $('loginCard').hidden = false; }
 const fmt = ts => ts ? new Date(ts).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 function ago(ts){
   if (!ts) return 'hiç';
@@ -215,6 +216,7 @@ function userRow(u){
   b.append(el('span', 'pill ' + P[0], P[1]));
   if (u.gizliOda) b.append(el('span', 'pill gizli', '🔒 gizli oda yetkisi'));
   if (u.kodsuz) b.append(el('span', 'pill gizli', '👑 kodsuz giriş'));
+  if (u.durum === 'onayli') b.append(el('span', 'pill lv', '🏅 Lv ' + (u.lv || 1)));
   const s1 = el('span', '', '@' + u.kadi + ' · görünen ad: ' + u.name);
   const s2 = el('span', '', 'Başvuru: ' + fmt(u.created) + (u.approvedAt ? ' · Onay: ' + fmt(u.approvedAt) : '') + (u.durum !== 'bekliyor' ? ' · Son giriş: ' + ago(u.lastSeen) : '') + (u.bildirim ? ' · 🔔' : ''));
   info.append(b, s1, s2);
@@ -235,6 +237,7 @@ function userRow(u){
       inp.onkeydown = e => { if (e.key === 'Enter') save(); if (e.key === 'Escape'){ editing = null; renderList(); } };
       acts.innerHTML = ''; acts.append(inp, button('Kaydet', 'primary', save), button('Vazgeç', '', () => { editing = null; renderList(); })); inp.focus();
     });
+    A('🏅 Seviye', '', () => kisiProfil({ kadi: u.kadi }));
     A('🔑 Şifre sıfırla', '', async () => {
       try { const d = await api('admin-sifre', { id: u.id }); tmpPw[u.id] = d.yeni; renderList(); }
       catch(e){ toast(e.message); }
@@ -468,6 +471,8 @@ $('admForm').onsubmit = async e => {
   try {
     const d = await api('admin-giris', { sifre: $('admPw').value });
     tok = d.token; sessionStorage.setItem('oyunodasi-admin', tok); $('admPw').value = '';
+    // aynı tarayıcıda sitenin kendisi de yöneticiyi tanısın (açık odalara kodsuz giriş); oturum gibi 12 saat
+    try { localStorage.setItem('oyunodasi-yonetici', JSON.stringify({ token: tok, exp: Date.now() + 12 * 3600e3 })); } catch(e2){}
     start();
   } catch(err){ $('admErr').textContent = err.message; }
 };

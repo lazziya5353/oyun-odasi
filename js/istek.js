@@ -126,13 +126,22 @@ const ISTEK = (() => {
     dene(0);
   }
   // yönetici yetkisi: kodsuz giriş
-  const kodsuzMu = () => !!(typeof account !== 'undefined' && account && account.uye && account.uye.kodsuz);
+  // yönetici: aynı tarayıcıda yönetim paneline giriş yapmışsa (12 saat) ya da üyeliğine yetki verilmişse
+  const yoneticiTok = () => { try { const y = JSON.parse(localStorage.getItem('oyunodasi-yonetici') || 'null'); return y && y.token && y.exp > Date.now() ? y.token : ''; } catch(e){ return ''; } };
+  const kodsuzMu = () => !!yoneticiTok() || !!(typeof account !== 'undefined' && account && account.uye && account.uye.kodsuz);
   async function kodsuzGir(o, durum){
     durum('⏳ Giriliyor…');
     try {
-      const r = await fetch('/api/oda/kodsuz', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + account.token }, body: JSON.stringify({ id: o.id }) });
+      const h = { 'content-type': 'application/json' }, yt = yoneticiTok();
+      if (yt) h['x-admin'] = yt;
+      if (typeof account !== 'undefined' && account) h.authorization = 'Bearer ' + account.token;
+      const r = await fetch('/api/oda/kodsuz', { method: 'POST', headers: h, body: JSON.stringify({ id: o.id }) });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.kod){ durum(d.hata === 'yetki' ? 'Kodsuz giriş yetkin yok.' : (d.hata || 'Odaya girilemedi.'), 'hata'); return; }
+      if (!r.ok || !d.kod){
+        if (d.hata === 'yetki'){ try { localStorage.removeItem('oyunodasi-yonetici'); } catch(e){} durum('Yönetici oturumun bitmiş. Yönetim paneline yeniden giriş yap ya da kodu yaz.', 'hata'); }
+        else durum(d.hata || 'Odaya girilemedi.', 'hata');
+        return;
+      }
       $$('codeInput').value = d.kod; $$('joinBtn').click();
     } catch(e){ durum('Sunucuya ulaşılamadı.', 'hata'); }
   }

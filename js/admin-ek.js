@@ -199,6 +199,24 @@ async function kisiProfil(kimlik){
   body.append(st);
   if (k) body.append(note('İlk görülme: ' + tarihYaz(k.ilk) + ' · Son görülme: ' + tarihYaz(k.son) + ' · ' + ({ pc: '💻 bilgisayar', mobil: '📱 telefon', tablet: '📲 tablet' }[k.cihaz] || '') + (k.siteMs ? '' : ' · (süre sayacı yeni eklendi; bundan sonraki girişlerden itibaren dolar)')));
   else body.append(note('Bu kişi için canlı kayıt yok (henüz siteye girmemiş ya da kayıt silinmiş).'));
+  // seviye (üye): yönetici değiştirebilir
+  if (u && u.durum === 'onayli' && u.ilerleme){
+    const g = u.ilerleme, sb = el('div', 'ad-box sv-kutu');
+    sb.append(el('h3', '', '🏅 Seviye ve puan'));
+    const satir = el('div', 'sv-satir');
+    const lvYaz = el('b', 'sv-lv', 'Lv ' + (g.lv || 1));
+    const inp = el('input'); inp.type = 'number'; inp.min = 1; inp.max = 99; inp.value = g.lv || 1; inp.className = 'inp sv-inp'; inp.setAttribute('aria-label', 'Yeni seviye');
+    const kaydet = async lv => {
+      lv = Math.max(1, Math.min(99, Math.floor(+lv || 1)));
+      try { const r = await api('admin-seviye', { id: u.id, lv }); lvYaz.textContent = 'Lv ' + r.ilerleme.lv; inp.value = r.ilerleme.lv; bilgi.textContent = puanYazi(r.ilerleme); toast(u.name + ' artık Lv ' + r.ilerleme.lv + ' (bir sonraki girişinde görünür)'); if (typeof renderList === 'function') { try { await loadUsers(); renderList(); } catch(e){} } }
+      catch(e){ toast(e.message); }
+    };
+    satir.append(lvYaz, button('−1', '', () => kaydet(+inp.value - 1)), inp, button('+1', '', () => kaydet(+inp.value + 1)), button('Kaydet', 'primary', () => kaydet(inp.value)));
+    const puanYazi = x => (x.xp || 0) + ' puan · odada ' + sureYaz((x.dk || 0) * 60e3) + ' · ' + Object.values(x.oyun || {}).reduce((a, o) => a + (o[1] || 0), 0) + ' galibiyet · ' + (x.arkadas || 0) + ' arkadaş';
+    const bilgi = el('span', 'ad-muted', puanYazi(g));
+    sb.append(satir, bilgi, note('Seviyeyi değiştirince puanı o seviyenin başlangıcına ayarlanır; rozetleri ve diğer sayaçları aynı kalır.'));
+    body.append(sb);
+  }
   // bildirim
   if (u){
     const n = u.bildirim || {};

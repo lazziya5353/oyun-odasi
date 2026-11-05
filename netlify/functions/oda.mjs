@@ -113,12 +113,15 @@ export default async (req, context) => {
     }
     if (req.method === 'POST' && islem === 'kodsuz'){
       // yöneticinin verdiği "kodsuz giriş" yetkisi olan üye: listedeki odanın kodunu alır
-      const h = req.headers.get('authorization') || '', t = h.startsWith('Bearer ') ? h.slice(7) : '';
-      if (!t || t.length > 100) return json({ hata: 'oturum yok' }, 401);
-      const us = store('oyunodasi-uye');
-      const s2 = await us.get('s/' + crypto.createHash('sha256').update(t).digest('hex'), { type: 'json' });
-      const u = s2 && s2.exp > Date.now() && await us.get('u/' + s2.id, { type: 'json' });
-      if (!u || u.durum !== 'onayli' || !u.kodsuz || (s2.sv || 0) !== (u.sv || 0)) return json({ hata: 'yetki' }, 403);
+      // yönetici (panelde giriş yapmış) ya da yöneticinin yetki verdiği üye
+      if (!(await isAdmin(req))){
+        const h = req.headers.get('authorization') || '', t = h.startsWith('Bearer ') ? h.slice(7) : '';
+        if (!t || t.length > 100) return json({ hata: 'yetki' }, 403);
+        const us = store('oyunodasi-uye');
+        const s2 = await us.get('s/' + crypto.createHash('sha256').update(t).digest('hex'), { type: 'json' });
+        const u = s2 && s2.exp > Date.now() && await us.get('u/' + s2.id, { type: 'json' });
+        if (!u || u.durum !== 'onayli' || !u.kodsuz || (s2.sv || 0) !== (u.sv || 0)) return json({ hata: 'yetki' }, 403);
+      }
       const b = await req.json().catch(() => ({}));
       const { d } = await oku(); d.canli = d.canli || {}; d.odalar = d.odalar || {};
       const kod = Object.keys(d.odalar).find(k => odaId(d, k) === String(b.id || ''));

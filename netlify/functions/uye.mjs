@@ -210,7 +210,7 @@ export default async (req, context) => {
       const ad = u ? u.name : misafir;
       const hareket = ((hr && hr.liste) || []).filter(x => u ? (x.kadi ? x.kadi === lowerKey(u.kadi) : (x.uye && x.ad === u.name)) : (!x.uye && x.ad === misafir)).slice(0, 120);
       return json({
-        uye: u ? Object.assign(pub(u), { bildirimCihaz: (u.push || []).length }) : null, ad, anahtar,
+        uye: u ? Object.assign(pub(u), { bildirimCihaz: (u.push || []).length, ilerleme: ilerlemePub(u) }) : null, ad, anahtar,
         kisi: kisi ? { ilk: kisi.ilk, son: kisi.son, cihaz: kisi.cihaz, siteMs: kisi.siteMs || 0, odaMs: kisi.odaMs || 0, girisler: kisi.girisler || 0, odalar: kisi.odalar || {}, gecmis: kisi.gecmis || [] } : null,
         canli: canli ? { kod: canli.kod, giris: canli.giris, cihaz: canli.cihaz } : null, simdi: Date.now(), hareket
       });
@@ -219,7 +219,7 @@ export default async (req, context) => {
       if (!(await authAdmin(req))) return json({ hata: 'yetki' }, 401);
       const us = await allUsers();
       const ap = (await store().get('adminpush', { type: 'json' })) || [];
-      return json({ uyeler: us.map(u => Object.assign(pub(u), { bildirim: (u.push || []).length > 0 })), adminBildirim: ap.length });
+      return json({ uyeler: us.map(u => Object.assign(pub(u), { bildirim: (u.push || []).length > 0, lv: seviye((u.ilerleme || {}).xp || 0) })), adminBildirim: ap.length });
     }
     if (req.method === 'GET' && islem === 'saka-anahtar'){
       const k = await sakaKey();
@@ -503,6 +503,17 @@ export default async (req, context) => {
       u.gizliOda = !!b.acik; await putUser(u);
       await logAdmin((b.acik ? 'Gizli oda yetkisi verildi: ' : 'Gizli oda yetkisi kaldırıldı: ') + u.adSoyad + ' (@' + u.kadi + ')');
       return json({ ok: true, uye: pub(u) });
+    }
+    if (islem === 'admin-seviye'){
+      // yönetici bir üyenin seviyesini değiştirir: puanı o seviyenin başına ayarlanır (diğer sayaçlar ve rozetler aynı kalır)
+      if (u.durum !== 'onayli') return json({ hata: 'sadece üyelere' }, 400);
+      const lv = Math.max(1, Math.min(99, Math.floor(+b.lv || 1)));
+      u.ilerleme = Object.assign({ xp: 0, dk: 0, gece: 0, oda: 0, ekran: 0, ikram: 0, oyun: {}, gunler: 0, sonGun: '', enUzun: 0 }, u.ilerleme || {});
+      const eski = seviye(u.ilerleme.xp || 0);
+      u.ilerleme.xp = 25 * lv * (lv - 1);
+      await putUser(u);
+      await logAdmin('Seviye değişti: ' + u.name + ' (@' + u.kadi + ') Lv ' + eski + ' → Lv ' + lv);
+      return json({ ok: true, ilerleme: ilerlemePub(u) });
     }
     if (islem === 'admin-kodsuz'){
       // açık odalara kod sormadan ve onay beklemeden girme yetkisi (yöneticinin kendi üyeliği için)
