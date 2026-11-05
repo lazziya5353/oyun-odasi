@@ -13,7 +13,11 @@ function ensureCtx(){
     if (audioCtx.state !== 'running') audioCtx.resume().catch(() => {});
   } catch(e){}
 }
-document.addEventListener('pointerdown', () => { if (audioCtx && audioCtx.state !== 'running') audioCtx.resume().catch(() => {}); }, true);
+document.addEventListener('pointerdown', () => {
+  if (audioCtx && audioCtx.state !== 'running') audioCtx.resume().catch(() => {});
+  // sayfa yenilendikten sonra tarayıcı sesi bir tıklamaya kadar beklettiyse: ilk tıklamada herkesin sesini başlat
+  if (typeof peers !== 'undefined') peers.forEach(p => { if (p.audio && p.audio.srcObject && p.audio.paused) p.audio.play().catch(() => {}); });
+}, true);
 
 function makeAnalyser(stream){
   try {

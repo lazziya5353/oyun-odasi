@@ -136,6 +136,39 @@ try {
   }
 } catch(e){}
 
+// F5 / sayfa yenileme: az önce odadaysan aynı odaya kendiliğinden geri gir.
+// Odada başkaları varsa misafir olarak katılırsın; yalnızsan (ya da oda kapanmışsa) oda aynı kodla yeniden açılır.
+try {
+  const y = JSON.parse(sessionStorage.getItem('oyunodasi-yenile') || 'null');
+  sessionStorage.removeItem('oyunodasi-yenile');
+  if (y && typeof y.code === 'string' && cleanCode(y.code) === y.code && y.code.length >= 3 && Date.now() - y.ts < 10 * 60000){
+    $('lobbyErr').textContent = '';
+    lobbyStatus('🔄 Odaya geri dönülüyor… (' + y.code + ')');
+    let dene = 0;
+    const t = setInterval(async () => {
+      if (joined){ clearInterval(t); return; }
+      if (++dene > 60){ clearInterval(t); lobbyStatus(''); return; }
+      const ad = yoneticiGiris ? 'Yönetici' : (typeof account !== 'undefined' && account) ? clip(account.uye.name, 20) : (store.get('oyunodasi-name') || '').trim();
+      if (!ad || typeof Peer === 'undefined') return;     // ad / bağlantı kitaplığı hazır değil: biraz bekle
+      clearInterval(t);
+      myName = clip(ad, 20);
+      if (!y.yalniz){
+        rejoining = true;
+        await start(y.code, false);
+        rejoining = false;
+      }
+      if (!joined){                                       // yalnızdın ya da herkes çıkmış: odayı aynı kodla yeniden aç
+        customCode = true; $('lobbyErr').textContent = '';
+        await start(y.code, true);
+      }
+      // hangi kanaldaysan oraya dön (müzik, film, oyun salonu…)
+      if (joined && y.kanal && y.kanal !== 'genel' && typeof chanById === 'function' && chanById(y.kanal) && typeof switchChannel === 'function'){
+        setTimeout(() => { try { if (chanById(y.kanal)) switchChannel(y.kanal, true); } catch(e){} }, 1500);
+      }
+    }, 250);
+  }
+} catch(e){}
+
 // telefon uykudan dönüp odada tek kaldıysa sayfa yenilenir ve odaya kendiliğinden geri girilir
 try {
   const oto = sessionStorage.getItem('oyunodasi-otodon');
