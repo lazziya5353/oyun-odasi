@@ -314,6 +314,7 @@ function renderPeer(p){
     ? '<span class="pill red">Ses bağlanamadı</span>'
     : '<span class="pill wait">Ses bağlanıyor…</span>');
   if (p.noMic) ic.insertAdjacentHTML('beforeend', '<span class="pill">🎧 Dinleyici</span>');
+  if (p.arka) ic.insertAdjacentHTML('beforeend', '<span class="pill wait" title="Telefonda siteden çıktı ya da ekranı kilitledi; telefonu sesi kesebilir">📵 Arka planda</span>');
   if (p.sharing) ic.insertAdjacentHTML('beforeend', '<span class="pill live">🖥 Yayında</span>');
   if (p.id === currentHostId) ic.insertAdjacentHTML('beforeend', '<span class="pill">👑 Oda sahibi</span>');
   if (typeof dersRozet === 'function') ic.insertAdjacentHTML('beforeend', dersRozet(p.id));

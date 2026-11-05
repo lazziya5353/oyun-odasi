@@ -480,6 +480,7 @@ function onData(id, d){
       if ('muted' in d) p.muted = !!d.muted;
       if ('noMic' in d) p.noMic = !!d.noMic;
       if ('deaf' in d) p.deaf = !!d.deaf;
+      if ('arka' in d) p.arka = !!d.arka;
       if ('sharing' in d){ p.sharing = !!d.sharing; if (!p.sharing) dropScreen(p); }
       if ('channel' in d){
         const old = p.channel;
