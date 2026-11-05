@@ -98,6 +98,12 @@
   .bar #micBtn.off{background:var(--danger);border-color:var(--danger);box-shadow:0 0 0 6px var(--panel),0 8px 22px -6px color-mix(in srgb,var(--danger) 60%,transparent)}
   .bar #micBtn::after{display:none}
   .bar #chatBtn .badge-count{top:0;right:8px}
+  /* yükseltilmiş mikrofon düğmesi içeriğin son satırını örtmesin */
+  .room>.layout{padding-bottom:30px}
+  /* oyun açıkken: düğme çubuğa gömülür, çubuk incelir (oyuna daha çok yer) */
+  .room.gaming .bar{padding-top:4px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+  .room.gaming .bar #micBtn{width:48px;height:48px;margin:0 8px;font-size:21px;box-shadow:none}
+  .room.gaming>.layout{padding-bottom:0}
 
   /* ---------- alttan açılan panel ---------- */
   .mob-dim{display:block;position:fixed;inset:0;z-index:89;background:rgb(0 0 0 / .55);opacity:0;transition:opacity .2s}

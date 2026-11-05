@@ -185,6 +185,35 @@
     .adm-yan{position:static;max-height:none;overflow:visible}
     .yan-kisiler{max-height:360px;overflow:auto}
   }
+  /* ---------- telefon ---------- */
+  .yan-ac{display:none}
+  @media (max-width:700px){
+    .adm{padding:10px 12px 40px;gap:12px}
+    .adm-head{gap:8px;flex-wrap:nowrap}
+    .adm-head h1{font-size:17px;gap:8px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .adm-head h1 img{width:28px;height:28px}
+    .adm-head h1 .adm-uzun{display:none}
+    .adm-head .btn.small{padding:7px 9px;flex:none}
+    .adm-head .adm-kisa{display:none}
+    #pushBtn{font-size:0;padding:7px 10px}
+    #pushBtn::before{content:"🔔";font-size:15px}
+    #pushBtn.acik{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+    .adm-govde{gap:12px}
+    .yan-ac{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);
+      background:var(--panel);color:var(--fg);font:inherit;font-size:15px;font-weight:600;cursor:pointer;text-align:left}
+    .yan-ac small{color:var(--muted);font-weight:500;font-size:13px}
+    .yan-ac i{font-style:normal;color:var(--muted);transition:transform .2s}
+    .yan-ac[aria-expanded="true"] i{transform:rotate(180deg)}
+    .adm-govde>.adm-yan:not(.acik){display:none}
+    .adm-card{padding:14px;border-radius:14px}
+    .adm-ana{gap:12px}
+    .seg.adm-tabs{position:sticky;top:0;z-index:20;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:-14px -14px 0;padding:12px 14px 10px;
+      background:var(--panel);border-radius:14px 14px 0 0;border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch}
+    .seg.adm-tabs::-webkit-scrollbar{display:none}
+    .adm-tabs button{flex:none;white-space:nowrap;padding:8px 13px;font-size:14px}
+    select.inp,.inp{max-width:100%}
+    .adm input,.adm select,.adm textarea{font-size:16px}
+  }
 </style>
 </head>
 <body>
@@ -201,9 +230,9 @@
 
   <section id="panel" hidden class="stack" style="gap:18px">
     <div class="adm-head">
-      <h1><img src="logo.svg" alt="" width="36" height="36">Oyun Odası · Yönetim</h1>
+      <h1><img src="logo.svg" alt="" width="36" height="36"><span class="adm-uzun">Oyun Odası · </span>Yönetim</h1>
       <button class="btn small" id="pushBtn">🔔 Başvuru bildirimi al</button>
-      <a class="btn small" href="./" style="text-decoration:none;color:inherit">↩ Siteye dön</a>
+      <a class="btn small" href="./" style="text-decoration:none;color:inherit" title="Siteye dön">↩ <span class="adm-kisa">Siteye dön</span></a>
       <button class="btn small" id="outBtn">Çıkış</button>
     </div>
     <div class="adm-govde">
@@ -235,5 +264,6 @@
 <script src="js/games/tabu-kartlar.js"></script>
 <script src="js/games/tabu.js"></script>
 <script src="js/admin-icerik.js"></script>
+<script src="js/admin-mobil.js"></script>
 </body>
 </html>
