@@ -62,7 +62,7 @@ function odaListesi(d, now, admin){
     kisiler.sort((a, b) => (a.giris || 0) - (b.giris || 0));
     const r = { acilis, sure: now - acilis, kisi: kisiler.length, adlar: kisiler.map(k => k.ad) };
     if (admin){ r.kod = kod; r.kisiler = kisiler; r.acan = o.acan || ''; r.gizli = !!o.gizli; }
-    else r.id = odaId(d, kod);
+    else { r.id = odaId(d, kod); if (o.kapi && now - (o.kapiTs || 0) < 150e3) r.kapi = o.kapi; }
     return r;
   }).sort((a, b) => b.kisi - a.kisi || a.acilis - b.acilis);
 }
@@ -111,6 +111,19 @@ export default async (req, context) => {
       });
       return json({ ok: true });
     }
+    if (req.method === 'POST' && islem === 'kodsuz'){
+      // yöneticinin verdiği "kodsuz giriş" yetkisi olan üye: listedeki odanın kodunu alır
+      const h = req.headers.get('authorization') || '', t = h.startsWith('Bearer ') ? h.slice(7) : '';
+      if (!t || t.length > 100) return json({ hata: 'oturum yok' }, 401);
+      const us = store('oyunodasi-uye');
+      const s2 = await us.get('s/' + crypto.createHash('sha256').update(t).digest('hex'), { type: 'json' });
+      const u = s2 && s2.exp > Date.now() && await us.get('u/' + s2.id, { type: 'json' });
+      if (!u || u.durum !== 'onayli' || !u.kodsuz || (s2.sv || 0) !== (u.sv || 0)) return json({ hata: 'yetki' }, 403);
+      const b = await req.json().catch(() => ({}));
+      const { d } = await oku(); d.canli = d.canli || {}; d.odalar = d.odalar || {};
+      const kod = Object.keys(d.odalar).find(k => odaId(d, k) === String(b.id || ''));
+      return kod ? json({ ok: true, kod }) : json({ hata: 'Oda kapanmış olabilir.' }, 404);
+    }
     if (req.method === 'POST' && islem === 'dogrula'){
       // listedeki odaya girmek için yazılan kod o odanın kodu mu?
       const b = await req.json().catch(() => ({}));
@@ -136,6 +149,8 @@ export default async (req, context) => {
       const ad = clip(b.ad, 20), uye = clip(b.uye, 24).toLocaleLowerCase('tr'), cihaz = ['mobil', 'tablet', 'pc'].includes(b.cihaz) ? b.cihaz : 'pc';
       const kod = clip(b.kod, 12).toUpperCase().replace(/[^A-Z0-9ÇĞİÖŞÜ-]/g, '');
       const gizli = !!b.gizli && !!kod && await gizliYetkili(req);
+      // oda sahibinin "kapı" adresi: katılma isteği buraya gelir (kod gizli kalır)
+      const kapi = typeof b.kapi === 'string' && /^[a-z0-9]{8,32}$/.test(b.kapi) ? b.kapi : '';
       let atildi = false;
       const d = await guncelle((d, now) => {
         temizle(d, now);
@@ -174,6 +189,7 @@ export default async (req, context) => {
           // gizlilik kalıcı: oda bir süre boş kalıp yeniden açılsa da (24 saat içinde) gizli kalır
           if (bosmu) d.odalar[kod] = { acilis: now, son: now, acan: ad, gizli: !!(gizli || (o && o.gizli && now - (o.son || 0) < 864e5)) };
           else { o.son = now; if (gizli) o.gizli = true; }
+          if (kapi){ d.odalar[kod].kapi = kapi; d.odalar[kod].kapiTs = now; }
         }
         k.son = now;
         d.canli[cid] = { anahtar, ad, uye, cihaz, kod, giris: kod ? giris : 0, son: now };

@@ -264,6 +264,7 @@ function renderSelf(){
   if (noMic) ic.insertAdjacentHTML('beforeend', '<span class="pill">🎧 Dinleyici</span>');
   if (screenStream) ic.insertAdjacentHTML('beforeend', '<span class="pill live">🖥 Yayında</span>');
   if (isHost) ic.insertAdjacentHTML('beforeend', '<span class="pill">👑 Oda sahibi</span>');
+  if (typeof rozetEtiket === 'function' && typeof account !== 'undefined' && account) ic.insertAdjacentHTML('beforeend', rozetEtiket(rozetBen()));
   if (typeof dersRozet === 'function' && peer) ic.insertAdjacentHTML('beforeend', dersRozet(peer.id));
   if (typeof vfxId !== 'undefined' && vfxId !== 'normal') ic.insertAdjacentHTML('beforeend', '<span class="pill vfx">' + vfxEtiket(vfxId) + '</span>');
   if (typeof kameraKart === 'function') kameraKart(c, null);
@@ -317,6 +318,7 @@ function renderPeer(p){
   if (p.arka) ic.insertAdjacentHTML('beforeend', '<span class="pill wait" title="Telefonda siteden çıktı ya da ekranı kilitledi; telefonu sesi kesebilir">📵 Arka planda</span>');
   if (p.sharing) ic.insertAdjacentHTML('beforeend', '<span class="pill live">🖥 Yayında</span>');
   if (p.id === currentHostId) ic.insertAdjacentHTML('beforeend', '<span class="pill">👑 Oda sahibi</span>');
+  if (p.rozet && typeof rozetEtiket === 'function') ic.insertAdjacentHTML('beforeend', rozetEtiket(p.rozet));
   if (typeof dersRozet === 'function') ic.insertAdjacentHTML('beforeend', dersRozet(p.id));
   if (p.vfx && p.vfx !== 'normal' && typeof vfxEtiket === 'function') ic.insertAdjacentHTML('beforeend', '<span class="pill vfx">' + vfxEtiket(p.vfx) + '</span>');
   if (p.tile){ const w = p.tile.querySelector('.who'); if (w) w.textContent = screenTitleFor(p); }

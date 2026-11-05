@@ -394,7 +394,7 @@ function handleConn(conn){
   conn.on('open', () => {
     p.linked = true; p.failed = false; p.lastSeen = Date.now(); clearTimeout(p.linkTimer);
     if (!joined) enterRoom();
-    send(conn, { t: 'hello', name: myName, muted: micMuted, noMic, sharing: !!screenStream, channel: me.channel, foto: typeof myFoto !== 'undefined' ? myFoto : null, stil: typeof myStil !== 'undefined' ? myStil : null, vfx: typeof vfxId !== 'undefined' ? vfxId : 'normal', kam: 1, mav: typeof MASA !== 'undefined' ? MASA.benAv() : null, deaf: !!deafened });
+    send(conn, { t: 'hello', name: myName, muted: micMuted, noMic, sharing: !!screenStream, channel: me.channel, foto: typeof myFoto !== 'undefined' ? myFoto : null, stil: typeof myStil !== 'undefined' ? myStil : null, vfx: typeof vfxId !== 'undefined' ? vfxId : 'normal', kam: 1, mav: typeof MASA !== 'undefined' ? MASA.benAv() : null, deaf: !!deafened, uye: typeof account !== 'undefined' && account ? account.uye.kadi : null, rozet: typeof rozetBen === 'function' ? rozetBen() : null });
     if (isHost){
       send(conn, { t: 'peers', ids: [...peers.values()].filter(o => o.linked && o.id !== conn.peer).map(o => o.id) });
       send(conn, Object.assign({ t: 'sync' }, makeSync()));
@@ -456,6 +456,8 @@ function onData(id, d){
       p.vfx = typeof VFX !== 'undefined' && VFX.some(v => v[0] === d.vfx) ? d.vfx : 'normal';
       p.kamDestek = !!d.kam;
       p.mav = typeof MASA !== 'undefined' ? MASA.avTemiz(d.mav) : null; p.deaf = !!d.deaf;
+      p.uye = typeof d.uye === 'string' && /^[a-zA-Z0-9çğıöşüÇĞİÖŞÜ._-]{3,20}$/.test(d.uye) ? d.uye : null;
+      p.rozet = typeof rozetTemiz === 'function' ? rozetTemiz(d.rozet) : null;
       if (p.stil) p.color = colorFor(p.id);
       if (!p.helloed){
         p.helloed = true;
@@ -466,6 +468,11 @@ function onData(id, d){
         else { toast(p.name + ' odaya katıldı'); chime(true); addSys(p.name + ' odaya katıldı'); }
       }
       afterPeerStateChange(p);
+      return;
+    }
+    case 'rozet': {
+      p.rozet = typeof rozetTemiz === 'function' ? rozetTemiz(d.rozet) : null;
+      renderPeer(p);
       return;
     }
     case 'profil': {

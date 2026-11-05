@@ -1,0 +1,80 @@
+/* Seviye ve rozetler */
+.pill.rz-pill{background:linear-gradient(135deg,color-mix(in srgb,#ffc94d 26%,var(--panel-2)),color-mix(in srgb,#ff8a3d 18%,var(--panel-2)));border-color:color-mix(in srgb,#ffc94d 55%,var(--line));color:#ffe6a6;font-weight:700;white-space:nowrap}
+.rz-kutu{display:grid;gap:12px;padding:14px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+.rz-kutu:empty{display:none}
+.rz-ust{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center}
+.rz-lv{font-family:var(--display);font-size:22px;color:#ffd166;grid-row:span 2}
+.rz-bar{height:10px;border-radius:99px;background:var(--panel-2);overflow:hidden}
+.rz-bar i{display:block;height:100%;background:linear-gradient(90deg,#ffd166,#ff8a3d);border-radius:99px;transition:width .4s}
+.rz-ust small{color:var(--muted);font-size:12px}
+.rz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.rz{display:grid;justify-items:center;text-align:center;gap:2px;padding:10px 6px 8px;border-radius:12px;border:1px solid var(--line);background:var(--panel-2);opacity:.55;filter:grayscale(1)}
+.rz.on{opacity:1;filter:none;border-color:color-mix(in srgb,#ffc94d 55%,var(--line));background:color-mix(in srgb,#ffc94d 10%,var(--panel-2))}
+.rz span{font-size:26px;line-height:1.1}
+.rz b{font-size:13px}
+.rz small{font-size:11px;color:var(--muted);line-height:1.25}
+.rz i{display:block;width:80%;height:4px;border-radius:9px;background:var(--bg);overflow:hidden;margin-top:4px}
+.rz u{display:block;height:100%;background:#ffd166}
+
+/* Arkadaşlar */
+.ark-dlg{width:min(520px,94vw)}
+.ark-ekle{display:flex;gap:8px}
+.ark-ekle input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font:inherit;font-size:16px}
+.ark-ekle[hidden]{display:none}
+.ark-icerik{display:grid;gap:14px}
+.ark-bolum{display:grid;gap:8px}
+.ark-bolum h4{margin:0;font-size:13px;letter-spacing:.04em;color:var(--muted)}
+.ark-satir{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.ark-av{width:38px;height:38px;flex:none;font-size:16px}
+.ark-bilgi{flex:1;min-width:0;display:grid}
+.ark-bilgi b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ark-bilgi small{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ark-satir.cevrimici{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.ark-ac{display:flex;gap:6px;flex:none}
+.ark-ac .btn.on{background:transparent;color:var(--accent);border-color:var(--accent)}
+.ark-tum{width:100%;justify-content:center}
+.ark-gelen .ark-satir{border-color:color-mix(in srgb,#ffc94d 50%,var(--line))}
+.ark-btn{position:relative}
+.ark-btn .badge-count{position:absolute;top:-6px;right:-6px}
+.btn.ark-kart:disabled{opacity:.75}
+
+/* Girişte davet kartı */
+.davet-kutu-lobi{display:grid;gap:8px}
+.davet-kart{display:flex;align-items:center;gap:8px;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--bg));border:1px solid color-mix(in srgb,var(--accent) 50%,var(--line));animation:pop-in .3s ease}
+.davet-kart>div{flex:1;min-width:0;display:grid}
+.davet-kart b{font-size:14px}
+.davet-kart small{font-size:12px;color:var(--muted)}
+
+/* Açık odalar: istek ve durum */
+.ao-dugmeler{display:flex;gap:6px;flex-wrap:wrap}
+.ao-durum{flex-basis:100%;font-size:12.5px;color:var(--muted)}
+.ao-durum:empty{display:none}
+.ao-durum.bekle{color:#ffd166}
+.ao-durum.ok{color:var(--accent)}
+.ao-durum.hata{color:var(--danger)}
+
+/* Oda sahibine gelen katılma istekleri */
+.istek-kutu{position:fixed;top:70px;right:16px;z-index:95;display:grid;gap:8px;width:min(360px,calc(100vw - 32px))}
+.istek-kutu[hidden]{display:none}
+.istek-kart{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;background:var(--panel);border:1px solid color-mix(in srgb,#ffc94d 60%,var(--line));
+  box-shadow:0 14px 40px rgb(0 0 0 / .5);animation:pop-in .3s cubic-bezier(.3,1.5,.5,1)}
+.istek-kart .acct-av{width:40px;height:40px;flex:none}
+.istek-yazi{flex:1;min-width:0;display:grid}
+.istek-yazi b{font-size:14px}
+.istek-yazi small{font-size:12px;color:var(--muted)}
+.istek-ac{display:flex;flex-direction:column;gap:6px}
+.istek-kart.bitti{opacity:.7}
+@media (max-width:860px){
+  .istek-kutu{top:auto;bottom:96px;right:12px;left:12px;width:auto}
+  .rz-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ark-satir{flex-wrap:wrap}
+  .ark-ac{margin-left:auto}
+}
+/* girişteki hesap kutusu: Arkadaşlar düğmesiyle sığmazsa düğmeler alt satıra iner */
+.acct-in{flex-wrap:wrap}
+.acct-in .acct-info{min-width:140px}
+@media (max-width:520px){
+  .acct-in>.btn{flex:1 1 auto;justify-content:center}
+}
+.davet-kart{flex-wrap:wrap}
+.davet-kart>div{min-width:180px}

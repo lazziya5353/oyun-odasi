@@ -25,7 +25,7 @@ const DEFAULT_ADMIN = 'c884240bc2367d1eaae80e94dbc4486b663184137bed5899d0a53e610
 
 function pub(u){
   return { id: u.id, kadi: u.kadi, adSoyad: u.adSoyad, name: u.name, durum: u.durum, created: u.created, approvedAt: u.approvedAt || null,
-    foto: u.foto ? '/api/uye/foto?id=' + u.id + '&v=' + u.foto : null, lastSeen: u.lastSeen || null, gizliOda: !!u.gizliOda,
+    foto: u.foto ? '/api/uye/foto?id=' + u.id + '&v=' + u.foto : null, lastSeen: u.lastSeen || null, gizliOda: !!u.gizliOda, kodsuz: !!u.kodsuz,
     bio: u.bio || '', bildirim: bildirimAyar(u) };
 }
 // bildirim ayarı: gonder (oda açınca başkalarına bildirim gitsin mi), kime (herkes | secili), secili (kullanıcı adları), al (başkalarının oda bildirimini alayım mı)
@@ -110,6 +110,53 @@ async function adminLimit(ok){
   return true;
 }
 
+
+// ---------- arkadaşlar, davetler, ilerleme (seviye/rozet) ----------
+const ark = u => { u.arkadas = u.arkadas || []; u.istekGelen = u.istekGelen || []; u.istekGiden = u.istekGiden || []; return u; };
+async function userByKadi(k){ const ex = await store().get('k/' + lowerKey(clip(k, 20)), { type: 'json' }); const u = ex && await getUser(ex.id); return u && u.durum === 'onayli' ? u : null; }
+const kisa = u => ({ kadi: u.kadi, name: u.name, foto: u.foto ? '/api/uye/foto?id=' + u.id + '&v=' + u.foto : null, lv: seviye((u.ilerleme || {}).xp || 0) });
+// çevrimiçi durumu: canlı durum kaydından (oda.mjs) okunur; oda kodu gösterilmez
+async function canliDurum(){
+  try {
+    const d = await ostore('oyunodasi-varlik').get('durum', { type: 'json' });
+    const now = Date.now(), m = {};
+    for (const c of Object.values((d && d.canli) || {})){
+      if (!c.uye || c.kapali || now - c.son > 150e3) continue;
+      const k = lowerKey(c.uye), o = m[k] || (m[k] = { cevrimici: true, odada: false });
+      if (c.kod && !(d.odalar && d.odalar[c.kod] && d.odalar[c.kod].gizli)) o.odada = true;
+    }
+    return m;
+  } catch(e){ return {}; }
+}
+// seviye: L seviyesine çıkmak için toplam 25·L·(L-1) puan
+const seviye = xp => { let l = 1; while (25 * (l + 1) * l <= xp && l < 99) l++; return l; };
+function ilerlemeEkle(u, b){
+  const g = u.ilerleme = u.ilerleme || { xp: 0, dk: 0, gece: 0, oda: 0, ekran: 0, ikram: 0, oyun: {}, gunler: 0, sonGun: '', enUzun: 0 };
+  const now = Date.now(), gecen = Math.max(1, Math.ceil((now - (g.sonRapor || 0)) / 60e3) + 1);
+  const n = (v, max) => Math.max(0, Math.min(max, Math.floor(+v || 0)));
+  const dk = n(b.dk, Math.min(gecen, 30)), gece = n(b.gece, dk), oda = n(b.oda, 3), ekran = n(b.ekran, 5), ikram = n(b.ikram, 20);
+  g.sonRapor = now;
+  let xp = dk;
+  g.dk += dk; g.gece += gece; g.oda += oda; g.ekran += ekran; g.ikram += ikram;
+  xp += oda * 5 + ekran * 5 + ikram * 2;
+  if (b.oyun && typeof b.oyun === 'object'){
+    for (const [k, v] of Object.entries(b.oyun).slice(0, 20)){
+      if (!/^[a-z0-9]{2,16}$/.test(k) || !Array.isArray(v)) continue;
+      const o = n(v[0], 10), w = n(v[1], Math.min(o, 10));
+      const x = g.oyun[k] = g.oyun[k] || [0, 0];
+      x[0] += o; x[1] += w; xp += o * 3 + w * 15;
+    }
+  }
+  if (dk){
+    const gun = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date(now));
+    if (g.sonGun !== gun){ g.sonGun = gun; g.gunler++; }
+  }
+  g.enUzun = Math.max(g.enUzun || 0, n(b.oturum, 24 * 60));
+  g.xp += xp;
+  return g;
+}
+const ilerlemePub = u => { const g = Object.assign({ xp: 0, dk: 0, gece: 0, oda: 0, ekran: 0, ikram: 0, oyun: {}, gunler: 0, enUzun: 0 }, u.ilerleme || {}); return Object.assign({}, g, { sonRapor: undefined, lv: seviye(g.xp || 0), arkadas: (u.arkadas || []).length }); };
+
 export default async (req, context) => {
   const url = new URL(req.url);
   const islem = (context && context.params && context.params.islem) || url.pathname.split('/').pop();
@@ -126,7 +173,17 @@ export default async (req, context) => {
     if (req.method === 'GET' && islem === 'ben'){
       const u = await authUser(req);
       if (u && Date.now() - (u.lastSeen || 0) > 10 * 60e3){ u.lastSeen = Date.now(); await putUser(u); }
-      return u ? json({ uye: pub(u) }) : json({ hata: 'oturum yok' }, 401);
+      if (!u) return json({ hata: 'oturum yok' }, 401);
+      const dv = (u.davetler || []).filter(x => Date.now() - x.ts < 30 * 60e3);
+      return json({ uye: pub(u), ilerleme: ilerlemePub(u), davetler: dv, istekSayisi: (u.istekGelen || []).length });
+    }
+    if (req.method === 'GET' && islem === 'arkadaslar'){
+      const u = await authUser(req); if (!u) return json({ hata: 'oturum yok' }, 401);
+      ark(u);
+      const canli = await canliDurum();
+      const liste = async ids => (await Promise.all(ids.map(getUser))).filter(x => x && x.durum === 'onayli').map(x => Object.assign(kisa(x), canli[lowerKey(x.kadi)] || { cevrimici: false, odada: false }));
+      const arkadaslar = (await liste(u.arkadas)).sort((a, b) => (b.odada - a.odada) || (b.cevrimici - a.cevrimici) || a.name.localeCompare(b.name, 'tr'));
+      return json({ arkadaslar, gelen: await liste(u.istekGelen), giden: await liste(u.istekGiden) });
     }
     if (req.method === 'GET' && islem === 'uye-listesi'){
       // bildirim gönderilecek kişileri seçmek için: onaylı üyelerin kullanıcı adı ve görünen adı
@@ -248,6 +305,79 @@ export default async (req, context) => {
       const h = req.headers.get('authorization') || '';
       if (h.startsWith('Bearer ')) await store().delete('s/' + sha(h.slice(7)));
       return json({ ok: true });
+    }
+    // ---------- arkadaşlık ----------
+    if (islem === 'arkadas-ekle' || islem === 'arkadas-cevap' || islem === 'arkadas-sil'){
+      const u = await authUser(req); if (!u) return json({ hata: 'Arkadaş eklemek için giriş yapmalısın.' }, 401);
+      const o = await userByKadi(b.kadi);
+      if (!o) return json({ hata: 'Bu kullanıcı adıyla bir üye bulunamadı.' }, 404);
+      if (o.id === u.id) return json({ hata: 'Kendini ekleyemezsin 🙂' }, 400);
+      ark(u); ark(o);
+      const cik = (l, id) => l.filter(x => x !== id);
+      let durum = '';
+      if (islem === 'arkadas-sil'){
+        u.arkadas = cik(u.arkadas, o.id); o.arkadas = cik(o.arkadas, u.id);
+        u.istekGiden = cik(u.istekGiden, o.id); o.istekGelen = cik(o.istekGelen, u.id);
+        u.istekGelen = cik(u.istekGelen, o.id); o.istekGiden = cik(o.istekGiden, u.id);
+        durum = 'silindi';
+      } else if (u.arkadas.includes(o.id)) durum = 'zaten';
+      else if (islem === 'arkadas-cevap' || u.istekGelen.includes(o.id)){
+        // gelen isteğe cevap (ya da karşı taraf zaten istek göndermiş: ekleyince kabul sayılır)
+        if (!u.istekGelen.includes(o.id)) return json({ hata: 'Bu kişiden gelen bir istek yok.' }, 400);
+        u.istekGelen = cik(u.istekGelen, o.id); o.istekGiden = cik(o.istekGiden, u.id);
+        if (islem === 'arkadas-cevap' && !b.kabul) durum = 'reddedildi';
+        else {
+          u.arkadas = [...new Set(u.arkadas.concat(o.id))].slice(-300); o.arkadas = [...new Set(o.arkadas.concat(u.id))].slice(-300);
+          durum = 'arkadas';
+          const gone = await pushTo(o.push, { title: '🤝 ' + u.name + ' arkadaşlık isteğini kabul etti', body: 'Artık arkadaşsınız. Oda açınca birbirinizi davet edebilirsiniz.', url: '/?arkadas=1', tag: 'ark-' + u.id }, origin);
+          if (gone.length) o.push = o.push.filter(s => !gone.includes(s.endpoint));
+        }
+      } else {
+        if (u.istekGiden.includes(o.id)) durum = 'bekliyor';
+        else {
+          if (u.istekGiden.length >= 100) return json({ hata: 'Çok fazla bekleyen isteğin var.' }, 429);
+          u.istekGiden.push(o.id); o.istekGelen = [...new Set(o.istekGelen.concat(u.id))].slice(-100);
+          durum = 'gonderildi';
+          const gone = await pushTo(o.push, { title: '👥 Arkadaşlık isteği', body: u.name + ' (@' + u.kadi + ') seni arkadaş olarak eklemek istiyor.', url: '/?arkadas=1', tag: 'ark-' + u.id }, origin);
+          if (gone.length) o.push = o.push.filter(s => !gone.includes(s.endpoint));
+        }
+      }
+      await putUser(u); await putUser(o);
+      return json({ ok: true, durum, kisi: kisa(o) });
+    }
+    if (islem === 'davet'){
+      const u = await authUser(req); if (!u) return json({ hata: 'oturum yok' }, 401);
+      const kod = clip(b.kod, 12).toUpperCase().replace(/[^A-Z0-9ÇĞİÖŞÜ-]/g, '');
+      if (kod.length < 3) return json({ hata: 'oda kodu' }, 400);
+      ark(u);
+      const hedef = Array.isArray(b.kadiler) ? b.kadiler.slice(0, 50) : [];
+      let n = 0;
+      for (const k of hedef){
+        const o = await userByKadi(k);
+        if (!o || !u.arkadas.includes(o.id)) continue;
+        o.davetler = (o.davetler || []).filter(x => Date.now() - x.ts < 30 * 60e3 && !(x.kadi === u.kadi && x.kod === kod)).concat({ kadi: u.kadi, name: u.name, kod, ts: Date.now() }).slice(-5);
+        const gone = await pushTo(o.push, { title: '📨 ' + u.name + ' seni odaya çağırıyor', body: 'Dokun, doğrudan ' + kod + ' odasına gir.', url: '/?oda=' + encodeURIComponent(kod) + '&davet=1', tag: 'davet-' + u.id }, origin);
+        if (gone.length) o.push = o.push.filter(s => !gone.includes(s.endpoint));
+        await putUser(o); n++;
+      }
+      return json({ ok: true, gonderilen: n });
+    }
+    if (islem === 'davet-sil'){
+      const u = await authUser(req); if (!u) return json({ hata: 'oturum yok' }, 401);
+      u.davetler = (u.davetler || []).filter(x => !(x.kadi === b.kadi && x.kod === b.kod)); await putUser(u);
+      return json({ ok: true });
+    }
+    if (islem === 'ilerleme'){
+      // sendBeacon başlık gönderemez: oturum anahtarı gövdede de gelebilir
+      let u = await authUser(req);
+      if (!u && typeof b.token === 'string' && b.token.length < 100){
+        const s2 = await store().get('s/' + sha(b.token), { type: 'json' });
+        const u2 = s2 && s2.exp > Date.now() && await getUser(s2.id);
+        if (u2 && u2.durum === 'onayli' && (s2.sv || 0) === (u2.sv || 0)) u = u2;
+      }
+      if (!u) return json({ hata: 'oturum yok' }, 401);
+      ilerlemeEkle(u, b); await putUser(u);
+      return json({ ok: true, ilerleme: ilerlemePub(u) });
     }
     if (islem === 'profil'){
       const u = await authUser(req); if (!u) return json({ hata: 'oturum yok' }, 401);
@@ -372,6 +502,13 @@ export default async (req, context) => {
       if (u.durum !== 'onayli') return json({ hata: 'sadece üyelere verilebilir' }, 400);
       u.gizliOda = !!b.acik; await putUser(u);
       await logAdmin((b.acik ? 'Gizli oda yetkisi verildi: ' : 'Gizli oda yetkisi kaldırıldı: ') + u.adSoyad + ' (@' + u.kadi + ')');
+      return json({ ok: true, uye: pub(u) });
+    }
+    if (islem === 'admin-kodsuz'){
+      // açık odalara kod sormadan ve onay beklemeden girme yetkisi (yöneticinin kendi üyeliği için)
+      if (u.durum !== 'onayli') return json({ hata: 'sadece üyelere verilebilir' }, 400);
+      u.kodsuz = !!b.acik; await putUser(u);
+      await logAdmin((b.acik ? 'Kodsuz giriş yetkisi verildi: ' : 'Kodsuz giriş yetkisi kaldırıldı: ') + u.adSoyad + ' (@' + u.kadi + ')');
       return json({ ok: true, uye: pub(u) });
     }
     if (islem === 'admin-askiya'){

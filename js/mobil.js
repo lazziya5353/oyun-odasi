@@ -43,7 +43,7 @@
   // ---------- ⋯ Daha menüsü ----------
   const DAHA = [
     ['Odada', [
-      ['shareBtn'], ['sakaBtn'], ['masaToggle'],
+      ['shareBtn'], ['sakaBtn'], ['arkBtn', '👥', 'Arkadaşlar'], ['masaToggle'],
       ['_kanal', '🗂', 'Kanallar']
     ]],
     ['Ayarlar', [

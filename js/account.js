@@ -56,7 +56,7 @@ function renderAccountBox(){
 }
 async function refreshAccount(){
   if (!account || !uyeOK()) return;
-  try { const d = await uyeApi('ben'); account.uye = d.uye; saveAccount(); }
+  try { const d = await uyeApi('ben'); account.uye = d.uye; saveAccount(); document.dispatchEvent(new CustomEvent('uye-ben', { detail: d })); }
   catch(e){ if (e.status === 401){ account = null; saveAccount(); toast('Oturumun sona erdi, yeniden giriş yap.'); } }
 }
 
@@ -97,6 +97,7 @@ async function doLogin(e){
     store.set('oyunodasi-name', d.uye.name);
     $('uyeDlg').close(); $('gSifre').value = '';
     toast('👋 Hoş geldin ' + d.uye.name + '! Artık sadece oda koduyla girebilirsin.');
+    refreshAccount();
     if (typeof clearAutofilledCode === 'function') setTimeout(clearAutofilledCode, 50);
     $('codeInput').focus();
   } catch(err){ uyeMsg(err.message); }
@@ -147,6 +148,7 @@ function openProfil(){
   $('pMsg').textContent = '';
   $('pBio').value = account.uye.bio || ''; bioSay();
   bildirimAyarCiz();
+  if (typeof ROZET !== 'undefined') ROZET.profilCiz($('pRozet'));
   $('profilDlg').showModal();
 }
 const bioSay = () => { $('pBioSay').textContent = $('pBio').value.length + '/200'; };

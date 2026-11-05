@@ -214,6 +214,7 @@ function userRow(u){
   const P = { onayli: ['ok', 'üye'], bekliyor: ['wait', 'onay bekliyor'], red: ['no', 'reddedildi'], askida: ['no', 'durduruldu'] }[u.durum] || ['', u.durum];
   b.append(el('span', 'pill ' + P[0], P[1]));
   if (u.gizliOda) b.append(el('span', 'pill gizli', '🔒 gizli oda yetkisi'));
+  if (u.kodsuz) b.append(el('span', 'pill gizli', '👑 kodsuz giriş'));
   const s1 = el('span', '', '@' + u.kadi + ' · görünen ad: ' + u.name);
   const s2 = el('span', '', 'Başvuru: ' + fmt(u.created) + (u.approvedAt ? ' · Onay: ' + fmt(u.approvedAt) : '') + (u.durum !== 'bekliyor' ? ' · Son giriş: ' + ago(u.lastSeen) : '') + (u.bildirim ? ' · 🔔' : ''));
   info.append(b, s1, s2);
@@ -240,6 +241,8 @@ function userRow(u){
     });
     A(u.gizliOda ? '🔒 Gizli oda yetkisini kaldır' : '🔒 Gizli oda yetkisi ver', u.gizliOda ? '' : 'gizli-ver',
       () => act('admin-gizli', { id: u.id, acik: !u.gizliOda }, u.gizliOda ? u.name + ' artık gizli oda açamaz' : u.name + ' artık gizli oda açabilir (lobide “🔒 Gizli oda aç” seçeneği çıkar)'));
+    A(u.kodsuz ? '👑 Kodsuz giriş yetkisini kaldır' : '👑 Kodsuz giriş yetkisi ver', u.kodsuz ? '' : 'gizli-ver',
+      () => act('admin-kodsuz', { id: u.id, acik: !u.kodsuz }, u.kodsuz ? u.name + ' artık açık odalara kodla ya da istekle girer' : u.name + ' artık açık odalara kod sormadan girebilir (girişteki listede “👑 Direkt gir”)'));
     acts.append(dangerBtn('🚪 Çıkış yaptır', () => act('admin-oturum-kapat', { id: u.id }, u.name + ' tüm cihazlardan çıkarıldı')));
     acts.append(dangerBtn('⏸ Durdur', () => act('admin-askiya', { id: u.id, askida: true }, u.name + ' durduruldu, giriş yapamaz')));
   }

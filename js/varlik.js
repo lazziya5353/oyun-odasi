@@ -11,7 +11,7 @@
     const acc = typeof account !== 'undefined' && account && account.uye;
     let ad = katildi() ? myName : (acc ? acc.name : '');
     if (!ad){ const i = document.getElementById('nameInput'); ad = i ? i.value.trim() : ''; }
-    return { cid, ad, uye: acc ? acc.kadi : '', cihaz: typeof cihazTuru === 'function' ? cihazTuru() : 'pc', kod: katildi() ? roomCode : '', gizli: katildi() && typeof gizliOdaMi === 'function' && gizliOdaMi() };
+    return { cid, ad, uye: acc ? acc.kadi : '', cihaz: typeof cihazTuru === 'function' ? cihazTuru() : 'pc', kod: katildi() ? roomCode : '', gizli: katildi() && typeof gizliOdaMi === 'function' && gizliOdaMi(), kapi: katildi() && typeof ISTEK !== 'undefined' ? ISTEK.kapi() : '' };
   }
   async function nabiz(){
     clearTimeout(zaman); zaman = setTimeout(nabiz, 60e3);
@@ -32,6 +32,7 @@
   const sure = ms => { const m = Math.max(1, Math.round(ms / 60e3)), h = Math.floor(m / 60), d = m % 60; return m < 60 ? m + ' dakika' : d ? h + ' saat ' + d + ' dakika' : h + ' saat'; };
   const acikSure = ms => { const s = sure(ms); return s + (/saat$/.test(s) ? 'tir' : 'dır') + ' açık'; };
   let acikForm = '';
+  const istekDurum = {};   // oda kimliği → { t, cls } (liste yeniden çizilince kaybolmasın)
   function ciz(){
     const kutu = document.getElementById('acikOdalar'); if (!kutu) return;
     if (katildi() || !odalar.length){ kutu.hidden = true; kutu.innerHTML = ''; return; }
@@ -69,7 +70,22 @@
         document.getElementById('codeInput').value = kod;
         document.getElementById('joinBtn').click();
       };
-      k.append(bilgi, ac, form);
+      const dur = document.createElement('small'); dur.className = 'ao-durum'; dur.dataset.id = o.id;
+      const yaz = (t, cls) => { istekDurum[o.id] = { t, cls: cls || '' }; const d2 = kutu.querySelector('.ao-durum[data-id="' + o.id + '"]') || dur; d2.textContent = t; d2.className = 'ao-durum ' + (cls || ''); };
+      if (istekDurum[o.id]){ dur.textContent = istekDurum[o.id].t; dur.className = 'ao-durum ' + istekDurum[o.id].cls; }
+      const dugmeler = document.createElement('div'); dugmeler.className = 'ao-dugmeler';
+      if (typeof ISTEK !== 'undefined' && ISTEK.kodsuzMu()){
+        const dg = document.createElement('button'); dg.type = 'button'; dg.className = 'btn primary small'; dg.textContent = '👑 Direkt gir';
+        dg.title = 'Yönetici yetkin var: kod sormadan girersin';
+        dg.onclick = () => ISTEK.kodsuzGir(o, yaz);
+        dugmeler.append(dg);
+      } else if (o.kapi && typeof ISTEK !== 'undefined'){
+        const ist = document.createElement('button'); ist.type = 'button'; ist.className = 'btn small ao-istek'; ist.textContent = '🙋 Katılma isteği gönder';
+        ist.onclick = () => ISTEK.gonder(o, yaz);
+        dugmeler.append(ist);
+      }
+      dugmeler.append(ac);
+      k.append(bilgi, dugmeler, form, dur);
       kutu.append(k);
     }
   }

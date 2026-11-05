@@ -37,7 +37,7 @@
   .top{flex-wrap:wrap;gap:6px 8px;padding:8px 12px 8px;padding-top:max(8px,env(safe-area-inset-top,0px));border-bottom:0;justify-content:flex-start}
   .top .top-mid,.top .codebox,.top .davet-kutu{display:contents}
   #chanToggle,.top .top-brand{display:none!important}
-  #mixerBtn2,#profilBtn2,#temaBtn2,#notifBtn2,#radioOpenBtn,#masaToggle{display:none!important}
+  #mixerBtn2,#profilBtn2,#arkBtn,#temaBtn2,#notifBtn2,#radioOpenBtn,#masaToggle{display:none!important}
   #roomCode{order:1;font-size:20px;letter-spacing:.14em}
   #gizliRozet{order:2}
   .top .count-pill{order:3;margin-right:auto;padding:4px 9px;font-size:12px}
