@@ -804,16 +804,26 @@ function kickedOut(){
   leaveRoom();
 }
 // Odada benden başka kimse yoksa çıkınca oda kapanır: "Son odana dön" ve kayıtlı sohbet silinir
-let leaveChecked = false;
-function closeIfAlone(){
+let leaveChecked = false, bilerekCikis = false;
+function closeIfAlone(yenileniyor){
   if (leaveChecked) return;          // çıkarken bağlantılar kapanır; karar bir kez, kapanmadan önce verilir
   leaveChecked = true;
   if (!joined || [...peers.values()].some(o => o.linked && !o.lobby)) return;
+  if (yenileniyor) return;           // sayfa yenileniyor olabilir: oda ve sohbet geri dönüş için kalsın
   forgetRoom();
   try { localStorage.removeItem('oyunodasi-chat-' + roomCode); localStorage.removeItem('oyunodasi-chatclr-' + roomCode); } catch(e){}
 }
+// Sayfa yenilenince (F5) odaya kendiliğinden geri dönmek için: oda kodu bu sekmenin hafızasına yazılır.
+// Sekme kapanınca bu hafıza da silinir; "Ayrıl" ile çıkınca hiç yazılmaz.
+function yenilemeNotu(){
+  if (!joined || bilerekCikis) return;
+  const yalniz = ![...peers.values()].some(o => o.linked && !o.lobby);
+  try { sessionStorage.setItem('oyunodasi-yenile', JSON.stringify({ code: roomCode, yalniz, kanal: me && me.channel, ts: Date.now() })); } catch(e){}
+}
 function leaveRoom(){
   if (typeof kayitBitir === 'function' && kayitBitir(leaveRoom)) return;   // önce kayıt kaydedilip insin
+  bilerekCikis = true;
+  try { sessionStorage.removeItem('oyunodasi-yenile'); } catch(e){}
   hoscaKal();
   if (typeof hareket === 'function' && joined){ hareket('cikis', roomCode + ' odasından çıktı'); hareketGonder(true); }
   closeIfAlone();
@@ -822,9 +832,10 @@ function leaveRoom(){
   location.reload();
 }
 window.addEventListener('beforeunload', () => {
+  yenilemeNotu();
   hoscaKal();
   if (typeof hareket === 'function' && joined){ hareket('cikis', roomCode + ' odasından çıktı (sayfa kapandı)'); hareketGonder(true); }
-  closeIfAlone();
+  closeIfAlone(!bilerekCikis);
   try { lobbyPeer && lobbyPeer.destroy(); } catch(e){}
   try { peer && peer.destroy(); } catch(e){}
 });
