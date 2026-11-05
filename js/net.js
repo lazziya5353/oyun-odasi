@@ -7,6 +7,7 @@ const PREFIX = 'oyunodasi-v1-';
 let peer = null, lobbyPeer = null;
 let myName = '', roomCode = '', isHost = false, joined = false, customCode = false, rejoining = false;
 let currentHostId = '';
+let sessizAcilis = false;   // F5 / uykudan dönüş: oda aynı kodla yeniden açılırken bildirim gönderme
 const peers = new Map();
 const blocked = new Set();
 const me = { channel: 'genel' };
@@ -119,7 +120,9 @@ async function start(code, asHost){
   try {
     if (asHost){
       await hostFlow(code);
-      if (joined && typeof notifyRoomOpened === 'function') notifyRoomOpened();   // yeni oda: arkadaşlara bildirim
+      // yeni oda: arkadaşlara bildirim (sayfa yenilenip aynı oda yeniden açıldıysa gitmez)
+      if (joined && typeof notifyRoomOpened === 'function' && !sessizAcilis) notifyRoomOpened();
+      sessizAcilis = false;
     }
     else await guestFlow(code);
   } catch(e){

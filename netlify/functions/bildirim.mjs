@@ -189,7 +189,9 @@ export default async (req, context) => {
       if (b.gizli) return json({ ok: true, sent: 0, gizli: true });
       // gizli oda (son 24 saatte gizli açılmış kod): kimseye bildirim gitmez
       try { const dr = await store('oyunodasi-varlik').get('durum', { type: 'json' }); const o = dr && dr.odalar && dr.odalar[code];
-        if (o && o.gizli && Date.now() - (o.son || 0) < 864e5) return json({ ok: true, sent: 0, gizli: true }); } catch(e){}
+        if (o && o.gizli && Date.now() - (o.son || 0) < 864e5) return json({ ok: true, sent: 0, gizli: true });
+        // aynı oda birkaç dakika içinde yeniden açıldı (sayfa yenilendi, telefon uykudan döndü): tekrar bildirim gitmesin
+        if (o && Date.now() - (o.son || 0) < 4 * 60e3 && Date.now() - (o.acilis || 0) > 90e3) return json({ ok: true, sent: 0, sinir: 'yenile' }); } catch(e){}
       const lim = await allowed(code);
       if (lim) return json({ ok: true, sent: 0, sinir: lim });
       const v = await vapidKeys();

@@ -159,7 +159,9 @@ try {
       }
       if (!joined){                                       // yalnızdın ya da herkes çıkmış: odayı aynı kodla yeniden aç
         customCode = true; $('lobbyErr').textContent = '';
+        sessizAcilis = true;                              // aynı oda: kimseye yeniden "oda açıldı" bildirimi gitmesin
         await start(y.code, true);
+        sessizAcilis = false;
       }
       // hangi kanaldaysan oraya dön (müzik, film, oyun salonu…)
       if (joined && y.kanal && y.kanal !== 'genel' && typeof chanById === 'function' && chanById(y.kanal) && typeof switchChannel === 'function'){

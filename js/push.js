@@ -72,6 +72,7 @@ async function notifyRoomOpened(){
     const r = await pushApi('oda', { code: roomCode, name: myName, endpoint });
     // oda açana kısa bilgi: kaç kişiye gitti
     if (r.kapali) toast('🔕 Ayarlarına göre bu odada kimseye bildirim gitmedi');
+    else if (r.sinir === 'yenile') {}
     else if (r.sinir === 'kod') toast('🔔 Bu oda için 1 dakika içinde zaten bildirim gönderildi');
     else if (r.sinir) toast('🔔 Son bir saatte çok fazla oda açıldı; bildirim gönderilmedi');
     else if (r.total === 0) toast('🔔 Bildirim gidecek kimse yok: arkadaşların önce “Bildirimleri aç” demeli (senin cihazına kendi odanın bildirimi gelmez)');
