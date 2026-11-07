@@ -52,37 +52,29 @@
 <script>try{var t=JSON.parse(localStorage.getItem("oyunodasi-tema")||"{}");if(t.mode==="cyber"||t.mode==="led")document.documentElement.dataset.tema=t.mode;}catch(e){}</script>
 </head>
 <body>
-<!-- ============ AÇILIŞ ANİMASYONU ============
+<!-- ============ AÇILIŞ ANİMASYONU (neon logo) ============
      Sadece sekmenin ilk açılışında. F5 ile odaya dönüşte, "hareketi azalt" açıksa ve otomatik testlerde gösterilmez.
-     Dokununca geçilir. Taşlar gerçek yüklemeyle dolar: sayfa → yazı tipleri → açık odalar listesi (en fazla ~3,5 sn). -->
+     Dokununca geçilir. Animasyon bitince ve sayfa yüklenince kalkar (en geç ~4 sn). -->
 <style>
-#acilis{position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 40%,#16202a,#0d1016 65%);display:grid;place-items:center;align-content:center;gap:16px;
+#acilis{position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 42%,#14202a,#0d1016 62%);display:grid;place-items:center;align-content:center;gap:18px;
   color:#e8ecf2;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;transition:opacity .45s ease,transform .45s ease;cursor:pointer;-webkit-tap-highlight-color:transparent}
-#acilis.bitti{opacity:0;transform:scale(1.06);pointer-events:none}
+#acilis.bitti{opacity:0;transform:scale(1.08);pointer-events:none}
 #acilis .ac-logo{position:relative;display:grid;place-items:center}
-#acilis .ac-logo img{width:104px;height:104px;opacity:0;transform:scale(.3) rotate(-25deg);animation:acLogo .85s cubic-bezier(.2,1.6,.4,1) .1s forwards}
-#acilis .ac-halka{position:absolute;width:104px;height:104px;border-radius:50%;border:3px solid #5ee0b5;opacity:0;animation:acHalka 1.5s ease-out .8s 2}
-#acilis .ac-ad{font-size:34px;font-weight:800;letter-spacing:.01em}
-#acilis .ac-ad b,#acilis .ac-ad span{display:inline-block;opacity:0;transform:translateY(14px);animation:acYuk .45s ease forwards}
+#acilis .ac-logo img{width:120px;height:120px;opacity:0;transform:scale(.3) rotate(-25deg);animation:acLogo .9s cubic-bezier(.2,1.6,.4,1) .2s forwards}
+#acilis .ac-halka{position:absolute;width:120px;height:120px;border-radius:50%;border:3px solid #5ee0b5;opacity:0;animation:acHalka 1.4s ease-out 1s 2}
+#acilis .ac-ad{font-size:38px;font-weight:800;letter-spacing:.01em}
+#acilis .ac-ad b,#acilis .ac-ad span{display:inline-block;opacity:0;transform:translateY(16px);animation:acYuk .5s ease forwards}
 #acilis .ac-ad span{color:#5ee0b5}
-#acilis .ac-taslar{display:flex;gap:6px;margin-top:4px}
-#acilis .ac-tas{width:28px;height:40px;border-radius:6px;background:#1b2028;border:1px solid #2a2f38;display:grid;place-items:center;font:800 16px system-ui,sans-serif;color:transparent;
-  transform:translateY(8px);transition:background .25s,transform .3s cubic-bezier(.2,1.6,.4,1),box-shadow .25s,border-color .25s}
-#acilis .ac-tas.on{background:#f4efe3;border-color:#fff;transform:none;box-shadow:0 4px 10px #0009}
-#acilis .ac-tas.on.k{color:#e0453a}#acilis .ac-tas.on.m{color:#2f6fe0}#acilis .ac-tas.on.s{color:#222}#acilis .ac-tas.on.y{color:#e3a51b}
-#acilis.tamam .ac-tas{animation:acDalga .5s ease calc(var(--i) * 45ms)}
-#acilis .ac-durum{font-size:13.5px;color:#8b95a3;min-height:18px}
-#acilis .ac-gec{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));font-size:12px;color:#5c6672;opacity:0;animation:acYuk .5s ease 1.4s forwards}
-@keyframes acLogo{60%{opacity:1}to{opacity:1;transform:none;filter:drop-shadow(0 0 20px #5ee0b5aa)}}
-@keyframes acHalka{0%{opacity:.8;transform:scale(.8)}to{opacity:0;transform:scale(2.5)}}
+#acilis .ac-alt{font-size:15px;color:#8b95a3;letter-spacing:.06em;opacity:0;transform:translateY(16px);animation:acYuk .6s ease 1.8s forwards}
+#acilis .ac-gec{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));font-size:12px;color:#5c6672;opacity:0;animation:acYuk .5s ease 1.2s forwards}
+@keyframes acLogo{60%{opacity:1}to{opacity:1;transform:none;filter:drop-shadow(0 0 22px #5ee0b5aa)}}
+@keyframes acHalka{0%{opacity:.8;transform:scale(.8)}to{opacity:0;transform:scale(2.6)}}
 @keyframes acYuk{to{opacity:1;transform:none}}
-@keyframes acDalga{40%{transform:translateY(-9px)}}
 </style>
 <div id="acilis" hidden aria-hidden="true">
   <div class="ac-logo"><div class="ac-halka"></div><img src="logo.svg" alt=""></div>
   <div class="ac-ad"></div>
-  <div class="ac-taslar"></div>
-  <div class="ac-durum"></div>
+  <div class="ac-alt">SESLİ SOHBET · OYUN · FİLM</div>
   <div class="ac-gec">Geçmek için dokun</div>
 </div>
 <script>
@@ -101,52 +93,20 @@
   } catch(e){}
   if (!goster){ el.remove(); return; }
   el.hidden = false;
-  // başlık harf harf
   const ad = el.querySelector('.ac-ad');
-  [...'Oyun '].forEach((c, i) => { const b = document.createElement('b'); b.textContent = c === ' ' ? ' ' : c; b.style.animationDelay = (0.75 + i * 0.05) + 's'; ad.append(b); });
-  [...'Odası'].forEach((c, i) => { const b = document.createElement('span'); b.textContent = c; b.style.animationDelay = (1.0 + i * 0.05) + 's'; ad.append(b); });
-  // okey taşları
-  const RENK = ['k', 'm', 's', 'y', 'k', 'm', 's', 'y'], taslar = el.querySelector('.ac-taslar');
-  RENK.forEach((r, i) => { const t = document.createElement('div'); t.className = 'ac-tas ' + r; t.textContent = i + 1; t.style.setProperty('--i', i); taslar.append(t); });
-  const durum = el.querySelector('.ac-durum');
-  const t0 = performance.now();
-  let hedef = 0.15, gorunen = 0, bitti = false;
-  const DURUM = [[0, 'Hazırlanıyor…'], [0.35, 'Ses sistemi hazırlanıyor…'], [0.6, 'Odalar yükleniyor…'], [1, 'Hazır! 🎮']];
-  const ilerle = h => { hedef = Math.max(hedef, h); };
-  if (document.readyState !== 'loading') ilerle(0.4); else document.addEventListener('DOMContentLoaded', () => ilerle(0.4));
-  window.addEventListener('load', () => {
-    ilerle(0.65);
-    (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => ilerle(0.8));
-    // açık odalar listesi gelince (ya da en geç 1,2 sn) tamam
-    const ao = document.getElementById('acikOdalar');
-    const tamam = () => ilerle(1);
-    if (ao && window.MutationObserver){ new MutationObserver(tamam).observe(ao, { childList: true, attributes: true }); }
-    setTimeout(tamam, 1200);
-  });
-  setTimeout(() => ilerle(1), 3500);   // ne olursa olsun takılmasın
+  [...'Oyun '].forEach((c, i) => { const b = document.createElement('b'); b.textContent = c === ' ' ? '\u00a0' : c; b.style.animationDelay = (1 + i * 0.06) + 's'; ad.append(b); });
+  [...'Odası'].forEach((c, i) => { const b = document.createElement('span'); b.textContent = c; b.style.animationDelay = (1.3 + i * 0.06) + 's'; ad.append(b); });
+  let bitti = false, yuklendi = document.readyState === 'complete', sure = false;
   function kapat(){
     if (bitti) return; bitti = true;
     el.classList.add('bitti');
     setTimeout(() => el.remove(), 500);
   }
+  const dene = () => { if (yuklendi && sure) kapat(); };
+  window.addEventListener('load', () => { yuklendi = true; dene(); });
+  setTimeout(() => { sure = true; dene(); }, 3000);   // animasyonun tamamı
+  setTimeout(kapat, 4200);                            // ne olursa olsun takılmasın
   el.addEventListener('click', kapat);
-  (function adim(){
-    if (bitti) return;
-    const gecen = performance.now() - t0;
-    // logo ve isim gelene kadar (~1,3 sn) taşlar en fazla yarıya kadar dolar; görünen değer hedefe yumuşakça yaklaşır
-    const tavan = gecen < 1300 ? Math.min(hedef, 0.5) : hedef;
-    gorunen += (tavan - gorunen) * 0.08;
-    if (tavan - gorunen < 0.01) gorunen = tavan;
-    const n = Math.round(gorunen * 8);
-    taslar.querySelectorAll('.ac-tas').forEach((t, i) => t.classList.toggle('on', i < n));
-    durum.textContent = DURUM.filter(x => gorunen >= x[0] - 0.001).pop()[1];
-    if (gorunen >= 1 && gecen > 1700){
-      el.classList.add('tamam');
-      setTimeout(kapat, 650);
-      return;
-    }
-    requestAnimationFrame(adim);
-  })();
 })();
 </script>
 
