@@ -141,7 +141,7 @@ if (typeof registerTableGame === 'function') (function(){
     cleanOpts: o => ({ rounds: [3, 5, 10, 15, 20].includes(+o.rounds) ? +o.rounds : 10, sure: [60, 90, 120].includes(+o.sure) ? +o.sure : 90, set: o.set === 'genis' ? 'genis' : 'klasik' }),
     variantName: s => s.opts.rounds + ' tur · ' + s.opts.sure + ' sn · ' + (s.opts.set === 'genis' ? '8 kategori' : '5 kategori'),
     seatLabel: () => 'Oyuncu',
-    waitText: (s, own) => own ? 'En az 2 kişi oturunca “Oyunu başlat”a bas. Oyun sırasında gelenler de oturup katılabilir.' : 'Bir koltuğa otur; masa sahibi başlatınca oyun burada açılır.',
+    waitText: (s, own) => own ? 'En az 2 kişi oturunca “Oyunu başlat”a basabilirsiniz. Oyun sırasında gelenler de oturup katılabilir.' : 'Bir koltuğa otur; masa sahibi başlatınca oyun burada açılır.',
     makeCard: {
       desc: '2-8 kişi. Harf zarı atılır, isim, şehir, hayvan, bitki, eşya… Cevaplar sözlükle sıkı denetlenir, ilk bitiren “Dur!” der.',
       opts: '<label>Tur<select data-o="rounds"><option value="3">3 tur</option><option value="5">5 tur</option><option value="10" selected>10 tur</option><option value="15">15 tur</option><option value="20">20 tur</option></select></label>' +

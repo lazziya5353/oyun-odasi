@@ -215,7 +215,7 @@ function setHint(text, cls){ const h = $('micHint'); h.textContent = text; h.cla
 
 $('testBtn').onclick = async () => {
   ensureCtx();
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ setHint('Bu tarayıcı mikrofona erişemiyor. Sayfayı https üzerinden aç.', 'bad'); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ setHint('Bu tarayıcı mikrofona erişemiyor. Sayfayı https üzerinden açabilirsiniz.', 'bad'); return; }
   try {
     if (!rawStream) await openMic(store.get('oyunodasi-mic') || undefined).catch(() => openMic());
     $('testBtn').textContent = '🎙 Test açık';
@@ -224,14 +224,14 @@ $('testBtn').onclick = async () => {
     setHint('Konuş: çubuk yeşil dolmalı.', '');
     quietSince = performance.now(); heardVoice = false;
   } catch(e){
-    setHint('Mikrofon izni verilmedi. Adres çubuğundaki kilit simgesinden izin ver.', 'bad');
+    setHint('Mikrofon izni verilmedi. Adres çubuğundaki kilit simgesinden izin verebilirsiniz.', 'bad');
   }
 };
 
 // 3 saniye kaydet ve geri çal
 $('recBtn').onclick = () => {
-  if (!rawStream || typeof MediaRecorder === 'undefined'){ setHint('Önce mikrofonu aç. Bu tarayıcı kaydı desteklemiyor olabilir.', 'bad'); return; }
-  if (micMuted){ setHint('Mikrofonun kapalı. Önce mikrofonu aç, sonra kaydet.', 'bad'); return; }
+  if (!rawStream || typeof MediaRecorder === 'undefined'){ setHint('Önce mikrofonu açabilirsiniz. Bu tarayıcı kaydı desteklemiyor olabilir.', 'bad'); return; }
+  if (micMuted){ setHint('Mikrofonunuz kapalı. Önce mikrofonu açıp sonra kaydedebilirsiniz.', 'bad'); return; }
   const rec = new MediaRecorder(localStream);
   const chunks = [];
   rec.ondataavailable = e => e.data.size && chunks.push(e.data);
@@ -267,7 +267,7 @@ $('netBtn').onclick = async () => {
     await pc.setLocalDescription(await pc.createOffer());
     await new Promise(r => setTimeout(r, 6000));
   } catch(e){
-    out.innerHTML = '<li class="bad">Bu tarayıcı bağlantı testine izin vermedi. Chrome ile dene.</li>';
+    out.innerHTML = '<li class="bad">Bu tarayıcı bağlantı testine izin vermedi. Chrome ile deneyebilirsiniz.</li>';
     $('netBtn').disabled = false; try { pc && pc.close(); } catch(_){}
     return;
   }
@@ -285,7 +285,7 @@ $('netBtn').onclick = async () => {
   out.innerHTML = sigRows +
     row(types.has('srflx'), types.has('srflx') ? 'İnternet adresin bulundu, doğrudan bağlantı denenebilir.' : 'İnternet adresin bulunamadı. Güvenlik duvarı ya da VPN engelliyor olabilir.') +
     row(types.has('relay'), types.has('relay') ? 'Aktarma sunucusuna ulaşılıyor. Doğrudan bağlantı olmasa da ses gelmeli.' : 'Aktarma sunucusuna ulaşılamadı. Doğrudan bağlantı da kurulamazsa ses gelmez.') +
-    (!types.has('srflx') && !types.has('relay') ? '<li class="bad">Bu ağ sesli bağlantıyı tamamen engelliyor. VPN, okul/iş ağı ya da Mac\'te “Gizli mod” güvenlik duvarı olabilir. Başka bir ağ ya da telefon hotspot\'u ile dene.</li>' : '');
+    (!types.has('srflx') && !types.has('relay') ? '<li class="bad">Bu ağ sesli bağlantıyı tamamen engelliyor. VPN, okul/iş ağı ya da Mac\'te “Gizli mod” güvenlik duvarı olabilir. Başka bir ağ ya da telefon hotspot\'u ile deneyebilirsiniz.</li>' : '');
   $('netBtn').disabled = false;
 };
 
@@ -396,13 +396,13 @@ function startMeters(){
 function micHintCheck(selfLv){
   if (!$('testBtn').disabled || heardVoice) return;
   const track = rawStream && rawStream.getAudioTracks()[0];
-  if (selfLv > 0.012){ heardVoice = true; setHint('Ses geliyor 👍 İstersen kaydedip dinle.', 'ok'); }
+  if (selfLv > 0.012){ heardVoice = true; setHint('Ses geliyor 👍 İsterseniz kaydedip dinleyebilirsiniz.', 'ok'); }
   else if (performance.now() - quietSince > 4000){
     if (noMic) setHint('Mikrofon izni yok, dinleyici olarak buradasın. Alttaki mikrofon düğmesiyle tekrar izin isteyebilirsin.', 'bad');
-    else if (audioCtx && audioCtx.state !== 'running') setHint('Ses ölçer duraklatıldı. Sayfada herhangi bir yere bir kez tıkla.', 'bad');
+    else if (audioCtx && audioCtx.state !== 'running') setHint('Ses ölçer duraklatıldı. Sayfada herhangi bir yere bir kez tıklayabilirsiniz.', 'bad');
     else if (track && track.readyState === 'ended') setHint('Mikrofon bağlantısı koptu. Mikrofonu takıp listeden yeniden seç.', 'bad');
-    else if (track && track.muted) setHint('Mikrofon sistem tarafından susturulmuş. Kulaklıktaki sessiz düğmesine ve sistem ses ayarlarına bak.', 'bad');
-    else setHint('Ses algılanmadı. Listeden doğru mikrofonu seç; kulaklığın mikrofonu ayrı bir seçenek olabilir.', 'bad');
+    else if (track && track.muted) setHint('Mikrofon sistem tarafından susturulmuş. Kulaklıktaki sessiz düğmesine ve sistem ses ayarlarına bakabilirsiniz.', 'bad');
+    else setHint('Ses algılanmadı. Listeden doğru mikrofonu seçebilirsiniz; kulaklığın mikrofonu ayrı bir seçenek olabilir.', 'bad');
     quietSince = performance.now();
   }
 }

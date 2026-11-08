@@ -93,7 +93,7 @@ function setBusy(b){ $('createBtn').disabled = b; $('joinBtn').disabled = b; }
 async function start(code, asHost){
   $('lobbyErr').textContent = '';
   setBusy(true);
-  if (typeof Peer === 'undefined'){ lobbyError('Bağlantı kitaplığı yüklenemedi. İnternet bağlantını kontrol edip sayfayı yenile.'); return; }
+  if (typeof Peer === 'undefined'){ lobbyError('Bağlantı kitaplığı yüklenemedi. İnternet bağlantınızı kontrol edip sayfayı yenileyebilirsiniz.'); return; }
   ensureCtx();
   // Mikrofon odaya girmeyi ASLA engellemez: 3 sn içinde hazır değilse (izin penceresi cevaplanmadı,
   // mikrofon yok, izin verilmedi) dinleyici olarak girilir; mikrofon sonradan hazır olursa ses kendiliğinden açılır.
@@ -127,7 +127,7 @@ async function start(code, asHost){
     else await guestFlow(code);
   } catch(e){
     lobbyStatus('');
-    lobbyError(typeof e === 'string' ? e : 'Odaya bağlanılamadı. Biraz sonra tekrar dene.');
+    lobbyError(typeof e === 'string' ? e : 'Odaya bağlanılamadı. Biraz sonra tekrar deneyebilirsiniz.');
   }
 }
 
@@ -207,7 +207,7 @@ async function guestFlow(code){
     const r = await joinVia(pr, srv, code);
     if (r === 'ok') return;
     if (r === 'no-room') continue;                       // oda bu sunucuda değil: diğerinde ara
-    throw 'Oda bulundu ama bağlanılamadı. Senin ya da oda sahibinin ağı doğrudan bağlantıyı engelliyor olabilir. Giriş ekranındaki “Ağ testi”ni dene.';
+    throw 'Oda bulundu ama bağlanılamadı. Sizin ya da oda sahibinin ağı doğrudan bağlantıyı engelliyor olabilir. Giriş ekranındaki “Ağ testi”ni deneyebilirsiniz.';
   }
   if (unreachable === list.length) throw noServerMessage();
   if (rejoining){
@@ -215,7 +215,7 @@ async function guestFlow(code){
     forgetRoom(); $('rejoin').hidden = true; $('createBtn').classList.add('primary');
     throw 'Son odan kapanmış: herkes çıktığı için oda kapandı. “Oda oluştur” ile yeni bir oda kurabilirsin.';
   }
-  throw 'Bu kodla açık bir oda bulunamadı. Kodu kontrol et; oda sahibinin odası açık olmalı.';
+  throw 'Bu kodla açık bir oda bulunamadı. Kodu kontrol edebilirsiniz; oda sahibinin odası açık olmalı.';
 }
 // Sunucuya kayıt olduk; şimdi oda sahibine bağlan. Sonuç: 'ok' | 'no-room' | 'timeout'
 function joinVia(pr, srv, code){
@@ -244,8 +244,8 @@ function joinVia(pr, srv, code){
 function noServerMessage(){
   const own = signalServers().some(s => s.own);
   return own
-    ? 'Eşleştirme sunucularının hiçbirine ulaşılamadı. İnternet bağlantını kontrol edip biraz sonra tekrar dene.'
-    : 'Eşleştirme sunucusuna ulaşılamıyor. Bu, herkese açık ücretsiz sunucunun geçici bir sorunu olabilir. Birkaç dakika sonra tekrar dene; kalıcı çözüm için kendi sunucunu kur (README’de anlatılıyor).';
+    ? 'Eşleştirme sunucularının hiçbirine ulaşılamadı. İnternet bağlantınızı kontrol edip biraz sonra tekrar deneyebilirsiniz.'
+    : 'Eşleştirme sunucusuna ulaşılamıyor. Bu, herkese açık ücretsiz sunucunun geçici bir sorunu olabilir. Birkaç dakika sonra tekrar deneyebilirsiniz; kalıcı çözüm için kendi sunucunuzu kurabilirsiniz (README’de anlatılıyor).';
 }
 
 // ---------- eşleştirme sunucusuyla bağlantı ----------
@@ -600,7 +600,7 @@ function attachCall(id, call, kind){
       if (!p.audio){ p.audio = new Audio(); p.audio.autoplay = true; }
       p.audio.srcObject = s;
       applyVolume(p);
-      p.audio.play().catch(() => toast('Sesi duymak için sayfaya bir kez tıkla.'));
+      p.audio.play().catch(() => toast('Sesi duymak için sayfaya bir kez tıklayabilirsiniz.'));
       p.analyser = makeAnalyser(s);
       updateMicRouting(p);
     } else if (kind === 'music'){

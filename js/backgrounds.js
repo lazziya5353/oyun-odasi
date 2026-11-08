@@ -1979,7 +1979,7 @@ function blobToCanvas(blob, maxEdge){
       g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, c.width, c.height);
       URL.revokeObjectURL(u); res(c);
     };
-    im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('Bu dosya açılamadı. JPG, PNG ya da WEBP bir görsel seç.')); };
+    im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('Bu dosya açılamadı. JPG, PNG ya da WEBP bir görsel seçebilirsiniz.')); };
     im.src = u;
   });
 }

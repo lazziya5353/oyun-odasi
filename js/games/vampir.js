@@ -214,7 +214,7 @@ if (typeof registerTableGame === 'function') (function(){
     variantName: s => (s.opts.vampir === 'auto' ? 'Otomatik' : s.opts.vampir) + ' vampir · ' + s.opts.gorev + ' görev · ısırma ' + s.opts.bekleme + ' sn' +
       (s.opts.limit ? ' · en fazla ' + s.opts.limit + ' kurban' : '') + (s.opts.sure ? ' · ' + s.opts.sure + ' dk' : ''),
     seatLabel: () => 'Köylü',
-    waitText: (s, own) => own ? 'En az 3 kişi (en güzeli 5-10) oturunca “Oyunu başlat”a bas. Roller gizlice dağıtılır. Mikrofonlar açık olsun!' : 'Bir koltuğa otur; masa sahibi başlatınca köye ineceksin.',
+    waitText: (s, own) => own ? 'En az 3 kişi (en güzeli 5-10) oturunca “Oyunu başlat”a basabilirsiniz. Roller gizlice dağıtılır. Mikrofonlar açık olsun!' : 'Bir koltuğa otur; masa sahibi başlatınca köye ineceksin.',
     makeCard: {
       desc: '3-10 kişi. Among Us gibi: köylüler görev yapar, vampir aralarına karışıp ısırır. Ceset bulunca toplantı, konuşun ve oylayın!',
       opts: '<label>Vampir sayısı<select data-o="vampir"><option value="auto" selected>Otomatik (≤6 kişi: 1, 7+: 2)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>' +

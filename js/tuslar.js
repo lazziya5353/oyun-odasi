@@ -74,7 +74,7 @@
     const t = tanimlar.get(oyun), g = dlg.querySelector('.dlg-body'); g.innerHTML = '';
     dlg.querySelector('h3').textContent = '⌨️ Tuşlar · ' + t.baslik;
     const n = document.createElement('p'); n.className = 'note';
-    n.textContent = 'Değiştirmek istediğin işin yanındaki tuşa tıkla, sonra yeni tuşa bas. Ayar sadece senin bilgisayarında geçerli.';
+    n.textContent = 'Değiştirmek istediğiniz işin yanındaki tuşa tıklayıp yeni tuşa basabilirsiniz. Ayar sadece sizin bilgisayarınızda geçerli.';
     g.append(n);
     const h = harita(oyun), liste = document.createElement('div'); liste.className = 'tus-liste';
     t.eylemler.forEach(e => {

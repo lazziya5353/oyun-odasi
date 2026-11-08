@@ -119,7 +119,7 @@ function ownerStart(o){
   if (d){
     let st = null;
     try { st = d.start(o); } catch(e){ console.error('oyun başlatılamadı', e); }
-    if (!st){ s.status = 'waiting'; o.state = null; pushSum(o); toast('Oyun başlatılamadı. Sayfayı yenileyip (Ctrl+F5) tekrar dene.'); return; }
+    if (!st){ s.status = 'waiting'; o.state = null; pushSum(o); toast('Oyun başlatılamadı. Sayfayı yenileyip (Ctrl+F5) tekrar deneyebilirsiniz.'); return; }
     o.state = st;
   }
   else if (s.game === 'tavla') o.state = TavlaCore.newGame({ target: s.opts.target });
@@ -388,7 +388,7 @@ function cezaCiz(sh, s, lv){
     box.append(es);
     const go = document.createElement('button'); go.type = 'button'; go.className = 'btn primary ceza-go';
     const ht = c.hedef.find(t => t.id === cezaSec.hedef);
-    go.textContent = ht && cezaSec.eylem ? CEZALAR[cezaSec.eylem].ico + ' ' + yonelme(ht.ad) + ' ' + CEZALAR[cezaSec.eylem].ad.toLocaleLowerCase('tr-TR') + '!' : 'Önce kişiyi ve cezayı seç';
+    go.textContent = ht && cezaSec.eylem ? CEZALAR[cezaSec.eylem].ico + ' ' + yonelme(ht.ad) + ' ' + CEZALAR[cezaSec.eylem].ad.toLocaleLowerCase('tr-TR') + '!' : 'Önce kişiyi ve cezayı seçebilirsiniz';
     go.disabled = !(ht && cezaSec.eylem);
     go.onclick = () => { go.disabled = true; tableAct({ type: 'ceza', hedef: cezaSec.hedef, eylem: cezaSec.eylem }); };
     box.append(go);
@@ -708,7 +708,7 @@ function renderOpenTable(){
     body.innerHTML = '';
     const w = document.createElement('div'); w.className = 'waiting-room';
     const h = document.createElement('p'); h.className = 'note';
-    h.textContent = s.status === 'playing' ? 'Oyun yükleniyor…' : tdef(s) && tdef(s).waitText ? tdef(s).waitText(s, s.owner === peer.id) : s.owner === peer.id ? 'Koltuklar dolunca “Oyunu başlat”a bas. Boş koltuklara bot ekleyebilirsin.' : 'Masa sahibi oyunu başlatınca burada görünecek. Boş koltuğa oturabilirsin.';
+    h.textContent = s.status === 'playing' ? 'Oyun yükleniyor…' : tdef(s) && tdef(s).waitText ? tdef(s).waitText(s, s.owner === peer.id) : s.owner === peer.id ? 'Koltuklar dolunca “Oyunu başlat”a basabilirsiniz. Boş koltuklara bot ekleyebilirsiniz.' : 'Masa sahibi oyunu başlatınca burada görünecek. Boş koltuğa oturabilirsin.';
     w.append(seatRow(s), h);
     body.append(w);
     return;

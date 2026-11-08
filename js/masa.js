@@ -194,7 +194,7 @@ const MASA = (() => {
   function yeniKisi(k, gelis){
     const el = document.createElement('div'); el.className = 'masa-kisi' + (k.ben ? ' ben' : ''); el.dataset.id = k.id;
     el.innerHTML = '<i class="masa-halka"></i><img class="masa-av" alt="" draggable="false"><div class="masa-plaka"><span class="masa-ik sus" title="Mikrofonu kapalı">🎙️</span><span class="masa-ik sagir" title="Sesleri kapalı">🔇</span><span class="pname"></span></div>';
-    if (!k.ben){ el.title = 'Tıkla: bir şey fırlat ya da sesini ayarla'; el.onclick = ev => { const o2 = S.kisi.get(k.id); if (o2) kisiMenu(o2, ev); }; }
+    if (!k.ben){ el.title = 'Tıklayarak bir şey fırlatabilir ya da sesini ayarlayabilirsiniz'; el.onclick = ev => { const o2 = S.kisi.get(k.id); if (o2) kisiMenu(o2, ev); }; }
     S.ic.append(el);
     const o = { id: k.id, el, img: el.querySelector('.masa-av'), plaka: el.querySelector('.masa-plaka'), ad: el.querySelector('.pname'), t: null, sonKonus: performance.now(), hedef: 90, r: gelis ? 1.45 : 1, op: gelis ? 0 : 1, g: null, gidiyor: false };
     S.kisi.set(k.id, o);

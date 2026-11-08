@@ -158,7 +158,7 @@ function openShareDialog(){
     box.append(b);
   });
   const n = document.createElement('p'); n.className = 'note';
-  n.textContent = 'Oyun/film sesini de paylaşmak için açılan pencerede “Ses paylaş” kutusunu işaretle. Netflix gibi korumalı sitelerde görüntü siyah görünebilir.';
+  n.textContent = 'Oyun/film sesini de paylaşmak için açılan pencerede “Ses paylaş” kutusunu işaretleyebilirsiniz. Netflix gibi korumalı sitelerde görüntü siyah görünebilir.';
   box.append(n);
   $('shareDlg').showModal();
 }
@@ -449,7 +449,7 @@ function watchSenderStats(tile){
       } catch(e){}
     }
     if (!n){ setStats(tile, ['İzleyen yok · ' + QUALITY[shareQ].label], ''); return; }
-    const warn = reason === 'bandwidth' ? '⚠ Yükleme hızın dar: kalite otomatik ayarlanıyor (sürerse “Zayıf internet”i seç)'
+    const warn = reason === 'bandwidth' ? '⚠ Yükleme hızınız dar: kalite otomatik ayarlanıyor (sürerse “Zayıf internet”i seçebilirsiniz)'
       : reason === 'cpu' ? '⚠ Bilgisayarın zorlanıyor: çözünürlük otomatik düşürüldü' : '';
     setStats(tile, ['Gönderiyor: ' + (h ? h + 'p · ' : '') + fps + ' fps · ' + n + ' izleyici · ' + bits.toFixed(1) + ' Mbps'], warn);
   }, 2000);

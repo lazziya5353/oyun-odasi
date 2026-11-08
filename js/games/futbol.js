@@ -146,7 +146,7 @@
     cleanOpts: o => ({ gol: [1, 3, 5, 7].includes(+o.gol) ? +o.gol : 3, hamle: [15, 30, 45, 60].includes(+o.hamle) ? +o.hamle : 30, zor: ZOR[o.zor] ? o.zor : 'orta', mod: o.mod === 'tek' ? 'tek' : 'cok' }),
     variantName: s => (s.seats[1] && s.seats[1].bot ? 'Bota karşı (' + s.opts.zor + ')' : 'İki kişi') + ' · ' + s.opts.gol + ' golde biter · hamle ' + s.opts.hamle + ' sn',
     seatLabel: k => k ? '🔵 Mavi' : '🔴 Kırmızı',
-    waitText: (s, own) => own ? 'Arkadaşın boş koltuğa otursun ya da koltuğa bot ekle, sonra “Oyunu başlat”a bas.' : 'Boş koltuğa otur; masayı açan başlatınca oyun burada açılır.',
+    waitText: (s, own) => own ? 'Arkadaşınız boş koltuğa oturabilir ya da koltuğa bot ekleyebilirsiniz, sonra “Oyunu başlat”a basabilirsiniz.' : 'Boş koltuğa otur; masayı açan başlatınca oyun burada açılır.',
     makeCard: {
       desc: '5\'e 5 sıra tabanlı. Taşını geriye çek, bırak, topu rakip kaleye sok! Bota karşı ya da arkadaşınla.',
       opts: '<label>Mod<select data-o="mod"><option value="tek">Tek oyunculu (bota karşı)</option><option value="cok" selected>İki kişi</option></select></label>' +

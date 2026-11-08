@@ -29,7 +29,7 @@ async function loadLibrary(){
       const d = await libApi('liste');
       lib = { songs: Array.isArray(d.songs) ? d.songs : [], playlists: Array.isArray(d.playlists) ? d.playlists : [] };
       libErr = ''; libLoadedAt = Date.now();
-    } catch(e){ libErr = 'Kütüphaneye ulaşılamadı. Biraz sonra tekrar dene.'; }
+    } catch(e){ libErr = 'Kütüphaneye ulaşılamadı. Biraz sonra tekrar deneyebilirsiniz.'; }
     libLoading = null;
     renderLibrary();
     if (current && current.lib) refreshMusicUI();     // şimdi çalanın "kim yükledi" bilgisi
@@ -264,7 +264,7 @@ function renderLibrary(){
   if (libErr && !lib.songs.length){ const p = document.createElement('p'); p.className = 'note'; p.textContent = libErr; list.append(p); }
   else if (!shown.length){
     const p = document.createElement('p'); p.className = 'note lib-empty';
-    p.textContent = pl ? 'Bu playlist boş. Şarkıların yanındaki ➕ ile ekleyebilirsin.' : lib.songs.length ? 'Aramana uyan şarkı yok.' : 'Kütüphane boş. “☁️ Şarkı yükle” ile ilk şarkıyı sen ekle!';
+    p.textContent = pl ? 'Bu playlist boş. Şarkıların yanındaki ➕ ile ekleyebilirsin.' : lib.songs.length ? 'Aramana uyan şarkı yok.' : 'Kütüphane boş. “☁️ Şarkı yükle” ile ilk şarkıyı siz ekleyebilirsiniz!';
     list.append(p);
   }
   const playingLib = current && current.lib;

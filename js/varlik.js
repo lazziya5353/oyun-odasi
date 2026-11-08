@@ -60,12 +60,12 @@
       form.onsubmit = async e => {
         e.preventDefault();
         const kod = typeof cleanCode === 'function' ? cleanCode(inp.value) : inp.value.trim().toUpperCase();
-        if (kod.length < 3){ hata.textContent = 'Odanın kodunu yaz.'; inp.focus(); return; }
+        if (kod.length < 3){ hata.textContent = 'Odanın kodunu yazabilirsiniz.'; inp.focus(); return; }
         btn.disabled = true; hata.textContent = '';
         let ok = true;
         try { const r = await fetch('/api/oda/dogrula', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: o.id, kod }) }); if (r.ok) ok = (await r.json()).ok; } catch(err){}
         btn.disabled = false;
-        if (!ok){ hata.textContent = 'Kod yanlış. Odadakilere sor.'; inp.select(); return; }
+        if (!ok){ hata.textContent = 'Kod yanlış. Odadakilere sorabilirsiniz.'; inp.select(); return; }
         acikForm = '';
         document.getElementById('codeInput').value = kod;
         document.getElementById('joinBtn').click();

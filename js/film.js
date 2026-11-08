@@ -18,9 +18,9 @@ function renderFilmDeck(d){
   };
   card('🎞', 'Bilgisayardan film aç', canCapture()
       ? 'Filmi kendi bilgisayarından herkese yayınlarsın. Durdurup ileri sarabilirsin. Ekran paylaşımından daha temiz ve akıcıdır.'
-      : 'Bu tarayıcı desteklemiyor. Chrome ya da Edge ile aç.', () => $('filmInput').click(), !canCapture());
+      : 'Bu tarayıcı desteklemiyor. Chrome ya da Edge ile açabilirsiniz.', () => $('filmInput').click(), !canCapture());
   card('▶️', 'YouTube\'dan birlikte izle', 'Video herkesin bilgisayarında YouTube\'dan açılır ve senkron oynar. Kimse yayın yapmadığı için donma olmaz.', () => { $('ytErr').textContent = ''; $('ytUrl').value = ''; $('ytDlg').showModal(); $('ytUrl').focus(); });
-  card('🖥', 'Ekran paylaş (Film modu)', 'Tarayıcıda açtığın bir videoyu paylaş. Netflix gibi korumalı sitelerde görüntü siyah görünebilir.', () => { shareQ = 'film'; openShareDialog(); });
+  card('🖥', 'Ekran paylaş (Film modu)', 'Tarayıcıda açtığınız bir videoyu paylaşabilirsiniz. Netflix gibi korumalı sitelerde görüntü siyah görünebilir.', () => { shareQ = 'film'; openShareDialog(); });
   const tip = document.createElement('p'); tip.className = 'note';
   tip.textContent = 'En akıcı sonuç için: yayın yapan kablolu internet kullansın, kalite menüsünde “Film” seçili olsun. Görüntünün sol üstündeki gösterge donma olursa nedenini yazar.';
   d.append(h, p, grid, tip);
@@ -42,7 +42,7 @@ function waitForVideoTrack(cap, ms){
 }
 async function startFilmFile(file){
   if (typeof hareket === 'function' && file) hareket('film', 'film yayını: ' + String(file.name || '').replace(/\.[^.]+$/, ''));
-  if (!canCapture()){ toast('Bu tarayıcı dosyadan yayını desteklemiyor. Chrome ya da Edge kullan.'); return; }
+  if (!canCapture()){ toast('Bu tarayıcı dosyadan yayını desteklemiyor. Chrome ya da Edge kullanabilirsiniz.'); return; }
   ensureCtx();
   toast('🎬 Film hazırlanıyor…');
   const v = document.createElement('video');
@@ -66,7 +66,7 @@ async function startFilmFile(file){
     URL.revokeObjectURL(url);
     broadcast({ t: 'film-state', paused: false });
   };
-  if (!track){ cleanup(); toast('Bu video açılamadı. MP4 (H.264) ya da WebM dosyası dene.'); return; }
+  if (!track){ cleanup(); toast('Bu video açılamadı. MP4 (H.264) ya da WebM dosyası deneyebilirsiniz.'); return; }
   const audio = dst ? dst.stream.getAudioTracks() : cap.getAudioTracks();
   const stream = new MediaStream([track, ...audio]);
   shareQ = 'film';
@@ -156,7 +156,7 @@ async function ensureYTTile(newVideo){
   if (araclar && ytTile._bar) ytTile._bar.append(araclar);
   $('screens').prepend(ytTile);
   updateStage();
-  try { await loadYTApi(); } catch(e){ toast('YouTube yüklenemedi. İnternet bağlantını kontrol et.'); return; }
+  try { await loadYTApi(); } catch(e){ toast('YouTube yüklenemedi. İnternet bağlantınızı kontrol edebilirsiniz.'); return; }
   if (!ytTile || !yt || !inner.isConnected) return;
   ytPlayer = new YT.Player(inner, {
     videoId: yt.vid, width: '100%', height: '100%',

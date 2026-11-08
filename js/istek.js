@@ -85,7 +85,7 @@ const ISTEK = (() => {
     vazgec();
     const acc = typeof account !== 'undefined' && account && account.uye;
     const ad = acc ? acc.name : $$('nameInput').value.trim();
-    if (!ad){ durum('Önce yukarıya adını yaz.', 'hata'); $$('nameInput').focus(); return; }
+    if (!ad){ durum('Önce yukarıya adınızı yazabilirsiniz.', 'hata'); $$('nameInput').focus(); return; }
     if (!o.kapi){ durum('Bu oda şu an istek kabul etmiyor. Kodu yazarak girebilirsin.', 'hata'); return; }
     durum('⏳ İstek gönderiliyor…');
     const b = bekleyen = { o };

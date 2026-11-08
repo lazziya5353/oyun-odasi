@@ -83,7 +83,7 @@
   // ---------- kaydı başlat / bitir ----------
   async function baslat(kaynak){
     if (K.rec) return;
-    if (!destek()){ toast('Bu tarayıcı kayıt almayı desteklemiyor. Chrome ya da Edge ile dene.'); return; }
+    if (!destek()){ toast('Bu tarayıcı kayıt almayı desteklemiyor. Chrome ya da Edge ile deneyebilirsiniz.'); return; }
     const vt = kaynak.stream && kaynak.stream.getVideoTracks().find(t => t.readyState === 'live');
     if (!vt){ toast('Kaydedilecek görüntü yok.'); return; }
     if (typeof ensureCtx === 'function') ensureCtx();
@@ -278,7 +278,7 @@
         indir(f, k.yarim ? k.ad.replace(/(\.\w+)$/, ' (yarım)$1') : k.ad);
         listeGuncelle(k.kok, { durum: 'indirildi' });          // parçalar bir sonraki açılışta silinir (indirme bitsin diye)
         toast('⬇️ İndiriliyor: ' + k.ad);
-        if (typeof myChan === 'function' && typeof joined !== 'undefined' && joined && myChan().type === 'ders') setTimeout(() => toast('Herkesle paylaşmak için Google Drive’a yükle, linkini üstteki 🔗 Kayıt linki’ne yapıştır.'), 4000);
+        if (typeof myChan === 'function' && typeof joined !== 'undefined' && joined && myChan().type === 'ders') setTimeout(() => toast('Herkesle paylaşmak için Google Drive’a yükle, linkini üstteki 🔗 Kayıt linki’ne yapıştırabilirsiniz.'), 4000);
         kutuCiz();
       };
       const sil = document.createElement('button'); sil.className = 'btn small'; sil.textContent = '🗑 Sil';

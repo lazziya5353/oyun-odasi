@@ -104,7 +104,7 @@ function playLocal(id){
   if (musicEl._url) URL.revokeObjectURL(musicEl._url);
   musicEl._url = URL.createObjectURL(f);
   musicEl.src = musicEl._url;
-  musicEl.play().catch(() => toast('Müziği başlatmak için sayfaya bir kez tıkla.'));
+  musicEl.play().catch(() => toast('Müziği başlatmak için sayfaya bir kez tıklayabilirsiniz.'));
   applyMusicVolume();
 }
 function stopLocal(){ if (musicEl) musicEl.pause(); }
@@ -285,7 +285,7 @@ function playRadio(){
   }
   if (!radioEl){
     radioEl = new Audio(); radioEl.preload = 'none';
-    radioEl.addEventListener('error', () => { if (radioEl._url) toast('Bu radyo şu an açılamadı, başka bir istasyon dene.'); });
+    radioEl.addEventListener('error', () => { if (radioEl._url) toast('Bu radyo şu an açılamadı, başka bir istasyonu deneyebilirsiniz.'); });
     radioEl.addEventListener('playing', renderRadioChip);
     radioEl.addEventListener('waiting', renderRadioChip);
   }
@@ -298,17 +298,17 @@ function playRadio(){
       hlsYukle().then(() => {
         if (radioEl._url !== url || !window.Hls || !Hls.isSupported()) return;
         const h = new Hls({ lowLatencyMode: false }); radioEl._hls = h;
-        h.on(Hls.Events.ERROR, (e, d) => { if (d.fatal && radioEl._url === url) toast('Bu radyo şu an açılamadı, başka bir istasyon dene.'); });
+        h.on(Hls.Events.ERROR, (e, d) => { if (d.fatal && radioEl._url === url) toast('Bu radyo şu an açılamadı, başka bir istasyonu deneyebilirsiniz.'); });
         h.loadSource(url); h.attachMedia(radioEl);
         applyMusicVolume();
-        radioEl.play().catch(() => toast('Radyoyu başlatmak için sayfaya bir kez tıkla.'));
-      }).catch(() => toast('Bu radyo şu an açılamadı, başka bir istasyon dene.'));
+        radioEl.play().catch(() => toast('Radyoyu başlatmak için sayfaya bir kez tıklayabilirsiniz.'));
+      }).catch(() => toast('Bu radyo şu an açılamadı, başka bir istasyonu deneyebilirsiniz.'));
       return;
     }
     radioEl.src = radio.url;
   }
   applyMusicVolume();
-  radioEl.play().catch(() => toast('Radyoyu başlatmak için sayfaya bir kez tıkla.'));
+  radioEl.play().catch(() => toast('Radyoyu başlatmak için sayfaya bir kez tıklayabilirsiniz.'));
 }
 let hlsSoz = null;
 function hlsYukle(){
@@ -538,7 +538,7 @@ function stationRow(st, sub){
     e.stopPropagation();
     if (!st.url && st.tid){
       fav.disabled = true; fav.textContent = '…';
-      try { await tuneinAdres(st); } catch(er){ fav.disabled = false; fav.textContent = '☆'; toast('Bu radyo şu an açılamadı, başka bir istasyon dene.'); return; }
+      try { await tuneinAdres(st); } catch(er){ fav.disabled = false; fav.textContent = '☆'; toast('Bu radyo şu an açılamadı, başka bir istasyonu deneyebilirsiniz.'); return; }
       fav.disabled = false;
     }
     const on = toggleFav(st); fav.textContent = on ? '★' : '☆'; fav.classList.toggle('on', on);
@@ -569,7 +569,7 @@ function setRadioTab(t){
 function renderFavList(){
   const list = $('radioList'); list.innerHTML = '';
   const l = radioFavs();
-  if (!l.length){ list.innerHTML = '<p class="note">Henüz favorin yok. “Ara” sekmesinde beğendiğin istasyonun yanındaki ☆ yıldıza bas.</p>'; return; }
+  if (!l.length){ list.innerHTML = '<p class="note">Henüz favoriniz yok. “Ara” sekmesinde beğendiğiniz istasyonun yanındaki ☆ yıldıza basabilirsiniz.</p>'; return; }
   l.forEach(st => list.append(stationRow(st, st.tags || '')));
 }
 let rbSira = 0;
@@ -588,7 +588,7 @@ async function doRadioSearch(){
     list.innerHTML = '';
     if (rbSearch.eski === 'yerlesik') list.innerHTML = '<p class="note">⚠️ Radyo dizini şu an kapalı, yerleşik liste' + ($('radioQuery').value.trim() ? ' ve TuneIn sonuçları' : '') + ' gösteriliyor. Yabancı radyolar için “Tüm dünya”yı seç ya da isim yazıp ara (ör. jazz, BBC, rock).</p>';
     else if (rbSearch.eski) list.innerHTML = '<p class="note">⚠️ Radyo dizinine şu an ulaşılamadı, en son kaydedilen liste gösteriliyor.</p>';
-    if (!items.length){ list.innerHTML = '<p class="note">Sonuç bulunamadı. Başka bir isim dene ya da “Tüm dünya”yı seç.</p>'; return; }
+    if (!items.length){ list.innerHTML = '<p class="note">Sonuç bulunamadı. Başka bir isim deneyebilir ya da “Tüm dünya”yı seçebilirsiniz.</p>'; return; }
     items.forEach(s => {
       const fav = typeof s.favicon === 'string' && /^https:\/\//i.test(s.favicon) ? s.favicon : '';
       const tags = String(s.tags || '').split(',').map(x => x.trim()).filter(Boolean).slice(0, 3).join(', ');
@@ -597,7 +597,7 @@ async function doRadioSearch(){
     });
   } catch(e){
     if (radioTab !== 'ara' || sira !== rbSira) return;
-    list.innerHTML = '<p class="note">Radyo listesi şu an alınamadı. İnternet bağlantını kontrol edip tekrar dene.</p>';
+    list.innerHTML = '<p class="note">Radyo listesi şu an alınamadı. İnternet bağlantınızı kontrol edip tekrar deneyebilirsiniz.</p>';
     const tb = document.createElement('button'); tb.type = 'button'; tb.className = 'btn'; tb.textContent = '🔄 Tekrar dene'; tb.onclick = doRadioSearch;
     list.append(tb);
   }
@@ -691,13 +691,13 @@ function renderMusicDeck(d){
   } else {
     tag.textContent = '🎵 Müzik Odası';
     title.textContent = 'Henüz bir şey çalmıyor';
-    sub.textContent = 'Kütüphaneden bir şarkı ya da playlist seç, müzik yükle ya da radyo aç. Bu kanaldaki herkes aynı anda dinler.';
+    sub.textContent = 'Kütüphaneden bir şarkı ya da playlist seçebilir, müzik yükleyebilir ya da radyo açabilirsiniz. Bu kanaldaki herkes aynı anda dinler.';
   }
   const viz = document.createElement('canvas'); viz.className = 'np-viz'; viz.id = 'npViz'; viz._c = color;
   info.append(tag, title, sub, viz);
   if (current && !radio){
     const prog = document.createElement('div'); prog.className = 'np-progress seekable';
-    prog.title = 'İleri / geri sarmak için tıkla ya da sürükle';
+    prog.title = 'İleri / geri sarmak için tıklayabilir ya da sürükleyebilirsiniz';
     const bar = document.createElement('i'); bar.id = 'npProg'; prog.append(bar);
     const knob = document.createElement('b'); knob.className = 'np-knob'; prog.append(knob);
     // tıkla / sürükle: bırakınca herkes için o noktaya atlar

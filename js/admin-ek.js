@@ -16,7 +16,7 @@ const tarihYaz = ts => ts ? new Date(ts).toLocaleString('tr-TR', { day: 'numeric
 function renderHava(list){
   const box = el('div', 'ad-box');
   box.append(el('h3', '', '🌦 Hava efektleri'));
-  if (typeof OyunHava === 'undefined'){ box.append(note('Hava efekti kitaplığı yüklenemedi, sayfayı yenile.', 'err')); list.append(box); return; }
+  if (typeof OyunHava === 'undefined'){ box.append(note('Hava efekti kitaplığı yüklenemedi, sayfayı yenileyebilirsiniz.', 'err')); list.append(box); return; }
   box.append(note('Sitedeki Görünüm → Hava ile aynı efektler. Seçim sadece bu tarayıcıda geçerlidir; kullanıcıların ekranını etkilemez.'));
   const picks = el('div', 'hava-picks');
   const cur = OyunHava.current || 'yok';
@@ -83,7 +83,7 @@ function radyoDurdur(){
 function radyoCal(st){
   if (!RD.el){
     RD.el = new Audio(); RD.el.preload = 'none';
-    RD.el.addEventListener('error', () => { if (RD.el._url){ toast('Bu radyo şu an açılamadı, başka bir istasyon dene.'); radyoDurdur(); } });
+    RD.el.addEventListener('error', () => { if (RD.el._url){ toast('Bu radyo şu an açılamadı, başka bir istasyonu deneyebilirsiniz.'); radyoDurdur(); } });
   }
   if (RD.hls){ try { RD.hls.destroy(); } catch(e){} RD.hls = null; }
   RD.cur = st; RD.el._url = st.url; RD.el.volume = RD.vol;
@@ -91,11 +91,11 @@ function radyoCal(st){
     hlsYukle().then(() => {
       if (RD.el._url !== st.url || !window.Hls || !Hls.isSupported()) return;
       const h = new Hls({ lowLatencyMode: false }); RD.hls = h;
-      h.on(Hls.Events.ERROR, (e, d) => { if (d.fatal && RD.el._url === st.url){ toast('Bu radyo şu an açılamadı, başka bir istasyon dene.'); radyoDurdur(); } });
+      h.on(Hls.Events.ERROR, (e, d) => { if (d.fatal && RD.el._url === st.url){ toast('Bu radyo şu an açılamadı, başka bir istasyonu deneyebilirsiniz.'); radyoDurdur(); } });
       h.loadSource(st.url); h.attachMedia(RD.el);
       RD.el.play().catch(() => {});
     }).catch(() => toast('Radyo yüklenemedi'));
-  } else { RD.el.src = st.url; RD.el.play().catch(() => toast('Radyoyu başlatmak için sayfaya bir kez tıkla.')); }
+  } else { RD.el.src = st.url; RD.el.play().catch(() => toast('Radyoyu başlatmak için sayfaya bir kez tıklayabilirsiniz.')); }
   miniRadyo(); if (tab === 'radyo') renderList();
 }
 // üst çubukta çalan radyo kutusu (sekme değişse de görünür)
@@ -139,7 +139,7 @@ function renderRadyo(list){
   const g = el('div', 'replik-liste');
   const goster = RD.ara ? [] : (RD.sonuc || RADYOLAR);
   if (RD.ara) g.append(note('Aranıyor…'));
-  else if (RD.sonuc && !RD.sonuc.length) g.append(note('Sonuç yok. Başka bir kelime dene.'));
+  else if (RD.sonuc && !RD.sonuc.length) g.append(note('Sonuç yok. Başka bir kelime deneyebilirsiniz.'));
   else if (RD.sonuc) g.append(note(RD.sonuc.length + ' sonuç'));
   goster.forEach(st => {
     const r = el('div', 'replik-satir');

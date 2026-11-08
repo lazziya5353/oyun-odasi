@@ -152,7 +152,7 @@
     cleanOpts: o => ({ sure: kis(Math.round(+o.sure) || 180, 30, 1800), zor: ZORLUK[o.zor] ? o.zor : 'orta', mod: o.mod === 'tek' ? 'tek' : 'cok' }),
     variantName: s => (s.seats[1] && s.seats[1].bot ? 'Bota karşı (' + s.opts.zor + ')' : 'İki kişi') + ' · ' + saat(s.opts.sure * 1000),
     seatLabel: k => k ? '🔵 Mavi' : '🔴 Kırmızı',
-    waitText: (s, own) => own ? 'Arkadaşın boş koltuğa otursun ya da koltuğa bot ekle, sonra “Oyunu başlat”a bas.' : 'Boş koltuğa otur; masayı açan başlatınca oyun burada açılır.',
+    waitText: (s, own) => own ? 'Arkadaşınız boş koltuğa oturabilir ya da koltuğa bot ekleyebilirsiniz, sonra “Oyunu başlat”a basabilirsiniz.' : 'Boş koltuğa otur; masayı açan başlatınca oyun burada açılır.',
     makeCard: {
       desc: 'HaxBall tarzı canlı futbol: WASD / oklar + Space ile şut, telefonda joystick. 1v1 ya da bota karşı.',
       opts: '<label>Mod<select data-o="mod"><option value="tek">Tek oyunculu (bota karşı)</option><option value="cok" selected>İki kişi</option></select></label>' +

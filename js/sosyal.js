@@ -21,7 +21,7 @@ const ARK = (() => {
   dlg.querySelector('.ark-ekle').onsubmit = async e => {
     e.preventDefault();
     const inp = dlg.querySelector('.ark-ekle input'), kadi = inp.value.trim().replace(/^@/, '');
-    if (kadi.length < 3){ msg('Arkadaşının kullanıcı adını yaz.'); inp.focus(); return; }
+    if (kadi.length < 3){ msg('Arkadaşınızın kullanıcı adını yazabilirsiniz.'); inp.focus(); return; }
     const d = await ekle(kadi, true);
     if (d) inp.value = '';
   };
@@ -104,7 +104,7 @@ const ARK = (() => {
       ic.append(tum);
       if (cevrim.length){ const n = document.createElement('p'); n.className = 'note'; n.textContent = '🟢 ' + cevrim.map(x => x.name).join(', ') + ' şu an sitede.'; ic.append(n); }
     }
-    [bolum('📥 Gelen istekler', veri.gelen, 'gelen'), bolum('🤝 Arkadaşların', veri.arkadaslar, 'arkadas', 'Henüz arkadaşın yok. Yukarıya kullanıcı adını yaz ya da odada birinin kartından “➕ Arkadaş” de.'), bolum('⏳ Gönderdiğin istekler', veri.giden, 'giden')]
+    [bolum('📥 Gelen istekler', veri.gelen, 'gelen'), bolum('🤝 Arkadaşların', veri.arkadaslar, 'arkadas', 'Henüz arkadaşınız yok. Yukarıya kullanıcı adını yazabilir ya da odada birinin kartındaki “➕ Arkadaş” düğmesine basabilirsiniz.'), bolum('⏳ Gönderdiğin istekler', veri.giden, 'giden')]
       .forEach(x => x && ic.append(x));
   }
   async function ac(){

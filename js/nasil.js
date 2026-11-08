@@ -7,9 +7,9 @@
     { id: 'hax', tur: 'masa', ikon: '🥅', ad: 'Canlı Futbol 1v1', kisi: '2 kişi ya da bota karşı',
       amac: 'Yuvarlak oyuncunu sürüp topu rakip kaleye şutlamak. Süre bitince en çok golü atan kazanır.',
       adim: [
-        'Masa açarken modu (bota karşı / iki kişi), süreyi (istersen kendin belirle) ve bot zorluğunu seç.',
-        'Bilgisayarda W A S D ya da yön tuşlarıyla hareket et, topun yanındayken SPACE ile şut çek.',
-        'Telefonda sol alttaki joystick ile hareket et, sağ alttaki ŞUT düğmesine bas.',
+        'Masa açarken modu (bota karşı / iki kişi), süreyi (isterseniz kendiniz belirleyebilirsiniz) ve bot zorluğunu seçebilirsiniz.',
+        'Bilgisayarda W A S D ya da yön tuşlarıyla hareket edebilir, topun yanındayken SPACE ile şut çekebilirsiniz.',
+        'Telefonda sol alttaki joystick ile hareket edebilir, sağ alttaki ŞUT düğmesine basabilirsiniz.',
         'Topa çarparak da sürebilirsin; şut tuşuna basılıyken oyuncun biraz yavaşlar ama sert vurur.',
         'Sağdaki hızlı mesajlarla (bilgisayarda 1-6 tuşları) rakibine laf atabilirsin; mesaj oyuncunun üstünde balon olarak çıkar.',
         'Gol olunca herkes yerine döner; santrada rakip yarı sahaya geçilmez.'
@@ -21,7 +21,7 @@
       amac: 'Taşlarınla topa vurup rakip kaleye sokmak. Belirlenen gol sayısına ilk ulaşan kazanır.',
       adim: [
         'Her takımın 5 yuvarlak taşı var: 🔴 Kırmızı solda, 🔵 Mavi sağda (kendi kalen her zaman solda ya da telefonda altta görünür).',
-        'Sıra sendeyken taşlarından birine bas, parmağını / fareni geriye doğru çek. Taşın yanında yeşilden kırmızıya dolan şiddet barı ve gideceği yönü gösteren noktalı çizgi çıkar.',
+        'Sıra sizdeyken taşlarınızdan birine basıp parmağınızı / farenizi geriye doğru çekebilirsiniz. Taşın yanında yeşilden kırmızıya dolan şiddet barı ve gideceği yönü gösteren noktalı çizgi çıkar.',
         'Bırakınca taş fırlar; taşlar ve top birbirine çarpıp seker.',
         'Bütün taşlar ve top durunca sıra rakibe geçer.',
         'Her hamlenin bir süresi var; süre dolarsa sıran geçer.',
@@ -33,9 +33,9 @@
     { id: 'hokey', tur: 'masa', ikon: '🏒', ad: 'Hava Hokeyi', kisi: '2 kişi ya da bota karşı',
       amac: 'Tokmağınla pukı rakibin kalesine sokmak. Süre bitince en çok golü atan kazanır.',
       adim: [
-        'Masa açarken modu seç: “Tek oyunculu” bota karşı hemen başlar, “Çok oyunculu”da arkadaşın mavi koltuğa oturur.',
+        'Masa açarken modu seçebilirsiniz: “Tek oyunculu” bota karşı hemen başlar, “Çok oyunculu”da arkadaşınız mavi koltuğa oturur.',
         'Süreyi sen belirle: 1, 2, 3, 5, 10 dakika ya da “Kendim belirleyeyim” ile istediğin süre (yarım dakikadan 30 dakikaya kadar).',
-        'Bilgisayarda fareyi oynat, tokmak peşinden gelir. Telefonda parmağınla sürükle.',
+        'Bilgisayarda fareyi oynattığınızda tokmak peşinden gelir. Telefonda parmağınızla sürükleyebilirsiniz.',
         'Kendi yarı sahandan çıkamazsın. Kendi kalen her zaman solda (telefon dik tutulunca altta) görünür.',
         'Pukı hızlı vurmak için tokmağı ona doğru hızla sür; duvarlardan sektirerek de gol atabilirsin.',
         'Maç bitince masayı açan yeni maç başlatır; isterse süreyi ve modu değiştirir.'
@@ -67,7 +67,7 @@
         'Herkes her turda bir kez çizer; seçilen tur sayısı bitince oyun biter.'
       ],
       puan: 'Erken bilen daha çok puan alır. Çizen de kelimeyi bilen her kişi için puan kazanır. Sonda en çok puanı olan kazanır.',
-      ipucu: ['Telefonda parmağınla çizebilirsin.', 'Yanlış tahminler sohbet gibi görünür, bol bol dene.'] },
+      ipucu: ['Telefonda parmağınla çizebilirsin.', 'Yanlış tahminler sohbet gibi görünür, bol bol deneyebilirsiniz.'] },
 
     { id: 'isimsehir', tur: 'masa', ikon: '📝', ad: 'İsim-Şehir', kisi: '2-8 kişi',
       amac: 'Zarla çıkan harfle başlayan isim, şehir, hayvan, bitki, eşya… kutularını doğru, hızlı ve herkesten farklı doldurmak.',
@@ -83,7 +83,7 @@
         'Oyun bitince kazanan, masadaki birine 👋 tokat, 🦵 tekme gibi bir “ceza” verir; kime ne yaptığı herkesin ekranında ve sohbette görünür.'
       ],
       puan: 'O kategoride geçerli cevabı olan tek kişiysen 20, cevabın kimseyle aynı değilse 10, başkasıyla aynıysa 5; sözlükte olmayıp onay alan cevap bunların yarısı. Boş, harfi tutmayan, tekrar eden ya da itirazla düşen cevap 0.',
-      ipucu: ['Geniş seçenekte Ülke, Meslek ve Yemek de eklenir (8 kategori).', 'Herkesin aklına gelmeyecek ama sözlükte olan cevaplar en çok puanı getirir.', 'Türkçe karakterleri doğru yaz: “Çorum” Ç harfinde geçer, C harfinde geçmez.'] },
+      ipucu: ['Geniş seçenekte Ülke, Meslek ve Yemek de eklenir (8 kategori).', 'Herkesin aklına gelmeyecek ama sözlükte olan cevaplar en çok puanı getirir.', 'Türkçe karakterleri doğru yazmanız gerekir: “Çorum” Ç harfinde geçer, C harfinde geçmez.'] },
 
     { id: 'dedektif', tur: 'masa', ikon: '🕵️', ad: 'Kara Dosyalar', kisi: '1-8 kişi · ortak',
       amac: 'Ekip olarak bir cinayet vakasını çözmek: mekanları gezip delil toplayın, birbirinize anlatın ve doğru katili doğru kanıtlarla suçlayın.',
@@ -91,7 +91,7 @@
         'Masaya oturun, masayı açan başlatsın. Başta oylama yapılır: 👥 Toplu gezersiniz (biri bir mekana gidince herkes gider, bulunan her delil ortak) ya da 🧭 Ayrı gezersiniz (herkes kendi başına, bulduğunu ortak deftere asar).',
         'Sahnedeki nesnelere tıkla (🔍 tuşu tıklanabilir yerleri gösterir). Belgeler okunur, kasetler dinlenir; bazı nesneleri kaydırıcıyla çevirip gizli yüzünü bulman gerekir.',
         'Yeni mekanlar delil buldukça açılır: 🗺 Mekanlar’dan gidersin.',
-        'Sağdaki 📒 Ortak defter’e fikirlerini ve delilleri yaz; herkes 👍 / 👎 ile oylar. ✏️ Notlarım sadece senindir.',
+        'Sağdaki 📒 Ortak defter’e fikirlerinizi ve delilleri yazabilirsiniz; herkes 👍 / 👎 ile oylar. ✏️ Notlarım sadece sizindir.',
         'Takılırsanız 💡 İpucu: aynı aşamada ilk ipucu hafif bir dürtme, ikincisi delil bağlantısı, üçüncüsü tam çözüm. Her biri puandan düşer.',
         'Hazır olunca ⚖️ Katili Suçla: herkes bir şüpheli ve en fazla 2 kanıt seçer, çoğunluğun kararı geçer.'
       ],
@@ -103,7 +103,7 @@
       adim: [
         'Masaya oturun, masayı açan başlatsın. Herkes gizlice rolünü öğrenir: 🧑‍🌾 köylü ya da 🧛 vampir.',
         'Köyde dolaş: bilgisayarda ok tuşları / W A S D, telefonda ekrandaki joystick.',
-        'Köylüysen sarı parlayan yerlere gidip görevlerini yap (E ya da boşluk ile kullan).',
+        'Köylüyseniz sarı parlayan yerlere gidip görevlerinizi yapabilirsiniz (E ya da boşluk ile kullanılır).',
         'Vampirsen yalnız bulduğun birinin yanında 🩸 Isır (Q). Mezarlardan 🪦 gizlice geçebilir (V), fenerleri 🌑 söndürebilirsin (F).',
         'Ceset görürsen 📢 Bildir (R). Şüphelendiğin biri varsa meydandaki 🔔 çanı çal.',
         'Toplantıda herkes konuşur, sonra oylama yapılır. En çok oyu alan köyden kovulur.',
@@ -115,7 +115,7 @@
     { id: 'batak', tur: 'masa', ikon: '♠️', ad: 'Batak', kisi: '4 kişi · bot eklenebilir',
       amac: 'İhalede söylediğin kadar eli (ya da daha fazlasını) almak.',
       adim: [
-        'Masayı aç, eksik koltuklara 🤖 bot ekleyebilirsin. Herkese 13 kart dağıtılır.',
+        'Masayı açıp eksik koltuklara 🤖 bot ekleyebilirsiniz. Herkese 13 kart dağıtılır.',
         'İhale: herkes sırayla öncekinden yüksek teklif verir ya da “Pas” der (tekli en az 4, eşli en az 7).',
         'İhaleyi alan kozu seçer ve ilk eli açar.',
         'Açılan renge uymak zorunlu; uyarken yerdeki kartı geçebiliyorsan büyük atmak zorunlu.',
@@ -128,7 +128,7 @@
     { id: 'emlak', tur: 'masa', ikon: '🏙️', ad: 'Emlak Oyunu', kisi: '2-6 kişi · bot eklenebilir',
       amac: 'Tapu satın alıp ev ve otel kurarak kira toplamak, diğer oyuncuları iflas ettirip ayakta kalan tek kişi olmak.',
       adim: [
-        'Masayı aç, 2-6 kişi otursun (boş koltuğa 🤖 bot ekleyebilirsin). Herkesin kendi piyonu var: 🥯 simit, ⛴️ vapur, 🕊️ martı, 🍵 çay bardağı, 🐱 kedi, 🐟 balık. Herkes ₺1500 ile başlar; ilk oyuncu kurayla belirlenir.',
+        'Masayı açabilirsiniz, 2-6 kişi oturabilir (boş koltuğa 🤖 bot ekleyebilirsiniz). Herkesin kendi piyonu var: 🥯 simit, ⛴️ vapur, 🕊️ martı, 🍵 çay bardağı, 🐱 kedi, 🐟 balık. Herkes ₺1500 ile başlar; ilk oyuncu kurayla belirlenir.',
         'Sırası gelen “🎲 Zar at” der ve iki zarın toplamı kadar tahtada ilerler (Başla\'dan sola doğru). Çift atarsan bir kez daha atarsın; üst üste 3 çift atarsan cezaevine gidersin.',
         'Başla\'dan her geçişte bankadan ₺200 alırsın.',
         'Sahipsiz bir tapuya gelirsen “Satın al” diyebilirsin. İstemezsen ya da paran yetmezse tapu açık artırmaya çıkar: sırayla teklif verilir ya da pas denir, en yüksek teklif alır.',
@@ -136,7 +136,7 @@
         'Aynı renkteki bütün tapular bir kişideyse o renk seti tamamlanmıştır: evsiz tapuların kirası 2 katına çıkar ve ev yapılabilir. Evler her renkte eşit yapılır (bir tapuya 2. evi yapmak için setteki hepsinde 1 ev olmalı). 4 evden sonra aynı tapuya otel kurulur. Bankada 32 ev ve 12 otel var.',
         '❓ Şans ve 🎁 Kamu Fonu karelerine gelince bir kart çekilir; kart anında uygulanır. “Cezadan Çık” kartını saklayabilirsin.',
         'Vergi karelerine gelirsen bankaya ödersin. “Hapse Git” karesine gelirsen doğrudan cezaevine gidersin (Başla\'dan geçmeden).',
-        'Cezaevinden çıkmak için: çift at, ₺50 öde ya da “Cezadan Çık” kartını kullan. 3 turda çift atamazsan ₺50 zorunlu ödenir. Cezaevindeyken kira toplamaya devam edersin.',
+        'Cezaevinden çıkmak için çift atabilir, ₺50 ödeyebilir ya da “Cezadan Çık” kartını kullanabilirsiniz. 3 turda çift atamazsanız ₺50 zorunlu ödenir. Cezaevindeyken kira toplamaya devam edersiniz.',
         'Paran yetmezse: ev/otel sat (yapının yarı fiyatını alırsın) ya da tapuyu ipotek et (yarı fiyatını alırsın; ipoteği kaldırmak için %10 fazlasını ödersin). Yine de borcu ödeyemezsen iflas edersin: bütün varlığın alacaklıya (banka ise bankaya) geçer.',
         '🤝 Takas: istediğin oyuncuya tapu, para ve “Cezadan Çık” kartı teklif edebilirsin. Karşı taraf kabul ederse takas olur. Evli setlerde önce yapıların satılması gerekir.'
       ],
@@ -164,12 +164,12 @@
     { id: 'kizma', tur: 'masa', ikon: '🎲', ad: 'Kızma Panpi', kisi: '2-4 kişi · bot eklenebilir',
       amac: 'Kendi rengindeki 4 taşı da tahtayı bir tur dolaştırıp ortadaki BİTİŞ alanına ilk ulaştıran oyuncu kazanır.',
       adim: [
-        'Masayı açarken tahtayı seç: “Ludo” (ahşap tahta, varsayılan) ya da “Klasik kızma birader”. 2-4 kişi otur (boş koltuğa 🤖 bot ekleyebilirsin). Renkler kırmızı, yeşil, sarı ve mavi; herkesin köşede kendi yuvasında 4 taşı var.',
+        'Masayı açarken tahtayı seçebilirsiniz: “Ludo” (ahşap tahta, varsayılan) ya da “Klasik kızma birader”. 2-4 kişi oturabilir (boş koltuğa 🤖 bot ekleyebilirsiniz). Renkler kırmızı, yeşil, sarı ve mavi; herkesin köşede kendi yuvasında 4 taşı var.',
         'Sıra belirleme: oyun başlarken herkes zar atar, en yüksek atan başlar (eşitlikte eşitler yeniden atar). Sonra sıra saat yönünde döner.',
         'Sıran gelince turuncu “🎲 ZAR AT” düğmesine basarsın; tek zar, 1-6.',
         'Taşı oyuna sokmak için 6 atmalısın: yuvandan bir taşı kendi renkli başlangıç karene çıkarırsın.',
         '6 atan hamlesini yapar ve bir zar daha atar. Masa ayarında “Üst üste üç 6” açıksa üçüncü 6’da o hamle yanar ve sıra geçer.',
-        'Tahtada birden fazla taşın varsa hangisini oynatacağını sen seçersin: parlayan taşın üstüne gel (telefonda bir kez dokun), gideceği kare görünür; tıklayınca (telefonda ikinci dokunuşta) oynar. Taşlar saat yönünde ilerler.',
+        'Tahtada birden fazla taşınız varsa hangisini oynatacağınızı siz seçersiniz: parlayan taşın üstüne geldiğinizde (telefonda bir kez dokunduğunuzda) gideceği kare görünür; tıklayınca (telefonda ikinci dokunuşta) oynar. Taşlar saat yönünde ilerler.',
         'Rakibin taşının olduğu kareye tam gelirsen onu yersin: o taş yuvasına döner ve sahibinin yeniden 6 atması gerekir.',
         '⭐ Yıldızlı kareler ve her rengin başlangıç karesi güvenlidir: orada duran taş yenmez, farklı renkler aynı karede durabilir.',
         'Kendi iki taşın aynı karede üst üste durabilir. Masa ayarında “Blok kuralı” açıksa aynı renkten iki taş bir blok olur: rakip taşlar o karenin üstünden geçemez, üstüne de konamaz.',
@@ -182,19 +182,19 @@
     { id: 'tekkart', tur: 'masa', ikon: '🟥', ad: 'Tek Kart', kisi: '2-6 kişi · bot eklenebilir',
       amac: 'Elindeki bütün kartları ilk bitiren olmak. Puanlı oyunda eli bitiren, rakiplerin elinde kalan kartların puanını alır; hedef puana ilk ulaşan kazanır.',
       adim: [
-        'Masayı aç, 2-6 kişi otursun (boş koltuğa 🤖 bot ekleyebilirsin). Destede 108 kart var: 4 renk (kırmızı, sarı, yeşil, mavi) × 0-9 sayılar, Pas, Yön değiştir ve +2 kartları; bir de 4 Joker ve 4 Joker +4.',
+        'Masayı açabilirsiniz, 2-6 kişi oturabilir (boş koltuğa 🤖 bot ekleyebilirsiniz). Destede 108 kart var: 4 renk (kırmızı, sarı, yeşil, mavi) × 0-9 sayılar, Pas, Yön değiştir ve +2 kartları; bir de 4 Joker ve 4 Joker +4.',
         'Herkese 7 kart dağıtılır, destenin üstündeki kart yere açılır. Dağıtanın solundaki oyuncu başlar.',
         'Sıran gelince yerdeki kartla aynı renkte, aynı sayıda ya da aynı sembolde bir kart atarsın. Joker her zaman atılabilir. Atabileceğin kartlar parlak görünür.',
         'Atacak kartın yoksa (ya da atmak istemezsen) desteden 1 kart çekersin. Çektiğin kart uyuyorsa hemen oynayabilir ya da elinde tutabilirsin; uymuyorsa sıra geçer.',
         '⊘ Pas: sıradaki oyuncu oynayamaz. ⇄ Yön değiştir: oyun ters yöne döner (iki kişide Pas gibi çalışır). +2: sıradaki oyuncu 2 kart çeker ve sırası geçer.',
         'Joker: istediğin rengi seçersin. Joker +4: rengi seçersin, sıradaki oyuncu 4 kart çeker ve sırası geçer. Ama Joker +4 yalnızca elinde yerdeki renkten kart yokken atılabilir.',
         'Joker +4 gelen oyuncu itiraz edebilir: atan kişi kuralsız attıysa 4 kartı o çeker ve itiraz eden normal oynar; kuralsız değilse itiraz eden 6 kart çeker ve sırası geçer.',
-        'Sondan bir önceki kartını atarken “📣 TEK!” demelisin (kartı atmadan önce TEK düğmesine bas). Demezsen ve sıradaki oyuncu oynamadan biri “🚨 Yakala” derse 2 kart ceza çekersin.',
+        'Sondan bir önceki kartınızı atarken “📣 TEK!” demelisiniz (kartı atmadan önce TEK düğmesine basabilirsiniz). Demezseniz ve sıradaki oyuncu oynamadan biri “🚨 Yakala” derse 2 kart ceza çekersiniz.',
         'Elindeki son kartı atan eli bitirir. Son kart +2 ya da Joker +4 ise sıradaki oyuncu yine de kartları çeker.',
         'Desteden kart bitince yerdeki kartlar (en üstteki hariç) karıştırılıp yeni deste yapılır. +2 ya da +4 üst üste eklenmez.'
       ],
       puan: 'Eli bitiren, rakiplerinin elinde kalan kartların puanını toplar: sayılar kendi değeri (0-9), Pas · Yön · +2 = 20 puan, Joker · Joker +4 = 50 puan. “Tek el” seçilirse ilk bitiren kazanır; 250 ya da 500 puan seçilirse o puana ilk ulaşan oyunu kazanır.',
-      ipucu: ['Jokerleri sona sakla: renk sana uymadığında kurtarır.', 'Sıradaki oyuncunun az kartı kaldıysa Pas, +2 ve Yön kartlarıyla onu durdur.', 'Rakibin tek kartı kalıp “TEK!” demediyse hızlı ol: Yakala düğmesi sıradaki oyuncu oynayana kadar durur.', 'Sıran gelince 45 saniye içinde oynamazsan oyun senin yerine oynar.'] },
+      ipucu: ['Jokerleri sona sakla: renk sana uymadığında kurtarır.', 'Sıradaki oyuncunun az kartı kaldıysa Pas, +2 ve Yön kartlarıyla onu durdurabilirsiniz.', 'Rakibin tek kartı kalıp “TEK!” demediyse hızlı olmanız gerekir: Yakala düğmesi sıradaki oyuncu oynayana kadar durur.', 'Sıran gelince 45 saniye içinde oynamazsan oyun senin yerine oynar.'] },
 
     { id: 'boyut', tur: 'masa', ikon: '📏', ad: 'Boyut Bilmece', kisi: '1-8 kişi · tek başına da oynanır · bot eklenebilir',
       amac: 'Bir şeyin gerçek boyunu, yanındaki bilinen bir şeye bakarak tahmin etmek. Siyah silüetin ölçüsü yazılıdır; beyaz silüeti ona göre büyütüp küçültürsün. Gerçeğe ne kadar yakınsan o kadar puan.',
@@ -202,20 +202,20 @@
         'Ekranda iki silüet var: siyah olan referans (adı ve gerçek ölçüsü altında yazar), beyaz olan tahmin edeceğin şey.',
         'Beyaz silüeti alttaki kaydırıcıyla, fare tekerleğiyle, köşedeki ⤢ tutamağı çekerek ya da + / - tuşlarıyla boyutlandır. Silüeti sürükleyip referansın yanına koyabilirsin.',
         'Emin olunca “🔒 Kilitle”ye bas (Enter da olur). Gerçek boyu kırmızıyla açılır; tahminin, sapman ve kısa bir bilgi görünür.',
-        'Tek başına: Oyun Salonu’ndaki “Boyut Bilmece” kartından aç. Günlük 5 ya da 10 soru herkes için aynıdır ve skor tablosuna yazılır; sonra istediğin konuda serbest oynayabilirsin.',
+        'Tek başına oynamak için Oyun Salonu’ndaki “Boyut Bilmece” kartından açabilirsiniz. Günlük 5 ya da 10 soru herkes için aynıdır ve skor tablosuna yazılır; sonra istediğiniz konuda serbest oynayabilirsiniz.',
         'Masada “Toplu”: herkes aynı soruyu aynı anda tahmin eder (40 sn). Herkes kilitleyince tahminler oyuncu renkleriyle üst üste açılır.',
         'Masada “Sıralı”: sırayla oynanır, herkes sıradakinin silüeti nasıl büyütüp küçülttüğünü canlı izler. Her oyuncu kendi sorusunu alır (45 sn).'
       ],
       puan: 'Her soru en fazla 100 puan. %5’e kadar sapma tam puan; yarısı ya da iki katı tahmin 45 puan alır, uzaklaştıkça puan düşer. Masada en çok puanı toplayan kazanır.',
-      ipucu: ['Önce birimlere bak: boy mu, uzunluk mu, kanat açıklığı mı soruluyor?', 'Referansı aklında “kaç tane yan yana/üst üste” diye düşün: zürafa kaç insan boyu?', 'Süre biterken kilitlemediysen o anki tahminin otomatik kilitlenir.'] },
+      ipucu: ['Önce birimlere bakabilirsiniz: boy mu, uzunluk mu, kanat açıklığı mı soruluyor?', 'Referansı aklında “kaç tane yan yana/üst üste” diye düşün: zürafa kaç insan boyu?', 'Süre biterken kilitlemediysen o anki tahminin otomatik kilitlenir.'] },
 
     { id: 'okey', tur: 'masa', ikon: '🀄', ad: 'Okey', kisi: '4 kişi · bot eklenebilir',
       amac: 'Bütün taşlarını per (aynı renk sıralı: 3-4-5) ya da grup (aynı sayı, farklı renk: 7-7-7) yapıp elini bitirmek.',
       adim: [
-        'Masayı aç, eksik koltuklara 🤖 bot ekleyebilirsin. Herkese 14 taş, başlayana 15 taş gelir.',
+        'Masayı açıp eksik koltuklara 🤖 bot ekleyebilirsiniz. Herkese 14 taş, başlayana 15 taş gelir.',
         'Ortada gösterge taşı açılır. Göstergenin aynı renkte bir fazlası OKEY’dir ve her taşın yerine geçer.',
-        'Sıran gelince ortadan ya da solundakinin attığı taşı al, sonra bir taş at.',
-        'Taşları ıstakanda sürükleyerek dizebilirsin. Atmak için: taşı seçip “At”a bas, çift tıkla ya da sağ alttaki alana sürükle.',
+        'Sıranız gelince ortadan ya da solunuzdakinin attığı taşı alıp bir taş atabilirsiniz.',
+        'Taşları ıstakanızda sürükleyerek dizebilirsiniz. Atmak için taşı seçip “At”a basabilir, çift tıklayabilir ya da sağ alttaki alana sürükleyebilirsiniz.',
         'Bütün taşların perlere/gruplara oturunca son taşı atarak bitirirsin. 7 çift ile de bitebilir (çift bitiş).'
       ],
       puan: 'Klasik Okey’de herkes 20 puanla başlar, el kaybettikçe puan düşer; puanı sıfıra inen oyunu kaybeder. 101 Okey’de el açmak için perlerin toplamı en az 101 olmalı; seçilen el sayısı sonunda en az ceza puanı olan kazanır.',
@@ -224,23 +224,23 @@
     { id: 'tavla', tur: 'masa', ikon: '🎲', ad: 'Tavla', kisi: '2 kişi · bot eklenebilir',
       amac: 'Bütün pullarını kendi evine toplayıp rakipten önce dışarı çıkarmak.',
       adim: [
-        'Masayı aç; arkadaşın otursun ya da 🤖 bot ekle. ⚪ Beyaz ve ⚫ Siyah karşılıklı oynar.',
+        'Masayı açabilirsiniz; arkadaşınız oturabilir ya da 🤖 bot ekleyebilirsiniz. ⚪ Beyaz ve ⚫ Siyah karşılıklı oynar.',
         'Sıran gelince zar at. Zarlardaki sayılar kadar pullarını ilerletirsin; çift gelirse 4 kez oynarsın.',
-        'Oynamak için: bir pula tıkla, sonra parlayan haneye tıkla. Pula çift tıklarsan büyük zarla oynar.',
+        'Oynamak için bir pula, sonra parlayan haneye tıklayabilirsiniz. Pula çift tıklarsanız büyük zarla oynar.',
         'Rakibin tek pulu olan haneye gelirsen pulu kırılır, başa döner. Kırık pulun varsa önce onu sokman gerekir.',
         'İki ya da daha fazla pulun olan hane kapıdır, rakip oraya gelemez.',
         'Bütün pulların evindeyken pullarını toplamaya başlarsın.'
       ],
       puan: 'Normal bitirme 1 puan; rakip hiç pul toplayamadıysa mars, 2 puan. Seçilen puana ilk ulaşan maçı kazanır.',
-      ipucu: ['Gidebileceğin haneler parlar, emin değilsen pula tıklayıp bak.'] },
+      ipucu: ['Gidebileceğiniz haneler parlar, emin değilseniz pula tıklayıp bakabilirsiniz.'] },
 
     // ---------- tek kişilik ----------
     { id: 'kelime', tur: 'tek', ikon: '🔤', ad: 'Kelime Bul', kisi: 'tek kişilik · günlük',
       amac: 'Günün 5 harfli Türkçe kelimesini 6 tahminde bulmak. Herkese aynı kelime çıkar.',
       adim: [
-        '5 harfli bir kelime yaz, Enter’a (ya da ekrandaki ENTER tuşuna) bas.',
+        '5 harfli bir kelime yazıp Enter’a (ya da ekrandaki ENTER tuşuna) basabilirsiniz.',
         '🟩 Yeşil: harf doğru ve yeri doğru. 🟨 Sarı: harf kelimede var ama yeri yanlış. ⬛ Gri: harf kelimede yok.',
-        'Renklere bakarak yeni tahmin yap; 6 hakkın var.'
+        'Renklere bakarak yeni tahmin yapabilirsiniz; 6 hakkınız var.'
       ],
       puan: 'Ne kadar az tahminde ve ne kadar hızlı bulursan o kadar iyi. Skor tablosunda bugün oynayanlarla yarışırsın.',
       ipucu: ['Yazdığın kelime sözlükte olmalı.', 'İlk tahminde sesli harfi bol bir kelime dene.'] },
@@ -259,7 +259,7 @@
       amac: 'Kapalı kartları çevirip bütün eşleri en kısa sürede bulmak.',
       adim: [
         'Bir karta dokununca süre başlar.',
-        'İki kart çevir: aynıysa açık kalır, değilse kapanır. Yerlerini aklında tut!',
+        'İki kart çevirebilirsiniz: aynıysa açık kalır, değilse kapanır. Yerlerini aklınızda tutmaya çalışın!',
         'Bütün eşler bulununca oyun biter.'
       ],
       puan: 'Skor = süre + gereksiz her hamle için 2 saniye ceza. Az olan kazanır.',
@@ -268,7 +268,7 @@
     { id: 'sudoku', tur: 'tek', ikon: '🔢', ad: 'Günün Sudokusu', kisi: 'tek kişilik · günlük',
       amac: 'Her satıra, sütuna ve 3×3 kutuya 1-9 arası rakamları birer kez yerleştirmek.',
       adim: [
-        'Boş bir kareye tıkla, alttan (ya da klavyeden) rakam seç.',
+        'Boş bir kareye tıklayıp alttan (ya da klavyeden) rakam seçebilirsiniz.',
         'Yanlış rakam koyarsan hata sayılır ve +30 saniye ceza yazılır.',
         'Silmek için Sil düğmesi ya da Backspace. N tuşu (ya da not modu) ile karelere küçük not alabilirsin.'
       ],
@@ -278,9 +278,9 @@
     { id: 'mayin', tur: 'tek', ikon: '💣', ad: 'Mayın Tarlası', kisi: 'tek kişilik',
       amac: 'Mayınlara basmadan bütün güvenli kareleri açmak.',
       adim: [
-        'Bir kareye tıkla; ilk tıklama her zaman güvenlidir.',
+        'Bir kareye tıklayabilirsiniz; ilk tıklama her zaman güvenlidir.',
         'Açılan sayılar, o karenin çevresindeki 8 karede kaç mayın olduğunu gösterir.',
-        'Mayın olduğunu düşündüğün kareye 🚩 bayrak koy: sağ tık, telefonda uzun bas ya da 🚩 Bayrak modu (F).',
+        'Mayın olduğunu düşündüğünüz kareye 🚩 bayrak koyabilirsiniz: sağ tık, telefonda uzun basma ya da 🚩 Bayrak modu (F).',
         'Bayrakları tamam olan bir sayıya tıklarsan çevresi kendiliğinden açılır.'
       ],
       puan: 'Skor = bitirme süren. Kaybedersen tabloya girmez.',
@@ -289,7 +289,7 @@
     { id: 'ikibin', tur: 'tek', ikon: '🧮', ad: '2048', kisi: 'tek kişilik',
       amac: 'Aynı sayıları birleştirip 2048 taşına ulaşmak (ve ötesine geçmek).',
       adim: [
-        'Ok tuşları ya da W A S D ile bütün taşları bir yöne kaydır; telefonda parmağınla çek.',
+        'Ok tuşları ya da W A S D ile bütün taşları bir yöne kaydırabilirsiniz; telefonda parmağınızla çekebilirsiniz.',
         'Aynı iki sayı çarpışınca birleşir (2+2=4, 4+4=8…).',
         'Her hamleden sonra yeni bir taş gelir. Hamle kalmayınca oyun biter.'
       ],
@@ -299,27 +299,27 @@
     { id: 'yilan', tur: 'tek', ikon: '🐍', ad: 'Yılan', kisi: 'tek kişilik',
       amac: 'Elmaları yiyip uzamak; duvara ve kendine çarpmamak.',
       adim: [
-        'Ok tuşları / W A S D ile yön ver; telefonda parmağınla kaydır.',
+        'Ok tuşları / W A S D ile yön verebilirsiniz; telefonda parmağınızla kaydırabilirsiniz.',
         'Her elma 10 puan ve 1 boy. Her 5 elmada süreli bir ⭐ çıkar: 50 puan.',
         'Uzadıkça hızlanır. P ile duraklatabilirsin.'
       ],
       puan: 'Topladığın puan skor tablosuna yazılır.',
-      ipucu: ['Kenarlarda dolaşmak yerine ortada geniş dönüşler yap.', 'Tuşları beğenmediysen üst çubuktaki ⌨️ Tuşlar’dan istediğin gibi değiştirebilirsin.'] },
+      ipucu: ['Kenarlarda dolaşmak yerine ortada geniş dönüşler yapabilirsiniz.', 'Tuşları beğenmediysen üst çubuktaki ⌨️ Tuşlar’dan istediğin gibi değiştirebilirsin.'] },
 
     { id: 'kosu', tur: 'tek', ikon: '🏃', ad: 'Engel Koşusu', kisi: 'tek kişilik',
       amac: 'Engellere takılmadan olabildiğince uzağa koşmak, simitleri toplamak.',
       adim: [
-        'Zıplamak: boşluk, ↑ ya da ekrana dokun. Basılı tutarsan daha yükseğe zıplarsın.',
+        'Zıplamak için boşluk, ↑ ya da ekrana dokunabilirsiniz. Basılı tutarsanız daha yükseğe zıplarsınız.',
         'Havadayken bir kez daha basarsan çift zıplarsın.',
         'Eğilmek: ↓ ya da aşağı kaydır. P ile duraklat.'
       ],
       puan: 'Skor = koştuğun mesafe + her simit için 50 puan.',
-      ipucu: ['Alçak engellerde kısa bas, yüksek engellerde basılı tut.', 'Tuşları beğenmediysen üst çubuktaki ⌨️ Tuşlar’dan istediğin gibi değiştirebilirsin.'] },
+      ipucu: ['Alçak engellerde kısa basabilir, yüksek engellerde basılı tutabilirsiniz.', 'Tuşları beğenmediysen üst çubuktaki ⌨️ Tuşlar’dan istediğin gibi değiştirebilirsin.'] },
 
     { id: 'ordek', tur: 'tek', ikon: '🦆', ad: 'Ördek Avı', kisi: 'tek kişilik',
       amac: '10 dalgada olabildiğince çok ördek vurmak.',
       adim: [
-        'Başlamak için tıkla. Ördeklere tıklayarak (telefonda dokunarak) ateş et.',
+        'Başlamak için tıklayabilirsiniz. Ördeklere tıklayarak (telefonda dokunarak) ateş edersiniz.',
         'Her dalgada fişek sayın sınırlı: ördek sayısı + 1.',
         'Balonlara ateş etme! 6 ördek kaçarsa oyun erken biter.'
       ],
@@ -330,7 +330,7 @@
       amac: 'Parçaları yerine koyup resmi en kısa sürede tamamlamak.',
       adim: [
         'Bir resim seç (istersen kendi fotoğrafını da yükleyebilirsin).',
-        'Parçaları sürükle; doğru yerine yaklaşınca kendiliğinden oturur.',
+        'Parçaları sürükleyebilirsiniz; doğru yerine yaklaşınca kendiliğinden oturur.',
         'Bütün parçalar yerleşince süre durur.'
       ],
       puan: 'Skor = süre. En hızlı bitiren kazanır.',
@@ -355,7 +355,7 @@
     const g = dlg.querySelector('.nasil-govde'); g.innerHTML = '';
     dlg.querySelector('.nasil-geri').hidden = true;
     dlg.querySelector('h3').textContent = '❓ Nasıl oynanır?';
-    g.append(el('p', 'note', 'Bir oyuna tıkla, nasıl oynandığını oku. Kapatınca kaldığın yerden devam edersin. Oyun açıkken üst çubuktaki ⛶ Tam ekran ile oyunu büyütebilirsin.'));
+    g.append(el('p', 'note', 'Bir oyuna tıklayıp nasıl oynandığını okuyabilirsiniz. Kapatınca kaldığınız yerden devam edersiniz. Oyun açıkken üst çubuktaki ⛶ Tam ekran ile oyunu büyütebilirsiniz.'));
     [['masa', '🃏 Masa oyunları (arkadaşlarınla)'], ['tek', '🙋 Tek kişilik (skor tablolu)']].forEach(([tur, baslik]) => {
       g.append(el('h4', 'nasil-baslik', baslik));
       const iz = el('div', 'nasil-izgara');

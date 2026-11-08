@@ -148,7 +148,7 @@ if (typeof registerTableGame === 'function') (function(){
     cleanOpts: o => ({ rounds: [1, 2, 3, 4].includes(+o.rounds) ? +o.rounds : 2, sure: [60, 80, 100].includes(+o.sure) ? +o.sure : 80 }),
     variantName: s => s.opts.rounds + ' tur · ' + s.opts.sure + ' sn çizim',
     seatLabel: () => 'Oyuncu',
-    waitText: (s, own) => own ? 'En az 2 kişi oturunca “Oyunu başlat”a bas. Sonradan gelenler de oturup katılabilir.' : 'Bir koltuğa otur; masa sahibi başlatınca oyun burada açılır.',
+    waitText: (s, own) => own ? 'En az 2 kişi oturunca “Oyunu başlat”a basabilirsiniz. Sonradan gelenler de oturup katılabilir.' : 'Bir koltuğa otur; masa sahibi başlatınca oyun burada açılır.',
     makeCard: {
       desc: '2-8 kişi. Biri çizer, herkes tahmin eder. Erken bilen çok puan alır.',
       opts: '<label>Tur (herkes her turda bir kez çizer)<select data-o="rounds"><option value="1">1 tur</option><option value="2" selected>2 tur</option><option value="3">3 tur</option><option value="4">4 tur</option></select></label>' +

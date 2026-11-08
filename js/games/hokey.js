@@ -152,7 +152,7 @@
     }),
     variantName: s => (s.seats[1] && s.seats[1].bot ? 'Tek oyunculu (' + { kolay: 'kolay', orta: 'orta', zor: 'zor' }[s.opts.zor] + ' bot)' : 'Çok oyunculu') + ' · ' + saat(s.opts.sure * 1000),
     seatLabel: k => k ? '🔵 Mavi' : '🔴 Kırmızı',
-    waitText: (s, own) => own ? 'Arkadaşın boş koltuğa otursun ya da bota karşı oynamak için koltuğa bot ekle, sonra “Oyunu başlat”a bas.' : 'Boş koltuğa otur; masayı açan başlatınca oyun burada açılır.',
+    waitText: (s, own) => own ? 'Arkadaşınız boş koltuğa oturabilir ya da bota karşı oynamak için koltuğa bot ekleyebilirsiniz, sonra “Oyunu başlat”a basabilirsiniz.' : 'Boş koltuğa otur; masayı açan başlatınca oyun burada açılır.',
     makeCard: {
       desc: '2 kişi ya da bota karşı. Fareyle / parmağınla tokmağı sür, pukı rakip kaleye sok!',
       opts: '<label>Mod<select data-o="mod"><option value="tek">Tek oyunculu (bota karşı)</option><option value="cok" selected>Çok oyunculu (arkadaşınla)</option></select></label>' +

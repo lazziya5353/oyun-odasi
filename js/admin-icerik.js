@@ -112,7 +112,7 @@ function renderDuvarTab(list){
   // ---- panelden yüklenenler
   const v = DV.liste || [];
   const kb = el('div', 'ad-box'); kb.append(el('h3', '', '🎬 Panelden yüklenenler (' + v.length + ') · ' + mb(v.reduce((a, x) => a + x.video.boyut + (x.muzik ? x.muzik.boyut : 0), 0))));
-  if (!v.length) kb.append(note('Henüz yok. Yukarıdan ilk videonu yükle.'));
+  if (!v.length) kb.append(note('Henüz yok. Yukarıdan ilk videonuzu yükleyebilirsiniz.'));
   const grup = {}; v.forEach(x => (grup[x.kategori] = grup[x.kategori] || []).push(x));
   Object.keys(grup).sort((a, b) => a.localeCompare(b, 'tr')).forEach(k => {
     kb.append(el('div', 'dv-kat', '🎬 ' + k));
@@ -121,7 +121,7 @@ function renderDuvarTab(list){
   list.append(kb);
   // ---- GitHub klasöründekiler (salt okunur)
   if (DV.dosyalar.length){
-    const gb = el('div', 'ad-box'); gb.append(el('h3', '', '📁 GitHub’daki duvar-kagitlari klasörü'), note('Bunlar GitHub’dan yüklendi; silmek ya da değiştirmek için GitHub’da dosyayı sil.'));
+    const gb = el('div', 'ad-box'); gb.append(el('h3', '', '📁 GitHub’daki duvar-kagitlari klasörü'), note('Bunlar GitHub’dan yüklendi; silmek ya da değiştirmek için dosyayı GitHub’dan silebilirsiniz.'));
     DV.dosyalar.forEach(k => k.videolar.forEach(x => { const r = el('div', 'ad-mini'); r.append(el('span', '', '🎬 ' + k.ad + ' / ' + x.ad + (x.muzik ? ' 🎵' : '')), el('span', 'ad-muted', mb(x.boyut))); gb.append(r); }));
     list.append(gb);
   }
@@ -203,7 +203,7 @@ function renderTabu(list, kartlar){
   const kaydet = button(d ? '💾 Kaydet' : '➕ Kartı ekle', 'primary', async () => {
     const y = ys.map(x => x.value.trim()).filter(Boolean);
     if (!w.value.trim()){ toast('Kelimeyi yaz'); w.focus(); return; }
-    if (y.length < 3){ toast('En az 3 yasaklı kelime yaz'); return; }
+    if (y.length < 3){ toast('En az 3 yasaklı kelime yazabilirsiniz'); return; }
     if (await kelimeIslem('admin-tabu', { w: w.value.trim(), y }, d ? 'Kart güncellendi' : 'Kart eklendi: ' + w.value.trim())) KL.duzenle = null;
   });
   f.append(w, yk, note('Aynı kelimeyle kart varsa yasaklı kelimeleri güncellenir.'));

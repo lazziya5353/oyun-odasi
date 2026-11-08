@@ -368,7 +368,7 @@ function okControls(ctl, s, v, seat, ctx, ui, names){
       const one = sel.length === 1 ? sel[0] : null;
       B('⬇ At', () => one !== null ? okDiscard(one, false, s, v, ctx, ui) : toast('Atacağın taşı seç (ya da sağ alttaki alana sürükle)'), one !== null ? 'primary' : '');
       B('✓ Bitir', () => one !== null ? okDiscard(one, true, s, v, ctx, ui) : toast('Bitirirken atacağın taşı seç'), '', 'Seçili taşı atıp elini aç');
-      note('Taşı seçip “At”a bas, çift tıkla ya da sağ alttaki alana sürükle');
+      note('Taşı seçip “At”a basabilir, çift tıklayabilir ya da sağ alttaki alana sürükleyebilirsiniz');
     } else {
       const opened = v.opened[seat];
       if (v.tookTile !== null && v.tookTile !== undefined && (v.hand || []).includes(v.tookTile)) B('↩ Yandan aldığımı geri ver', () => tableAct({ type: 'giveBack' }), 'small');
@@ -393,7 +393,7 @@ function okControls(ctl, s, v, seat, ctx, ui, names){
           if (sel.length < 2) { toast('İndireceğin perin taşlarını seç'); return; }
           tableAct({ type: 'meld', ids: sel }); ui.sel.clear();
         }, 'small');
-        note('İşlemek için taşı seç, sonra masadaki parlayan pere tıkla');
+        note('İşlemek için taşı seçip masadaki parlayan pere tıklayabilirsiniz');
       }
       const one = sel.length === 1 ? sel[0] : null;
       B('⬇ At', () => one !== null ? okDiscard(one, false, s, v, ctx, ui) : toast('Atacağın tek taşı seç'), one !== null ? 'primary' : '');

@@ -333,7 +333,7 @@ function updateCount(){
   $('peopleTitle').innerHTML = '👥 ' + total + '<span class="pt-k"> kişi</span>';
   const e = $('emptyStage');
   e.hidden = here > 0;
-  e.textContent = total > 1 ? 'Bu kanalda şimdilik yalnızsın. Soldan diğer kanallara geçebilirsin.' : 'Odada şimdilik yalnızsın. Yukarıdan daveti kopyalayıp arkadaşlarına gönder.';
+  e.textContent = total > 1 ? 'Bu kanalda şimdilik yalnızsın. Soldan diğer kanallara geçebilirsin.' : 'Odada şimdilik yalnızsınız. Yukarıdan daveti kopyalayıp arkadaşlarınıza gönderebilirsiniz.';
 }
 function refreshHostUI(){
   $('addChanBtn').hidden = !isHost;

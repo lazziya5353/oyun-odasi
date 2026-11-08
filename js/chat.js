@@ -289,7 +289,7 @@ function renderMsgs(){
   $('msgInput').disabled = gone; $('imgBtn').disabled = gone;
   if (!c.msgs.length){
     const e = document.createElement('p'); e.className = 'chat-empty';
-    e.textContent = activeConvo === 'all' ? 'Henüz mesaj yok. Fotoğraf göndermek için 🖼 düğmesini kullan ya da fotoğrafı buraya sürükle.' : 'Bu konuşmayı sadece ikiniz görürsünüz.';
+    e.textContent = activeConvo === 'all' ? 'Henüz mesaj yok. Fotoğraf göndermek için 🖼 düğmesini kullanabilir ya da fotoğrafı buraya sürükleyebilirsiniz.' : 'Bu konuşmayı sadece ikiniz görürsünüz.';
     box.append(e);
   }
   c.msgs.forEach((m, i) => appendMsgEl(m, c.msgs[i - 1], false));

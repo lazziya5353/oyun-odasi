@@ -891,7 +891,7 @@ function emPlayerSheet(ui, body, k){
 }
 function emTradePick(ui, body){
   const v = ui.v;
-  body.append(emEl('p', 'note', 'Takas yapmak istediğin oyuncuyu seç. (Evli setlerde önce yapılar satılmalı.)'));
+  body.append(emEl('p', 'note', 'Takas yapmak istediğiniz oyuncuyu seçebilirsiniz. (Evli setlerde önce yapılar satılmalı.)'));
   [0, 1, 2, 3, 4, 5].filter(k => v.P[k].on && !v.P[k].bk && k !== ui.seat).forEach(k => {
     const b = emBtn(EmPawns.ICON[k] + ' ' + emName(ui, k), '', () => { ui.draft = { to: k, gc: 0, wc: 0, gp: [], wp: [], gj: 0, wj: 0 }; ui.modal = { type: 'trade', to: k }; emPaint(ui); });
     b.classList.add('em-pick'); body.append(b);

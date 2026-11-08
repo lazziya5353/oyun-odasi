@@ -105,7 +105,7 @@ if (typeof registerTableGame === 'function') (function(){
     cleanOpts: o => ({ mod: ['auto', 'takim', 'tek'].includes(o.mod) ? o.mod : 'auto', sure: [45, 60, 90].includes(+o.sure) ? +o.sure : 60, rounds: [1, 2, 3].includes(+o.rounds) ? +o.rounds : 2 }),
     variantName: s => (s.opts.mod === 'takim' ? 'Takımlı' : s.opts.mod === 'tek' ? 'Herkes tek' : '4+ kişide takımlı') + ' · ' + s.opts.sure + ' sn · ' + s.opts.rounds + ' tur',
     seatLabel: () => 'Oyuncu',
-    waitText: (s, own) => own ? 'En az 2 kişi oturunca “Oyunu başlat”a bas. 4+ kişide iki takım olur. Sesli anlatılır, mikrofonlar açık olsun!' : 'Bir koltuğa otur; masa sahibi başlatınca oyun burada açılır.',
+    waitText: (s, own) => own ? 'En az 2 kişi oturunca “Oyunu başlat”a basabilirsiniz. 4+ kişide iki takım olur. Sesli anlatılır, mikrofonlar açık olsun!' : 'Bir koltuğa otur; masa sahibi başlatınca oyun burada açılır.',
     makeCard: {
       desc: '2-10 kişi. Kartı yasaklı kelimeleri söylemeden sesli anlat! ' + T.CARDS.length + ' kart.',
       opts: '<label>Oyun<select data-o="mod"><option value="auto" selected>4+ kişide takımlı</option><option value="takim">Takımlı (Kırmızı - Mavi)</option><option value="tek">Herkes kendi için</option></select></label>' +

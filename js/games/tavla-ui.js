@@ -283,7 +283,7 @@ function tvControls(ctl, msg, s, v, seat, names, board){
         e.onclick = () => tableAct({ type: 'end' }); ctl.append(e);
         ctl.append(Object.assign(document.createElement('span'), { className: 'note', textContent: 'Birkaç saniye içinde sıra kendiliğinden geçer' }));
       } else if (!v.noMoves){
-        ctl.append(Object.assign(document.createElement('span'), { className: 'note', textContent: v.bar[seat] ? 'Kırık pulunu içeri sok: parlayan haneye tıkla' : 'Bir pula tıkla, sonra parlayan haneye tıkla (çift tıklama: büyük zarla oyna)' }));
+        ctl.append(Object.assign(document.createElement('span'), { className: 'note', textContent: v.bar[seat] ? 'Kırık pulunu içeri sok: parlayan haneye tıkla' : 'Bir pula, sonra parlayan haneye tıklayabilirsiniz (çift tıklama: büyük zarla oynar)' }));
       }
     } else ctl.append(Object.assign(document.createElement('span'), { className: 'note', textContent: names[v.turn] + ' oynuyor…' }));
   } else if (v.phase === 'over' || v.phase === 'matchover'){

@@ -151,7 +151,7 @@ function renderVfx(){
     });
     const r = document.createElement('label'); r.className = 'vfx-dinle';
     const c = document.createElement('input'); c.type = 'checkbox'; c.checked = vfxDinle; c.onchange = () => setVfxDinle(c.checked);
-    r.append(c, ' Kendi sesimi dinle (kulaklıkla dene, hoparlörde yankı yapar)');
+    r.append(c, ' Kendi sesimi dinle (kulaklıkla deneyebilirsiniz, hoparlörde yankı yapar)');
     const n = document.createElement('p'); n.className = 'note'; n.textContent = 'Efekt odadaki herkese gider; “Normal” ile kapatırsın. Sayfayı yenileyince normale döner.';
     box.append(g, r, n);
   });

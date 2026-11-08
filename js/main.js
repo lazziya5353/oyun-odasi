@@ -26,14 +26,14 @@ let yoneticiGiris = false;
     if (!r.ok) return;
     yoneticiGiris = true;
     $('nameInput').value = 'Yönetici'; $('nameInput').readOnly = true;
-    lobbyError('🛡 Yönetici olarak giriyorsun: odadakiler seni “Yönetici” adıyla görecek. “Katıl”a bas.');
+    lobbyError('🛡 Yönetici olarak giriyorsunuz: odadakiler sizi “Yönetici” adıyla görecek. “Katıl”a basabilirsiniz.');
   } catch(e){}
 })();
 function readName(){
   if (yoneticiGiris) return 'Yönetici';
   if (typeof account !== 'undefined' && account) return clip(account.uye.name, 20);   // üye: ad sorulmaz
   const n = $('nameInput').value.trim();
-  if (!n){ lobbyError('Önce adını yaz.'); $('nameInput').focus(); return null; }
+  if (!n){ lobbyError('Önce adınızı yazabilirsiniz.'); $('nameInput').focus(); return null; }
   store.set('oyunodasi-name', n);
   return clip(n, 20);
 }
@@ -52,7 +52,7 @@ $('joinBtn').onclick = async () => {
   ensureCtx();
   const n = readName(); if (!n) return;
   const c = cleanCode($('codeInput').value);
-  if (c.length < 3){ lobbyError('Katılmak için arkadaşının verdiği oda kodunu yaz.'); $('codeInput').focus(); return; }
+  if (c.length < 3){ lobbyError('Katılmak için arkadaşınızın verdiği oda kodunu yazabilirsiniz.'); $('codeInput').focus(); return; }
   myName = n; await start(c, false);
 };
 $('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('joinBtn').click(); });

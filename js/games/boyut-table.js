@@ -59,7 +59,7 @@
     variantName: s => (s.opts.mode === 'sirali' ? 'Sıralı' : 'Toplu') + ' · ' + s.opts.tur + (s.opts.mode === 'sirali' ? ' tur' : ' soru') +
       (s.opts.kat && s.opts.kat !== 'karisik' && typeof BOYUT_KAT !== 'undefined' ? ' · ' + BOYUT_KAT[s.opts.kat] : ''),
     seatLabel: (s, k) => 'Oyuncu ' + (k + 1),
-    waitText: (s, mine) => mine ? 'Oturan herkes oynar (1-8 kişi). Hazır olunca “Oyunu başlat”a bas; boş koltuklara bot da ekleyebilirsin.' : 'Masa sahibi oyunu başlatınca burada görünecek. Boş bir koltuğa oturabilirsin.',
+    waitText: (s, mine) => mine ? 'Oturan herkes oynar (1-8 kişi). Hazır olunca “Oyunu başlat”a basabilirsiniz; boş koltuklara bot da ekleyebilirsiniz.' : 'Masa sahibi oyunu başlatınca burada görünecek. Boş bir koltuğa oturabilirsin.',
     makeCard: {
       desc: '1-8 kişi. Size It Up tarzı: siyah silüetin gerçek boyu belli, beyazı ona göre büyüt-küçült. Toplu (herkes aynı anda) ya da sıralı oyna.',
       opts: '<label>Oyun şekli<select data-o="mode"><option value="toplu">Toplu: herkes aynı anda</option><option value="sirali">Sıralı: sırayla, herkes izler</option></select></label>' +

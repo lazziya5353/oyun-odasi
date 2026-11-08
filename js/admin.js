@@ -21,7 +21,7 @@ function toast(m){ const t = $('toast'); t.textContent = m; t.hidden = false; cl
 async function req(url, body){
   const r = await fetch(url, { method: body === undefined ? 'GET' : 'POST', headers: { 'content-type': 'application/json', 'x-admin': tok }, body: body === undefined ? undefined : JSON.stringify(body) });
   const d = await r.json().catch(() => ({}));
-  if (r.status === 401 && !/admin-giris/.test(url)){ logout(); throw new Error('Oturum bitti, tekrar giriş yap.'); }
+  if (r.status === 401 && !/admin-giris/.test(url)){ logout(); throw new Error('Oturum bitti, tekrar giriş yapabilirsiniz.'); }
   if (!r.ok) throw new Error(d.hata || 'Sunucuya ulaşılamadı');
   return d;
 }
@@ -480,7 +480,7 @@ $('outBtn').onclick = logout;
 $('q').oninput = () => renderList();
 $('pushBtn').onclick = async () => {
   try {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) throw new Error('Bu tarayıcı bildirimleri desteklemiyor (iPhone’da önce siteyi Ana Ekrana ekle).');
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) throw new Error('Bu tarayıcı bildirimleri desteklemiyor (iPhone’da önce siteyi Ana Ekrana ekleyebilirsiniz).');
     if (await Notification.requestPermission() !== 'granted') throw new Error('Bildirim izni verilmedi.');
     const reg = await navigator.serviceWorker.register('sw.js');
     const { key } = await (await fetch('/api/bildirim/anahtar')).json();

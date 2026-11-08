@@ -67,7 +67,7 @@ function replikKutusu(list, gonderilebilir){
   box.append(el('h3', '', '🎬 Replikler (' + (REPLIKLER ? REPLIKLER.length : '…') + ')'));
   if (!REPLIKLER){ box.append(note('Yükleniyor…')); list.append(box); replikYukle().then(() => { if (tab === 'saka') renderList(); }); return; }
   replikYuklemeFormu(box);
-  if (!REPLIKLER.length) box.append(note('Henüz replik yok. Yukarıdan video yükle.'));
+  if (!REPLIKLER.length) box.append(note('Henüz replik yok. Yukarıdan video yükleyebilirsiniz.'));
   const g = el('div', 'replik-liste');
   REPLIKLER.forEach(k => {
     const row = el('div', 'replik-satir');
@@ -93,7 +93,7 @@ function replikKutusu(list, gonderilebilir){
   });
   box.append(g);
   if (REPLIKLER.length && !gonderilebilir) box.append(note('Göndermek için yukarıdan odaya bağlan.'));
-  box.append(note('GitHub’daki “replikler” klasöründen eklenenler de burada görünür; onları silmek için dosyayı GitHub’dan sil.'));
+  box.append(note('GitHub’daki “replikler” klasöründen eklenenler de burada görünür; onları silmek için dosyayı GitHub’dan silebilirsiniz.'));
   list.append(box);
 }
 // kullanıcıların birbirine şaka yapma ayarları
@@ -124,7 +124,7 @@ function renderKullaniciSaka(list){
   [[0, 'Bekleme yok'], [3, '3 sn'], [5, '5 sn'], [10, '10 sn'], [30, '30 sn'], [60, '1 dk'], [300, '5 dk']].forEach(([v, t]) => { const o = el('option', '', 'İki şaka arası: ' + t); o.value = v; o.selected = +a.bekleme === v; sel.append(o); });
   sel.onchange = () => sakaAyarKaydet({ bekleme: +sel.value }, 'Bekleme süresi kaydedildi');
   top.append(sel);
-  box.append(top, note(a.acik ? 'Odadakiler alt şeritteki 🎭 Şaka düğmesinden birbirine atabiliyor. Sürekli atan olursa aşağıdan onu engelle ya da efekti kapat.' : 'Şu an kimse şaka yapamıyor (senin panelden attıkların hariç).'));
+  box.append(top, note(a.acik ? 'Odadakiler alt şeritteki 🎭 Şaka düğmesinden birbirine atabiliyor. Sürekli atan olursa aşağıdan onu engelleyebilir ya da efekti kapatabilirsiniz.' : 'Şu an kimse şaka yapamıyor (senin panelden attıkların hariç).'));
   // engellenen kişiler
   const eb = el('div', 'saka-engel');
   eb.append(el('b', '', '🚫 Şaka yapması engellenenler'));
@@ -157,7 +157,7 @@ function renderKullaniciSaka(list){
     const off = a.kapali.includes(id);
     const b = el('button', 'saka-btn' + (off ? ' kapali' : '')); b.type = 'button';
     b.append(el('b', '', ikon), el('span', '', ad));
-    b.title = off ? 'Kapalı · açmak için tıkla' : 'Açık · kapatmak için tıkla';
+    b.title = off ? 'Kapalı · açmak için tıklayabilirsiniz' : 'Açık · kapatmak için tıklayabilirsiniz';
     b.onclick = () => sakaAyarKaydet({ kapali: off ? a.kapali.filter(x => x !== id) : a.kapali.concat(id) }, ikon + ' ' + ad + (off ? ' açıldı' : ' kapatıldı'));
     g.append(b);
   });
@@ -253,8 +253,8 @@ function sakaTry(srv, code){
 }
 async function sakaConnect(code){
   code = String(code || '').trim().toUpperCase();
-  if (!/^[A-Z0-9]{3,12}$/.test(code)){ toast('Geçerli bir oda kodu yaz'); return; }
-  if (typeof Peer === 'undefined'){ toast('Bağlantı kitaplığı yüklenemedi, sayfayı yenile'); return; }
+  if (!/^[A-Z0-9]{3,12}$/.test(code)){ toast('Geçerli bir oda kodu yazabilirsiniz'); return; }
+  if (typeof Peer === 'undefined'){ toast('Bağlantı kitaplığı yüklenemedi, sayfayı yenileyebilirsiniz'); return; }
   sakaDisconnect();
   SK.busy = true; SK.code = code; SK.status = '⏳ ' + code + ' odasına bağlanılıyor…'; renderList();
   try {
@@ -265,9 +265,9 @@ async function sakaConnect(code){
       catch(e){ last = e; if (e === 'red' || e === 'eski') break; }
     }
     if (last) SK.status = {
-      red: 'Oda, yönetici biletini kabul etmedi. Sayfayı yenileyip tekrar dene.',
+      red: 'Oda, yönetici biletini kabul etmedi. Sayfayı yenileyip tekrar deneyebilirsiniz.',
       eski: 'Oda açık ama odadakilerin sayfası eski sürümde kalmış. Odadakiler sayfayı bir kez yenilesin (telefonda uygulamayı kapatıp açsın), sonra tekrar bağlan.',
-      timeout: 'Oda bulundu ama bağlantı kurulamadı (ağ engeli olabilir). Biraz sonra tekrar dene.'
+      timeout: 'Oda bulundu ama bağlantı kurulamadı (ağ engeli olabilir). Biraz sonra tekrar deneyebilirsiniz.'
     }[last] || '“' + code + '” kodlu açık oda bulunamadı. Kod doğru mu, odada biri var mı?';
   } catch(e){ SK.status = e.message; }
   SK.busy = false;

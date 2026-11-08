@@ -57,7 +57,7 @@ function renderAccountBox(){
 async function refreshAccount(){
   if (!account || !uyeOK()) return;
   try { const d = await uyeApi('ben'); account.uye = d.uye; saveAccount(); document.dispatchEvent(new CustomEvent('uye-ben', { detail: d })); }
-  catch(e){ if (e.status === 401){ account = null; saveAccount(); toast('Oturumun sona erdi, yeniden giriş yap.'); } }
+  catch(e){ if (e.status === 401){ account = null; saveAccount(); toast('Oturumunuz sona erdi, yeniden giriş yapabilirsiniz.'); } }
 }
 
 // ---------- giriş / üye ol penceresi ----------
@@ -88,7 +88,7 @@ function uyeMsg(t, ok){ $('uyeMsg').textContent = t; $('uyeMsg').className = 'uy
 async function doLogin(e){
   e.preventDefault();
   const kadi = $('gKadi').value.trim(), sifre = $('gSifre').value;
-  if (!kadi || !sifre){ uyeMsg('Kullanıcı adını ve şifreni yaz.'); return; }
+  if (!kadi || !sifre){ uyeMsg('Kullanıcı adınızı ve şifrenizi yazabilirsiniz.'); return; }
   const btn = e.submitter || $('girisForm').querySelector('button[type=submit]'); btn.disabled = true;
   try {
     const d = await uyeApi('giris', { kadi, sifre, push: await currentPushSub(false) });
@@ -191,7 +191,7 @@ function squareJpeg(file){
       URL.revokeObjectURL(u);
       c.toBlob(b => b ? res(b) : rej(new Error('fotoğraf işlenemedi')), 'image/jpeg', 0.85);
     };
-    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('Bu dosya açılamadı. JPG ya da PNG seç.')); };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('Bu dosya açılamadı. JPG ya da PNG bir dosya seçebilirsiniz.')); };
     img.src = u;
   });
 }
@@ -220,7 +220,7 @@ function squareJpeg(file){
   $('pBSave').onclick = async () => {
     const sec = document.querySelector('input[name=pBKime]:checked');
     const body = { gonder: $('pBGonder').checked, al: $('pBAl').checked, kime: sec ? sec.value : 'herkes', secili: [...document.querySelectorAll('#pBSecili input:checked')].map(c => c.value) };
-    if (body.gonder && body.kime === 'secili' && !body.secili.length){ pMsg('“Sadece seçtiklerim” için en az bir kişi seç.'); return; }
+    if (body.gonder && body.kime === 'secili' && !body.secili.length){ pMsg('“Sadece seçtiklerim” için en az bir kişi seçebilirsiniz.'); return; }
     try { const d = await uyeApi('profil', { bildirim: body }); account.uye = d.uye; saveAccount(); pMsg('✓ Bildirim ayarların kaydedildi', true); }
     catch(e){ pMsg(e.message); }
   };
@@ -250,5 +250,5 @@ function squareJpeg(file){
   renderAccountBox();
   refreshAccount();
   renderUyePending();
-  if (new URLSearchParams(location.search).get('uye') === 'onay' && !account){ openUyeDlg('giris', '✅ Üyeliğin onaylandı! Kullanıcı adın ve şifrenle giriş yap.'); const k = store.get(BEKLEYEN_KEY); if (k) $('gKadi').value = k; }
+  if (new URLSearchParams(location.search).get('uye') === 'onay' && !account){ openUyeDlg('giris', '✅ Üyeliğiniz onaylandı! Kullanıcı adınız ve şifrenizle giriş yapabilirsiniz.'); const k = store.get(BEKLEYEN_KEY); if (k) $('gKadi').value = k; }
 })();

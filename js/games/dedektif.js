@@ -54,7 +54,7 @@ if (typeof registerTableGame === 'function') (function(){
     cleanOpts: o => ({ vaka: DK_VAKALAR[o.vaka] ? o.vaka : 'motel204' }),
     variantName: s => 'Dedektif · ' + V(s.opts.vaka).ad,
     seatLabel: () => 'Dedektif',
-    waitText: (s, own) => own ? 'Dedektifler masaya otursun, sonra “Oyunu başlat”a bas. Tek başına da oynanır. Başta ayrı mı toplu mu gezeceğinizi oylayacaksınız.' : 'Bir koltuğa otur; masa sahibi başlatınca vaka açılır.',
+    waitText: (s, own) => own ? 'Dedektifler masaya oturunca “Oyunu başlat”a basabilirsiniz. Tek başına da oynanır. Başta ayrı mı toplu mu gezeceğinizi oylayacaksınız.' : 'Bir koltuğa otur; masa sahibi başlatınca vaka açılır.',
     makeCard: {
       desc: '1-8 kişi, ortak. Max Payne havasında kara film vakası: mekanları gez, delil topla, ortak deftere yaz, katili birlikte suçla.',
       opts: '<label>Vaka<select data-o="vaka">' + DK_ALBUM.map(a => '<option value="' + a.id + '"' + (a.hazir ? '' : ' disabled') + '>' + a.ad + (a.hazir ? '' : ' (yakında)') + '</option>').join('') + '</select></label>',

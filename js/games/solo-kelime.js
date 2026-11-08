@@ -69,7 +69,7 @@
 
   registerSolo({
     id: 'kelime', name: 'Kelime Bul', icon: '🔤',
-    desc: 'Günün 5 harfli kelimesini 6 tahminde bul.',
+    desc: 'Günün 5 harfli kelimesini 6 tahminde bulmaya çalışın.',
     levels: [], daily: true, better: 'low',
     format: fmtScore,
     mount(root, ctx){
@@ -132,7 +132,7 @@
       board.classList.add('is-loading');
       msg.textContent = 'Sözlük yükleniyor…';
 
-      loadSozluk().then(S => { if (alive) start(S); }).catch(() => { if (alive) msg.textContent = 'Sözlük yüklenemedi. Sayfayı yenileyip tekrar dene.'; });
+      loadSozluk().then(S => { if (alive) start(S); }).catch(() => { if (alive) msg.textContent = 'Sözlük yüklenemedi. Sayfayı yenileyip tekrar deneyebilirsiniz.'; });
 
       function start(S){
         board.classList.remove('is-loading'); msg.textContent = '';

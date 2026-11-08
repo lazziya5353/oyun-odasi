@@ -29,7 +29,7 @@
       const id = typeof store !== 'undefined' ? store.get('oyunodasi-mic') : '';
       try { await openMic(id || undefined); } catch(e){ await openMic(); }
       if (typeof joined !== 'undefined' && joined) toast('🎙 Mikrofon yeniden açıldı');
-    } catch(e){ toast('Mikrofon geri açılamadı. 🎙 düğmesine bas ya da sayfayı yenile.'); }
+    } catch(e){ toast('Mikrofon geri açılamadı. 🎙 düğmesine basabilir ya da sayfayı yenileyebilirsiniz.'); }
   }
   function don(){
     if (!arkada) return;

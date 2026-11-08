@@ -24,12 +24,12 @@
       b.querySelector('.big').textContent = big; b.querySelector('b').textContent = baslik; b.querySelector('.d').textContent = aciklama;
       if (fn) b.onclick = fn; grid.append(b);
     };
-    kart('🖥', 'Ekranını paylaş', 'Sunum, slayt, belge, kod… Yazılar okunaklı olsun diye net görüntü kalitesinde açılır. Bilgisayarın sesini de paylaşmak için açılan pencerede “Ses paylaş”ı işaretle.', () => {
+    kart('🖥', 'Ekranını paylaş', 'Sunum, slayt, belge, kod… Yazılar okunaklı olsun diye net görüntü kalitesinde açılır. Bilgisayarın sesini de paylaşmak için açılan pencerede “Ses paylaş”ı işaretleyebilirsiniz.', () => {
       if (typeof screenStream !== 'undefined' && screenStream){ toast('Zaten ekranını paylaşıyorsun.'); return; }
       shareQ = 'detail'; store.set('oyunodasi-q', 'detail'); startScreenShare();
     });
-    kart('🔴', 'Kayıt nasıl alınır?', 'Ekran paylaşılınca ekranın üstünde ⏺ Kaydet çıkar: görüntü ve kanaldaki bütün sesler kaydedilir. Bitince “💾 Kayıtların” kutusundan İndir’e basıp bilgisayarına alırsın. Herkesle paylaşmak için Google Drive’a yükle, linki yukarıdaki 🔗 Kayıt linki’ne yapıştır.');
-    kart('🛠', 'Eski kaydı onar', 'Daha önce indirdiğin kayıt ileri sarılmıyorsa buradan seç: süresi ve atlama dizini eklenip yeniden iner. Dosya hiçbir yere yüklenmez, senin bilgisayarında düzeltilir.', () => {
+    kart('🔴', 'Kayıt nasıl alınır?', 'Ekran paylaşılınca ekranın üstünde ⏺ Kaydet çıkar: görüntü ve kanaldaki bütün sesler kaydedilir. Bitince “💾 Kayıtların” kutusundan İndir’e basıp bilgisayarınıza alabilirsiniz. Herkesle paylaşmak için Google Drive’a yükleyip linki yukarıdaki 🔗 Kayıt linki’ne yapıştırabilirsiniz.');
+    kart('🛠', 'Eski kaydı onar', 'Daha önce indirdiğiniz kayıt ileri sarılmıyorsa buradan seçebilirsiniz: süresi ve atlama dizini eklenip yeniden iner. Dosya hiçbir yere yüklenmez, sizin bilgisayarınızda düzeltilir.', () => {
       const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.webm,video/webm,.mp4,video/mp4';
       inp.onchange = async () => {
         const f = inp.files && inp.files[0]; if (!f) return;
@@ -70,7 +70,7 @@
     sus.textContent = '🔇 Herkesi sustur'; sus.title = 'Kanaldaki diğer herkesin mikrofonu kapanır (isteyen kendi açabilir)';
     sus.onclick = herkesiSustur;
     const kam = document.createElement('button'); kam.type = 'button'; kam.id = 'kamBtn'; kam.className = 'btn small';
-    kam.title = 'Kameranı aç: görüntün kanaldaki herkesin ekranında kendi kutucuğunda görünür';
+    kam.title = 'Kameranızı açabilirsiniz: görüntünüz kanaldaki herkesin ekranında kendi kutucuğunda görünür';
     kam.onclick = () => { if (typeof kameraAcKapat === 'function') kameraAcKapat(); };
     s.append(el, kam, sus);
     if (typeof kameraDugmeCiz === 'function') kameraDugmeCiz(); else kam.textContent = '📷 Kamera';

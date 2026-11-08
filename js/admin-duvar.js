@@ -13,7 +13,7 @@
     const bas = el('div', 'yd-bas');
     bas.append(el('h3', '', '🖼 Duvar kağıtları'));
     const dn = button('🌙 Dinlen', 'primary', () => { if (window.dinlenmeModu) dinlenmeModu.ac(); });
-    dn.title = 'Ekranda sadece arka plan kalır (ESC ile çık)';
+    dn.title = 'Ekranda sadece arka plan kalır (ESC ile çıkabilirsiniz)';
     bas.append(dn);
     kutu.append(bas);
     const su = el('div', 'yd-su');

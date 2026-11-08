@@ -54,7 +54,7 @@ async function sendScore(def, lv, score, day){
 function renderSoloCards(d){
   if (!SOLO.size) return;
   const h = document.createElement('p'); h.className = 'note salon-sub';
-  h.textContent = 'Tek başına oyna, skor tablosunda arkadaşlarınla yarış. Tablolar kalıcıdır; rekor kırınca odaya duyurulur.';
+  h.textContent = 'Tek başınıza oynayıp skor tablosunda arkadaşlarınızla yarışabilirsiniz. Tablolar kalıcıdır; rekor kırınca odaya duyurulur.';
   d.append(h);
   const grid = document.createElement('div'); grid.className = 'solo-grid';
   SOLO.forEach(def => {
@@ -273,7 +273,7 @@ async function renderLeaderboard(force){
       el.append(p);
     } else if (!rows.length){
       const p = document.createElement('p'); p.className = 'note lb-empty';
-      p.textContent = lbTab === 'tum' ? 'Henüz kimse yok. İlk sen ol!' : def.daily ? 'Bugün henüz kimse bitirmedi. İlk sen ol!' : 'Bu hafta henüz kimse oynamadı.';
+      p.textContent = lbTab === 'tum' ? 'Henüz kimse yok. İlk siz olabilirsiniz!' : def.daily ? 'Bugün henüz kimse bitirmedi. İlk siz olabilirsiniz!' : 'Bu hafta henüz kimse oynamadı.';
       el.append(p);
     } else {
       const meKey = (myName || '').toLocaleLowerCase('tr-TR');

@@ -38,7 +38,7 @@ async function enableNotifs(){
     store.set(PUSH_KEY, '1');
     toast('🔔 Bildirimler açık: arkadaşların oda açınca haber vereceğim');
   } catch(e){
-    toast('Bildirimler açılamadı. Biraz sonra tekrar dene.');
+    toast('Bildirimler açılamadı. Biraz sonra tekrar deneyebilirsiniz.');
   }
   renderNotifUI();
 }
@@ -93,15 +93,15 @@ function renderNotifUI(){
   note.textContent = {
     on: 'Arkadaşların oda açınca bu cihaza bildirim gelir, site kapalı olsa bile.',
     off: 'Biri oda açınca telefonuna ya da bilgisayarına bildirim gelsin.',
-    denied: 'Bildirimler bu sitede engellenmiş. Adres çubuğundaki kilit/ayar simgesinden “Bildirimler: İzin ver” yapıp sayfayı yenile.',
-    'ios-install': 'iPhone’da bildirim için: alttaki Paylaş ⬆ düğmesine dokun → “Ana Ekrana Ekle”. Sonra ana ekrandaki Oyun Odası simgesinden açıp buradan bildirimleri aç.',
+    denied: 'Bildirimler bu sitede engellenmiş. Adres çubuğundaki kilit/ayar simgesinden “Bildirimler: İzin ver” yapıp sayfayı yenileyebilirsiniz.',
+    'ios-install': 'iPhone’da bildirim için alttaki Paylaş ⬆ düğmesine dokunup “Ana Ekrana Ekle”yi seçebilirsiniz. Sonra ana ekrandaki Oyun Odası simgesinden açıp bildirimleri buradan açabilirsiniz.',
     unsupported: 'Uygulama gibi yükleyip ana ekrandan/masaüstünden tek dokunuşla açabilirsin.'
   }[st];
   $('installBtn').hidden = !installEvt;
   if (b2){
     b2.hidden = st === 'unsupported' || st === 'ios-install';
     b2.innerHTML = (st === 'on' ? '🔔' : '🔕') + ' <span class="lbl">' + (st === 'on' ? 'Bildirim açık' : 'Bildirim') + '</span>';
-    b2.title = st === 'on' ? 'Oda açılınca bildirim geliyor. Kapatmak için tıkla.' : 'Biri oda açınca bildirim al';
+    b2.title = st === 'on' ? 'Oda açılınca bildirim geliyor. Kapatmak için tıklayabilirsiniz.' : 'Biri oda açınca bildirim al';
     b2.classList.toggle('on', st === 'on');
   }
 }
@@ -115,7 +115,7 @@ const toggleNotifs = () => (notifState() === 'on' ? disableNotifs() : notifState
       if (!sub){ await subscribePush(); }
       const s2 = await swReg.pushManager.getSubscription();
       const r = await pushApi('test', { endpoint: s2 && s2.endpoint });
-      toast(r.sent ? '🧪 Deneme bildirimi gönderildi; birkaç saniye içinde gelmeli' : '⚠ Bu cihaz kayıtlı görünmüyor, bildirimleri kapatıp yeniden aç');
+      toast(r.sent ? '🧪 Deneme bildirimi gönderildi; birkaç saniye içinde gelmeli' : '⚠ Bu cihaz kayıtlı görünmüyor, bildirimleri kapatıp yeniden açabilirsiniz');
     } catch(e){ toast('Deneme bildirimi gönderilemedi: ' + e.message); }
   };
   $('notifBtn2').onclick = toggleNotifs;

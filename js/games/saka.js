@@ -203,7 +203,7 @@ function sakaShow(d, kimden, fromId){
   if (document.hidden){
     const kim = kimden || 'Yönetici';
     arkaHaber(s.ikon + ' ' + kim + ' sana ' + (d.e === 'replik' ? '“' + replikAd(d.r) + '” repliğini attı' : s.fiil),
-      d.e === 'mesaj' && d.m ? '“' + d.m + '”' : d.e === 'replik' ? 'Sesi geliyor, görmek için sekmeye dön.' : 'Görmek için sekmeye dön.', s.ikon);
+      d.e === 'mesaj' && d.m ? '“' + d.m + '”' : d.e === 'replik' ? 'Sesi geliyor, görmek için sekmeye dönebilirsiniz.' : 'Görmek için sekmeye dönebilirsiniz.', s.ikon);
     // replik ve komik sesler arka planda da hemen çalar (ses duyulur); bittiyse dönünce "tekrar izle" çıkar
     if (d.e === 'replik' || s.tur === 'ses'){
       Promise.resolve(playSaka(d.e, d.m, d.r, kim)).then(() => { if (d.e === 'replik' && document.hidden) kacirilan.push({ r: d.r, kimden: kim }); });
@@ -798,7 +798,7 @@ function renderSakaDurum(){
   const kalan = Math.ceil((benimSon + AYAR.bekleme * 1000 - Date.now()) / 1000);
   el.classList.toggle('err', !AYAR.acik || engelli(myName));
   if (sp.tab === 'sesim'){ el.classList.remove('err'); el.textContent = '🎤 Sesine efekt ver: odadaki herkes seni böyle duyar.'; return; }
-  el.textContent = !AYAR.acik ? '🔒 Şakalar şu an yönetici tarafından kapalı.' : engelli(myName) ? '🚫 Yönetici senin şaka yapmanı kapattı.' : kalan > 0 ? '⏳ Yeni şaka için ' + kalan + ' sn bekle' : 'Kime atacağını seç, sonra efekte bas!';
+  el.textContent = !AYAR.acik ? '🔒 Şakalar şu an yönetici tarafından kapalı.' : engelli(myName) ? '🚫 Yönetici senin şaka yapmanı kapattı.' : kalan > 0 ? '⏳ Yeni şaka için ' + kalan + ' sn bekle' : 'Kime atacağınızı seçip efekte basabilirsiniz!';
   sp.dlg.querySelector('.saka-izgara').classList.toggle('bekle', kalan > 0);
 }
 function renderSakaPanel(){
