@@ -37,7 +37,6 @@ function etiketliYaz(text, into){
 // gelen mesaj beni etiketlediyse haber ver
 function etiketGeldi(from, name, text, dm){
   if (!text || !etiketBeni(text)) return;
-  toast('📣 ' + name + ' seni etiketledi: “' + clip(text, 70) + '”');
   try { tone([880, 1320, 1760], 0.09, 0.25, 0.14); } catch(e){}
   try { navigator.vibrate && navigator.vibrate([120, 60, 120]); } catch(e){}
   if (!chatOpen){ const b = $('chatBtn'); b.classList.remove('etiketlendi'); void b.offsetWidth; b.classList.add('etiketlendi'); }

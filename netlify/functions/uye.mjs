@@ -177,6 +177,15 @@ export default async (req, context) => {
       const dv = (u.davetler || []).filter(x => Date.now() - x.ts < 30 * 60e3);
       return json({ uye: pub(u), ilerleme: ilerlemePub(u), davetler: dv, istekSayisi: (u.istekGelen || []).length });
     }
+    if (req.method === 'GET' && islem === 'profil-kart'){
+      // odada birine dokununca açılan profil kartı: herkese açık bilgiler (+ arkadaşsanız ne zamandan beri)
+      const o = await userByKadi(url.searchParams.get('kadi') || '');
+      if (!o) return json({ hata: 'yok' }, 404);
+      const ben = await authUser(req).catch(() => null);
+      const ark = !!(ben && (ben.arkadas || []).includes(o.id));
+      return json({ kadi: o.kadi, name: o.name, bio: o.bio || '', foto: o.foto ? '/api/uye/foto?id=' + o.id + '&v=' + o.foto : null,
+        uyelik: o.approvedAt || o.created || null, ilerleme: ilerlemePub(o), arkadas: ark, arkadasTs: ark ? ((ben.arkadasTarih || {})[o.id] || null) : null });
+    }
     if (req.method === 'GET' && islem === 'arkadaslar'){
       const u = await authUser(req); if (!u) return json({ hata: 'oturum yok' }, 401);
       ark(u);
@@ -328,6 +337,7 @@ export default async (req, context) => {
         if (islem === 'arkadas-cevap' && !b.kabul) durum = 'reddedildi';
         else {
           u.arkadas = [...new Set(u.arkadas.concat(o.id))].slice(-300); o.arkadas = [...new Set(o.arkadas.concat(u.id))].slice(-300);
+          (u.arkadasTarih = u.arkadasTarih || {})[o.id] = Date.now(); (o.arkadasTarih = o.arkadasTarih || {})[u.id] = Date.now();
           durum = 'arkadas';
           const gone = await pushTo(o.push, { title: '🤝 ' + u.name + ' arkadaşlık isteğini kabul etti', body: 'Artık arkadaşsınız. Oda açınca birbirinizi davet edebilirsiniz.', url: '/?arkadas=1', tag: 'ark-' + u.id }, origin);
           if (gone.length) o.push = o.push.filter(s => !gone.includes(s.endpoint));

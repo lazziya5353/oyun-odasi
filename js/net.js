@@ -330,6 +330,7 @@ function enterRoom(){
   setHint('Konuşunca çubuk dolmalı. Kaydedip kendi sesini dinleyebilirsin.', '');
   if (isHost) colorMap[peer.id] = 0;
   loadSavedChat();            // bu odanın daha önce kaydedilmiş sohbeti
+  if (typeof sabitYukle === 'function') sabitYukle();
   rememberRoom();             // "Son odana dön" için
   updateMicButton();
   renderSelf();
@@ -788,7 +789,7 @@ async function claimLobby(tries = 0){
 function makeSync(){
   return {
     channels, colorMap, blocked: [...blocked],
-    chat: chatHistoryForSync(), chatClearedAt, music: musicStateForSync(), yt: ytStateForSync()
+    chat: chatHistoryForSync(), chatClearedAt, chatPin: typeof sabit !== 'undefined' ? sabit : null, music: musicStateForSync(), yt: ytStateForSync()
   };
 }
 function applySync(s){
@@ -797,6 +798,7 @@ function applySync(s){
   if (s.colorMap) applyColorMap(s.colorMap);
   if (Array.isArray(s.blocked)) s.blocked.forEach(b => typeof b === 'string' && blocked.add(b));
   if (Array.isArray(s.chat)) applyChatHistory(s.chat, s.chatClearedAt);
+  if ('chatPin' in s && typeof sabitle === 'function') sabitle(temizPin(s.chatPin), true);
   if (s.music) applyMusicState(s.music);
   if (s.yt) applyYT(s.yt, currentHostId, true);
 }

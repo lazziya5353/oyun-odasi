@@ -6,15 +6,17 @@ const STIL_RENK = [
   ['#ff6ec7', 'Neon pembe'], ['#ff00ff', 'Fuşya'], ['#bc13fe', 'Neon mor'], ['#1f51ff', 'Neon mavi'], ['#00ffff', 'Camgöbeği'], ['#0aff99', 'Nane'], ['#ffffff', 'Beyaz']
 ];
 const STIL_ANIM = [['', 'Yok'], ['gokkusagi', '🌈 Gökkuşağı'], ['cyber', '🌆 Cyberpunk'], ['led', '💡 LED'], ['nabiz', '💓 Nabız']];
+const STIL_CERCEVE = [['', 'Yok'], ['neon', '💚 Neon'], ['altin', '👑 Altın'], ['ates', '🔥 Ateş'], ['gokkusagi', '🌈 Gökkuşağı'], ['buz', '🧊 Buz'], ['elmas', '💎 Elmas']];
 const STIL_ISIM = [['', 'Yok'], ['gokkusagi', '🌈 Gökkuşağı'], ['neon', '✨ Neon'], ['ates', '🔥 Ateş'], ['altin', '👑 Altın'], ['glitch', '📺 Glitch'], ['buz', '🧊 Buz']];
 const cleanStil = s => {
   if (!s || typeof s !== 'object') return null;
   const o = {
     renk: typeof s.renk === 'string' && /^#[0-9a-f]{6}$/i.test(s.renk) ? s.renk.toLowerCase() : '',
     anim: STIL_ANIM.some(a => a[0] === s.anim) ? s.anim : '',
-    isim: STIL_ISIM.some(a => a[0] === s.isim) ? s.isim : ''
+    isim: STIL_ISIM.some(a => a[0] === s.isim) ? s.isim : '',
+    cerceve: STIL_CERCEVE.some(a => a[0] === s.cerceve) ? s.cerceve : ''
   };
-  return o.renk || o.anim || o.isim ? o : null;
+  return o.renk || o.anim || o.isim || o.cerceve ? o : null;
 };
 let myStil = (() => { try { return cleanStil(JSON.parse(localStorage.getItem(STIL_KEY))); } catch(e){ return null; } })();
 function stilOf(id){
@@ -25,6 +27,7 @@ function stilOf(id){
 // kartın / ismin üstüne stil sınıflarını uygula
 function applyStil(card, st){
   if (!card) return;
+  if (st && st.cerceve) card.dataset.cerceve = st.cerceve; else delete card.dataset.cerceve;
   if (st && st.anim){ card.dataset.stil = st.anim; card.style.setProperty('--stil-r', st.renk || '#ff073a'); } else delete card.dataset.stil;
   const n = card.querySelector('.pname');
   if (n){ if (st && st.isim){ n.dataset.isim = st.isim; n.dataset.text = n.textContent; } else { delete n.dataset.isim; delete n.dataset.text; } }
@@ -46,7 +49,7 @@ function stilOnData(id, d){
 // ---------- seçici (Görünüm penceresinde “✨ Kartım”) ----------
 function renderStilPicker(){
   const box = document.getElementById('stilPicker'); if (!box) return;
-  const st = myStil || { renk: '', anim: '', isim: '' };
+  const st = myStil || { renk: '', anim: '', isim: '', cerceve: '' };
   box.innerHTML = '';
   const row = (label, el) => { const r = document.createElement('div'); r.className = 'tema-row'; const s = document.createElement('span'); s.textContent = label; r.append(s, el); box.append(r); };
   // renkler
@@ -70,6 +73,7 @@ function renderStilPicker(){
   };
   row('Hareketli renk', seg(STIL_ANIM, 'anim'));
   row('İsim efekti', seg(STIL_ISIM, 'isim'));
+  row('Avatar çerçevesi', seg(STIL_CERCEVE, 'cerceve'));
   // önizleme
   const pv = document.createElement('div'); pv.className = 'stil-onizle person';
   pv.style.setProperty('--c', st.renk || (typeof colorFor === 'function' && typeof peer !== 'undefined' && peer ? colorFor(peer.id) : 'var(--accent)'));

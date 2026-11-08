@@ -108,6 +108,7 @@
       durum();
       bil.append(ad, dr); bas.append(a, bil);
       s.append(bas, ctl);
+      if (typeof PROFIL !== 'undefined'){ const pk = PROFIL.el(p); pk.classList.add('pk-mob'); dr.classList.add('pk-durum'); pk.querySelector('.pk-govde').append(dr); bas.replaceWith(pk); }
       ctl.classList.add('mob-ctl');
       // Mesaja basınca panel kapanır, sohbet açılır
       ctl.querySelectorAll('.dm-btn').forEach(b => { if (/Mesaj/.test(b.textContent)) b.addEventListener('click', sheetKapat, { once: true }); });

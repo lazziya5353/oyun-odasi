@@ -62,3 +62,28 @@
 .sinyal[data-s="2"] i:nth-child(-n+2){background:#ffb020}
 .sinyal[data-s="1"] i:nth-child(1){background:#ff3b3b}
 .sinyal[data-s="1"]{animation:isim-titre 2s linear infinite}
+
+/* ---------- avatar çerçeveleri (Görünüm → Kartım → Avatar çerçevesi) ---------- */
+.person[data-cerceve] .av-wrap::after,.stil-onizle[data-cerceve] .stil-nokta::after,.pk-av[data-cerceve]::after{
+  content:"";position:absolute;left:50%;top:50%;width:calc(var(--av) + 14px);height:calc(var(--av) + 14px);margin:calc((var(--av) + 14px) / -2);border-radius:50%;padding:4px;pointer-events:none;
+  background:var(--cr);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);z-index:2}
+.stil-onizle .stil-nokta{position:relative;--av:22px}
+.stil-onizle[data-cerceve] .stil-nokta::after{padding:3px}
+[data-cerceve="neon"] .av-wrap::after,[data-cerceve="neon"] .stil-nokta::after,.pk-av[data-cerceve="neon"]::after{--cr:linear-gradient(135deg,#5ee0b5,#7aa2ff)}
+[data-cerceve="neon"] .av-wrap::after,[data-cerceve="neon"] .stil-nokta::after,.pk-av[data-cerceve="neon"]::after{filter:drop-shadow(0 0 6px #5ee0b5) drop-shadow(0 0 12px #7aa2ff88);animation:crNabiz 1.8s ease-in-out infinite}
+[data-cerceve="altin"] .av-wrap::after,[data-cerceve="altin"] .stil-nokta::after,.pk-av[data-cerceve="altin"]::after{--cr:conic-gradient(from var(--cra,0deg),#7a5410,#ffd966,#fff6c8,#e0a526,#7a5410,#ffd966,#7a5410)}
+[data-cerceve="ates"] .av-wrap::after,[data-cerceve="ates"] .stil-nokta::after,.pk-av[data-cerceve="ates"]::after{--cr:conic-gradient(from var(--cra,0deg),#ff2a00,#ff8c00,#ffe066,#ff4500,#ff8c00,#ff2a00)}
+[data-cerceve="ates"] .av-wrap::after,[data-cerceve="ates"] .stil-nokta::after,.pk-av[data-cerceve="ates"]::after{filter:drop-shadow(0 0 7px #ff6a00)}
+[data-cerceve="gokkusagi"] .av-wrap::after,[data-cerceve="gokkusagi"] .stil-nokta::after,.pk-av[data-cerceve="gokkusagi"]::after{--cr:conic-gradient(from var(--cra,0deg),#ff004c,#ff9900,#ffee00,#33dd55,#00ccff,#7a5cff,#ff00cc,#ff004c)}
+[data-cerceve="buz"] .av-wrap::after,[data-cerceve="buz"] .stil-nokta::after,.pk-av[data-cerceve="buz"]::after{--cr:conic-gradient(from var(--cra,0deg),#e8fbff,#7fdcff,#ffffff,#aee9ff,#4fc3f7,#e8fbff)}
+[data-cerceve="buz"] .av-wrap::after,[data-cerceve="buz"] .stil-nokta::after,.pk-av[data-cerceve="buz"]::after{filter:drop-shadow(0 0 6px #9be7ff)}
+[data-cerceve="elmas"] .av-wrap::after,[data-cerceve="elmas"] .stil-nokta::after,.pk-av[data-cerceve="elmas"]::after{--cr:conic-gradient(from var(--cra,0deg),#ffffff,#b9f2ff,#ff9ff3,#ffffff,#a0e7ff,#fff2a8,#ffffff)}
+[data-cerceve="elmas"] .av-wrap::after,[data-cerceve="elmas"] .stil-nokta::after,.pk-av[data-cerceve="elmas"]::after{filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px #b9f2ff)}
+[data-cerceve="altin"] .av-wrap::after,[data-cerceve="ates"] .av-wrap::after,[data-cerceve="gokkusagi"] .av-wrap::after,[data-cerceve="buz"] .av-wrap::after,[data-cerceve="elmas"] .av-wrap::after,
+[data-cerceve="altin"] .stil-nokta::after,[data-cerceve="ates"] .stil-nokta::after,[data-cerceve="gokkusagi"] .stil-nokta::after,[data-cerceve="buz"] .stil-nokta::after,[data-cerceve="elmas"] .stil-nokta::after,
+.pk-av[data-cerceve]:not([data-cerceve="neon"])::after{animation:crDon 3s linear infinite}
+[data-cerceve="ates"] .av-wrap::after,.pk-av[data-cerceve="ates"]::after{animation-duration:1.4s}
+@property --cra{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes crDon{to{--cra:360deg}}
+@keyframes crNabiz{50%{opacity:.65}}
+@media (prefers-reduced-motion:reduce){ [data-cerceve] .av-wrap::after,.pk-av[data-cerceve]::after{animation:none!important} }
