@@ -145,7 +145,7 @@
 .pk-av{--av:76px;position:absolute;left:18px;top:-44px;width:var(--av);height:var(--av);border-radius:50%;padding:0}
 .pk-av .avatar{width:100%;height:100%;border:5px solid var(--panel);font-size:30px;box-sizing:border-box}
 .pk-av .avatar::before,.pk-av .avatar::after{display:none}
-.pk-av[data-cerceve]::after{width:calc(var(--av) + 8px);height:calc(var(--av) + 8px);margin:calc((var(--av) + 8px) / -2)}
+.pk-av[data-cerceve]::after{width:calc(var(--av) + 8px);height:calc(var(--av) + 8px)}
 .pk-govde{display:grid;gap:6px;padding:0 18px 16px}
 .pk-ad{font-size:19px}
 .pk-alt{color:var(--muted);font-size:13px;margin-top:-4px}

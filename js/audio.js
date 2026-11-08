@@ -354,7 +354,7 @@ function animateSpeaker(card, state, lv, an, color){
   const speaking = now - (state._lastVoice || 0) < 300;      // kısa duraklamalarda sönmesin
   card.classList.toggle('speaking', speaking);
   const av = card.querySelector('.avatar');
-  if (av) av.style.setProperty('--lv', speaking ? state._lv.toFixed(3) : 0);
+  if (av){ const v = speaking ? state._lv.toFixed(3) : 0; av.style.setProperty('--lv', v); if (av.parentElement) av.parentElement.style.setProperty('--lv', v); }   // çerçeve de avatarla birlikte büyüsün
   drawViz(card, an, color, speaking);
   return speaking ? state._lv : 0;
 }

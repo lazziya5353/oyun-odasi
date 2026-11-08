@@ -65,7 +65,7 @@
 
 /* ---------- avatar çerçeveleri (Görünüm → Kartım → Avatar çerçevesi) ---------- */
 .person[data-cerceve] .av-wrap::after,.stil-onizle[data-cerceve] .stil-nokta::after,.pk-av[data-cerceve]::after{
-  content:"";position:absolute;left:50%;top:50%;width:calc(var(--av) + 14px);height:calc(var(--av) + 14px);margin:calc((var(--av) + 14px) / -2);border-radius:50%;padding:4px;pointer-events:none;
+  content:"";position:absolute;left:50%;top:50%;width:calc(var(--av) + 14px);height:calc(var(--av) + 14px);transform:translate(-50%,-50%) scale(calc(1 + var(--lv,0) * .12));transition:transform .08s linear;box-sizing:border-box;border-radius:50%;padding:4px;pointer-events:none;
   background:var(--cr);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);z-index:2}
 .stil-onizle .stil-nokta{position:relative;--av:22px}
 .stil-onizle[data-cerceve] .stil-nokta::after{padding:3px}
