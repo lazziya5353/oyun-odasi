@@ -128,7 +128,7 @@ export default async (req, context) => {
     if (req.method === 'POST' && islem === 'admin-duyuru'){
       // yöneticiden herkese duyuru bildirimi
       if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
-      const b = await req.json().catch(() => ({}));
+      const b = (await req.json().catch(() => ({}))) || {};
       // uzunluk sınırı yok (pratikte 20.000 karakter); bildirime baştan bir parça sığar, tamamı sitede açılır
       const title = clip(b.title, 300), body = String(b.body || '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim().slice(0, 20000);
       if (!title && !body) return json({ hata: 'Duyuru metnini yaz.' }, 400);
@@ -146,13 +146,13 @@ export default async (req, context) => {
     }
     if (req.method === 'POST' && islem === 'admin-cihaz-sil'){
       if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
-      const b = await req.json().catch(() => ({}));
+      const b = (await req.json().catch(() => ({}))) || {};
       if (!/^[a-f0-9]{40}$/.test(String(b.key || ''))) return json({ hata: 'cihaz' }, 400);
       await store('oyunodasi-abone').delete(b.key);
       return json({ ok: true });
     }
     if (req.method !== 'POST') return json({ hata: 'yöntem' }, 405);
-    const b = await req.json().catch(() => ({}));
+    const b = (await req.json().catch(() => ({}))) || {};
     const subs = store('oyunodasi-abone');
 
     if (islem === 'abone'){

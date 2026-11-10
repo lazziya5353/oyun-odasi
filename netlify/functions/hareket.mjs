@@ -47,7 +47,7 @@ export default async (req, context) => {
     if (req.method === 'POST' && islem === 'ekle'){
       const text = await req.text();
       if (text.length > 20000) return json({ hata: 'büyük' }, 413);
-      let b; try { b = JSON.parse(text); } catch(e){ return json({ hata: 'json' }, 400); }
+      let b; try { b = JSON.parse(text) || {}; } catch(e){ return json({ hata: 'json' }, 400); }
       const ad = clip(b.ad, 20) || 'Biri', cihaz = ['mobil', 'tablet', 'pc'].includes(b.cihaz) ? b.cihaz : 'pc', uye = !!b.uye, kadi = uye ? clip(b.kadi, 24).toLocaleLowerCase('tr-TR') : '';
       const now = Date.now();
       const items = (Array.isArray(b.olaylar) ? b.olaylar : []).slice(0, 30)

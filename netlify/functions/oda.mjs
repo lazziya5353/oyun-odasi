@@ -99,7 +99,7 @@ export default async (req, context) => {
     }
     if (req.method === 'POST' && (islem === 'admin-at' || islem === 'admin-kisi-sil')){
       if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
-      const b = await req.json().catch(() => ({}));
+      const b = (await req.json().catch(() => ({}))) || {};
       const anahtar = clip(b.anahtar, 40);
       if (!/^[um]:/.test(anahtar)) return json({ hata: 'kişi' }, 400);
       await guncelle((d, now) => {
@@ -122,21 +122,21 @@ export default async (req, context) => {
         const u = s2 && s2.exp > Date.now() && await us.get('u/' + s2.id, { type: 'json' });
         if (!u || u.durum !== 'onayli' || !u.kodsuz || (s2.sv || 0) !== (u.sv || 0)) return json({ hata: 'yetki' }, 403);
       }
-      const b = await req.json().catch(() => ({}));
+      const b = (await req.json().catch(() => ({}))) || {};
       const { d } = await oku(); d.canli = d.canli || {}; d.odalar = d.odalar || {};
       const kod = Object.keys(d.odalar).find(k => odaId(d, k) === String(b.id || ''));
       return kod ? json({ ok: true, kod }) : json({ hata: 'Oda kapanmış olabilir.' }, 404);
     }
     if (req.method === 'POST' && islem === 'dogrula'){
       // listedeki odaya girmek için yazılan kod o odanın kodu mu?
-      const b = await req.json().catch(() => ({}));
+      const b = (await req.json().catch(() => ({}))) || {};
       const kod = clip(b.kod, 12).toUpperCase(), { d } = await oku();
       return json({ ok: !!kod && !!d.tuz && odaId(d, kod) === String(b.id || '') });
     }
     if (req.method === 'POST' && (islem === 'nabiz' || islem === 'cik')){
       const text = await req.text();
       if (text.length > 2000) return json({ hata: 'büyük' }, 413);
-      let b; try { b = JSON.parse(text); } catch(e){ return json({ hata: 'json' }, 400); }
+      let b; try { b = JSON.parse(text) || {}; } catch(e){ return json({ hata: 'json' }, 400); }
       const cid = clip(b.cid, 40).replace(/[^\w-]/g, '');
       if (cid.length < 8) return json({ hata: 'cid' }, 400);
       if (islem === 'cik'){

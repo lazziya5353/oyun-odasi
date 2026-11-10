@@ -100,6 +100,17 @@ async function pushTo(subs, payload, origin){
   }));
   return gone;
 }
+// üye girişinde şifre denemesi sınırı: aynı kullanıcı adı için 15 dakikada en fazla 10 yanlış deneme
+// (sınır yokken 4 haneli şifreler ve yöneticinin verdiği 6 haneli geçici şifreler art arda denenerek bulunabiliyordu)
+async function girisLimit(kadi, ok){
+  const st = store(), now = Date.now(), k = 'rl/g/' + sha(kadi).slice(0, 32);
+  const r = (await st.get(k, { type: 'json' })) || { f: [] };
+  r.f = (Array.isArray(r.f) ? r.f : []).filter(t => now - t < 15 * 60e3);
+  if (ok === undefined) return r.f.length < 10;
+  if (!ok){ r.f.push(now); await st.setJSON(k, r); }
+  else if (r.f.length) await st.delete(k);
+  return true;
+}
 // çok sayıda yanlış yönetici şifresi denemesine karşı: 15 dakikada en fazla 8 hatalı deneme
 async function adminLimit(ok){
   const st = store(), now = Date.now();
@@ -241,7 +252,7 @@ export default async (req, context) => {
     }
     if (req.method === 'POST' && islem === 'saka-dogrula'){
       // yedek doğrulama: tarayıcı imzayı kendisi doğrulayamazsa sunucuya sorar
-      const b = await req.json().catch(() => ({}));
+      const b = (await req.json().catch(() => ({}))) || {};
       const exp = Number(b.exp), sig = String(b.sig || '');
       if (!(exp > Date.now()) || sig.length > 200) return json({ ok: false });
       const k = await sakaKey();
@@ -265,7 +276,7 @@ export default async (req, context) => {
       u.foto = (u.foto || 0) + 1; await putUser(u);
       return json({ ok: true, uye: pub(u) });
     }
-    const b = await req.json().catch(() => ({}));
+    const b = (await req.json().catch(() => ({}))) || {};
 
     // ---------- üyelik ----------
     if (islem === 'kayit'){
@@ -298,9 +309,13 @@ export default async (req, context) => {
       return json({ durum: u ? u.durum : 'yok' });
     }
     if (islem === 'giris'){
-      const ex = await store().get('k/' + lowerKey(clip(b.kadi, 20)), { type: 'json' });
+      const gk = lowerKey(clip(b.kadi, 20));
+      const ex = await store().get('k/' + gk, { type: 'json' });
       const u = ex && await getUser(ex.id);
-      if (!u || !same(hashPw(b.sifre || '', u.salt), u.hash)) return json({ hata: 'Kullanıcı adı ya da şifre yanlış.' }, 401);
+      if (u && !(await girisLimit(gk))) return json({ hata: 'Çok fazla yanlış deneme. 15 dakika sonra tekrar dene.' }, 429);
+      const sifreOk = !!u && same(hashPw(b.sifre || '', u.salt), u.hash);
+      if (u) await girisLimit(gk, sifreOk);
+      if (!sifreOk) return json({ hata: 'Kullanıcı adı ya da şifre yanlış.' }, 401);
       if (u.durum === 'bekliyor') return json({ hata: 'Üyeliğin henüz onaylanmadı. Onaylanınca haber vereceğiz.', durum: 'bekliyor' }, 403);
       if (u.durum === 'red') return json({ hata: 'Üyelik başvurun onaylanmadı.', durum: 'red' }, 403);
       if (u.durum === 'askida') return json({ hata: 'Hesabın yönetici tarafından geçici olarak durduruldu.', durum: 'askida' }, 403);
@@ -496,8 +511,9 @@ export default async (req, context) => {
     }
     if (islem === 'admin-sifre'){
       // şifresini unutan üyeye yeni geçici şifre
-      const yeni = String(Math.floor(100000 + Math.random() * 900000));
+      const yeni = String(crypto.randomInt(100000, 1000000));
       u.salt = crypto.randomBytes(16).toString('hex'); u.hash = hashPw(yeni, u.salt); u.sv = (u.sv || 0) + 1; await putUser(u);
+      await store().delete('rl/g/' + sha(lowerKey(u.kadi)).slice(0, 32));     // yanlış deneme sayacı da sıfırlansın: üye yeni şifreyle hemen girebilsin
       await logAdmin('Şifre sıfırlandı: ' + u.adSoyad + ' (@' + u.kadi + ')');
       return json({ ok: true, yeni });
     }

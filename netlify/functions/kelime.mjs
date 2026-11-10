@@ -43,7 +43,7 @@ export default async (req, context) => {
     if (req.method === 'GET' && islem === 'liste'){ const { d } = await oku(); return json(d); }
     if (req.method !== 'POST' || !islem.startsWith('admin-')) return json({ hata: 'bilinmeyen işlem' }, 404);
     if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
-    const b = await req.json().catch(() => ({}));
+    const b = (await req.json().catch(() => ({}))) || {};
     let r;
     if (islem === 'admin-tabu'){
       const w = temiz(b.w, 40), y = (Array.isArray(b.y) ? b.y : []).map(x => temiz(x, 30)).filter(Boolean);
