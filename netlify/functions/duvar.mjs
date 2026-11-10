@@ -96,7 +96,7 @@ export default async (req, context) => {
     }
     if (req.method !== 'POST' || !islem.startsWith('admin-')) return json({ hata: 'bilinmeyen işlem' }, 404);
     if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
-    const b = await req.json().catch(() => ({}));
+    const b = (await req.json().catch(() => ({}))) || {};
     const id = String(b.id || '');
     if (!ID.test(id)) return json({ hata: 'id' }, 400);
 

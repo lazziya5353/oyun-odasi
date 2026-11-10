@@ -11,6 +11,7 @@ const clip = (s, n) => String(s || '').replace(/[\u0000-\u001f]/g, ' ').replace(
 
 // oyunlar: hangi yön iyi, günlük mü, seviyeler, makul skor aralığı (hile/yanlışlık koruması)
 const GAMES = {
+  __proto__: null,     // 'constructor' gibi adlar oyun sanılmasın
   sudoku: { better: 'low', daily: true, levels: ['kolay', 'orta', 'zor'], min: 25, max: 36000 },
   kelime: { better: 'low', daily: true, levels: [''], min: 1003, max: 6999 },
   yapboz: { better: 'low', daily: false, levels: ['kolay', 'orta', 'zor'], min: 6, max: 36000 },
@@ -105,7 +106,7 @@ export default async (req, context) => {
     }
     if (req.method === 'POST' && (islem === 'admin-sil' || islem === 'admin-sifirla')){
       if (!(await isAdmin(req))) return json({ hata: 'yetki' }, 401);
-      const b = await req.json().catch(() => ({}));
+      const b = (await req.json().catch(() => ({}))) || {};
       const g = GAMES[b.game], level = String(b.level || '');
       if (!g || !g.levels.includes(level)) return json({ hata: 'oyun' }, 400);
       const k = keysFor(g, b.game, level, istanbulDay());
@@ -126,7 +127,7 @@ export default async (req, context) => {
       return json({ ok: true, removed });
     }
     if (req.method === 'POST' && islem === 'gonder'){
-      const b = await req.json().catch(() => ({}));
+      const b = (await req.json().catch(() => ({}))) || {};
       const g = GAMES[b.game];
       const level = String(b.level || '');
       if (!g || !g.levels.includes(level)) return json({ hata: 'oyun' }, 400);
