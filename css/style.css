@@ -703,3 +703,12 @@ html.dinlen:has(#dinlenUI.gizli), html.dinlen:has(#dinlenUI.gizli) body{cursor:n
 .prof-uyeler{display:grid;gap:4px;max-height:180px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .prof-uyeler[hidden]{display:none}
 #pBio{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:15px;color:var(--fg)}
+
+/* ekranda işaretleme */
+.screen .isaret-kat{position:absolute;pointer-events:none;z-index:2}
+.screen.isaretliyor .isaret-kat{pointer-events:auto;cursor:crosshair;touch-action:none}
+.screen.isaretliyor .screen-tools{opacity:1}
+.screen.isaretliyor{box-shadow:0 0 0 2px var(--accent,#5ee0b5)}
+.screen-tools .isaret-btn.on{background:var(--accent,#5ee0b5);color:#0b0e13;border-color:transparent}
+/* kayıt düğmesi sadece toplantı kanalında; başka kanalda ekran temiz kalsın (sürmekte olan kayıt görünür kalır) */
+#room:not(.ch-ders) .screen-tools .kayit-btn:not(.kayitta){display:none}

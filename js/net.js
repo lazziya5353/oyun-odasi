@@ -554,6 +554,7 @@ function onData(id, d){
   if (musicOnData(id, d)) return;
   if (filmOnData(id, d)) return;
   if (typeof kayitOnData === 'function' && kayitOnData(id, d)) return;
+  if (typeof isaretOnData === 'function' && isaretOnData(id, d)) return;
   if (typeof dersOnData === 'function' && dersOnData(id, d)) return;
   if (typeof kameraOnData === 'function' && kameraOnData(id, d)) return;
 }
